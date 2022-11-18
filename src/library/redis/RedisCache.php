@@ -54,7 +54,7 @@ class RedisCache implements CacheInterface
         if ($passwd) {
             $boolean = $this->redis->auth($passwd);
             if (!$boolean) {
-                throw new RedisCacheException(lang("Redis认证失败，请检查Redis密码：%s:%s 密码：%s", $config["host"], $config["port"], $passwd));
+                throw new RedisCacheException(sprintf("Redis认证失败，请检查Redis密码：%s:%s 密码：%s", $config["host"], $config["port"], $passwd));
             }
         }
     }
@@ -89,13 +89,13 @@ class RedisCache implements CacheInterface
 
     public function del(string $key)
     {
-        App::$debug && Log::record("Redis", lang("删除缓存：%s", $key));
+        App::$debug && Log::record("Redis", sprintf("删除缓存：%s", $key));
         $this->redis->del($this->cache_path . $key);
     }
 
     public function get(string $key)
     {
-        App::$debug && Log::record("Redis", lang("读取缓存：%s", $key));
+        App::$debug && Log::record("Redis", sprintf("读取缓存：%s", $key));
         $string = $this->redis->get($this->cache_path . $key);
         if (is_string($string)) {
             return unserialize($string);
@@ -105,13 +105,13 @@ class RedisCache implements CacheInterface
 
     public function empty()
     {
-        App::$debug && Log::record("Redis", lang("清空所有缓存"));
+        App::$debug && Log::record("Redis", "清空所有缓存");
         $this->redis->del($this->redis->keys($this->cache_path . "*"));
     }
 
     public function set(string $key, $data): bool
     {
-        App::$debug && Log::record("Redis", lang("设置缓存：%s", $key));
+        App::$debug && Log::record("Redis", sprintf("设置缓存：%s", $key));
         $values = serialize($data);
         return $this->redis->set($this->cache_path . $key, $values, $this->cache_expire);
     }

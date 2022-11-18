@@ -214,11 +214,12 @@ function url(string $m = 'index', string $c = 'main', string $a = 'index', array
 }
 /**
  * 将Array转换为无引号的Json
- * @param array $arg
+ * @param ?array $arg
  * @return string
  */
-function convert_json(array $arg): string
+function convert_json(?array $arg = []): string
 {
+    if(empty($arg))return "";
     $data = json_encode($arg,JSON_UNESCAPED_UNICODE);
     $data = substr($data,1,strlen($data)-2);
     return str_replace("\"","",$data);

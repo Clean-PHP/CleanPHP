@@ -59,8 +59,6 @@ class Error
      */
     public static function err(string $msg, array $errInfo = [],string $log_tag = "ErrorInfo")
     {
-        //if(App::$exit)return;
-       // try{
             Log::record($log_tag, $msg,Log::TYPE_ERROR);
             $traces = sizeof($errInfo) === 0 ? debug_backtrace() : $errInfo;
 
@@ -75,9 +73,6 @@ class Error
             } else {
                 (new Response())->render(App::getEngine()->renderMsg(true, 404, lang("404 Not Found"), lang("您访问的资源不存在。"), 5, "/", lang("立即跳转")), 404, App::getEngine()->getContentType())->send();
             }
-       // }catch (ExitApp $e){
-         //   App::$debug && Log::record("Frame", sprintf("框架执行退出2: %s", $e->getMessage()));
-      //  }
     }
 
     /**

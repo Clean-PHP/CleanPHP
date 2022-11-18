@@ -1,6 +1,6 @@
 <?php
 
-
+/**
 use core\App;
 use core\base\Loader;
 use core\config\Config;
@@ -24,3 +24,6 @@ spl_autoload_register(function (string $raw){
     }
 }, true, true);
 App::$debug = true;
+ **/
+
+require_once __DIR__.DIRECTORY_SEPARATOR."../src/public/index.php";

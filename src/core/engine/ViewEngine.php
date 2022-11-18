@@ -241,7 +241,13 @@ TPL
         $complied_file = $this->compile($template_name);
         ob_start();
         extract($this->data, EXTR_OVERWRITE);
-        include $complied_file;
+
+        try{
+            include $complied_file;
+        }catch (\Throwable $e){
+            Error::err($e->getMessage(),$e->getTrace());
+        }
+
         App::$debug && Log::record("ViewEngine", sprintf("编译运行时间：%s 毫秒", round((microtime(true) - Variables::get("__view_time_start__", 0)) * 1000, 2)),Log::TYPE_WARNING);
         return ob_get_clean();
     }
@@ -266,15 +272,17 @@ TPL
      */
     public function compile(string $template_name): string
     {
+
         if (!is_dir($this->compile_dir)) mkdir($this->compile_dir, 0777, true);
         if (!is_dir($this->template_dir)) mkdir($this->template_dir, 0777, true);
 
-        $__module = Variables::get("__controller_module__", "index");
+        $__module = Variables::get("__controller_module__", "");
         $real_name = $template_name;
         $template_name = ($__module == '' ? '' : $__module . DS) . $template_name . '.tpl';
         //自动化模板名字
         $file = $this->template_dir . DS . $template_name;
         if (!file_exists($file)) {
+            dump($file,true);
             $file2 = Variables::getViewPath($real_name);
             if (!file_exists($file2)) {
                 Error::err(sprintf("模板文件（%s）不存在", $file), [],"ViewEngine");
@@ -381,7 +389,8 @@ TPL
             $template_data = str_replace("../../public","/?s=CLEAN_STATIC",$template_data);
         }
 
-        return str_replace(["\r","\n"], "", $template_data);//换行符清理了
+        if(!App::$debug) return str_replace(["\r","\n"], "", $template_data);//换行符清理了
+        return $template_data;
     }
 
     /**
@@ -402,15 +411,113 @@ TPL
     }
 
 
-    function renderError(string $msg, array $traces, string $dumps,string $tag)
+    function renderError(string $msg, array $traces, string $dumps,string $tag): string
     {
+
+        Variables::set("__controller_module__", "");
         $tpl = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title><{$msg nofilter}></title>
-    <style type="">body{padding:0;margin:0;word-wrap:break-word;word-break:break-all;font-family:Courier,Arial,sans-serif;background:#ebf8ff;color:#5e5e5e}div,h2,p,span{margin:0;padding:0}ul{margin:0;padding:0;list-style-type:none;font-size:0;line-height:0}#body{width:918px;margin:0 auto}#main{width:918px;margin:13px auto 0 auto;padding:0 0 35px 0}#contents{width:918px;float:left;margin:13px auto 0 auto;background:#FFF;padding:8px 0 0 9px}#contents h2{display:block;background:#cff0f3;font:bold:20px;padding:12px 0 12px 30px;margin:0 10px 22px 1px}#contents ul{padding:0 0 0 18px;font-size:0;line-height:0}#contents ul li{display:block;padding:0;color:#8f8f8f;background-color:inherit;font:normal 14px Arial,Helvetica,sans-serif;margin:0}#contents ul li span{display:block;color:#408baa;background-color:inherit;font:bold 14px Arial,Helvetica,sans-serif;padding:0 0 10px 0;margin:0}#oneborder{width:800px;font:normal 14px Arial,Helvetica,sans-serif;border:#ebf3f5 solid 4px;margin:0 30px 20px 30px;padding:10px 20px;line-height:23px}#oneborder span{padding:0;margin:0}#oneborder #current{background:#cff0f3}pre{white-space:pre-wrap}
+    <style type="">
+    body {
+	padding: 0;
+	margin: 0;
+	word-wrap: break-word;
+	word-break: break-all;
+	font-family: Courier,Arial,sans-serif;
+	background: #ebf8ff;
+	color: #5e5e5e
+}
+
+div,h2,p,span {
+	margin: 0;
+	padding: 0
+}
+
+ul {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+	font-size: 0;
+	line-height: 0
+}
+
+#body {
+	
+	margin: 0 auto
+}
+
+#main {
+	width: 100%;
+	max-width: 900px;
+	margin: 13px auto 0 auto;
+	padding: 0 0 35px 0
+}
+
+#contents {
+	
+	margin: 13px auto 0 auto;
+	background: #FFF;
+	padding: 10px
+}
+
+#contents h2 {
+	display: block;
+	background: #cff0f3;
+	font: bold:20px;
+	padding: 12px 30px;
+	margin: 0 10px 22px 1px
+}
+
+#contents ul {
+	padding: 0 18px 0 18px;
+	font-size: 0;
+	line-height: 0
+}
+
+#contents ul li {
+	display: block;
+	    padding: 10px 0 0;
+	color: #8f8f8f;
+	background-color: inherit;
+	font: normal 14px Arial,Helvetica,sans-serif;
+	margin: 0
+}
+
+#contents ul li span {
+	display: block;
+	color: #408baa;
+	background-color: inherit;
+	font: bold 14px Arial,Helvetica,sans-serif;
+	padding: 0 0 10px 0;
+	margin: 0
+}
+
+#oneborder {
+	font: normal 14px Arial,Helvetica,sans-serif;
+	border: #ebf3f5 solid 4px;
+	margin: 0 18px;
+	padding: 10px 20px;
+	line-height: 23px;
+	overflow:scroll;
+	white-space:nowrap;
+}
+
+#oneborder span {
+	padding: 0;
+	margin: 0
+}
+
+#oneborder #current {
+	background: #cff0f3
+}
+
+pre {
+	white-space: pre-wrap
+}
     </style>
 </head>
 <body>
@@ -422,13 +529,19 @@ TPL
         </h2>
         <{foreach $array as $key => $trace}>
             <ul>
-                <li><span>#<{$key}> <{$trace["file"]}>(<{$trace["line"]}>) <{$call["class"]}><{$call["type"]}><{$call["function"]}>(<{convert_json($call["args"])}>) </span></li>
+                <li><span>
+                <{$trace["title"]}></span>  
+                <span style="color: #094e5a">
+                <{$trace["func"]}></span>  
+                </li>
             </ul>
             <div id="oneborder">
+               
                 <{foreach $trace["data"] as $singleLine}>
                     <{$singleLine nofilter}>
                 <{/foreach}>
-            </div>
+</div>
+          
         <{/foreach}>
     </div>
 </div>
@@ -436,12 +549,10 @@ TPL
 </body>
 </html>';
         $file = Variables::getCachePath("temp_error.tpl");
-        if (!file_exists($file)) file_put_contents($file, $tpl);
+        if (!file_exists($file)||App::$debug) file_put_contents($file, $tpl);
         $this->setTplDir(Variables::getCachePath());
-        $index = 0;
         $setArray = [];
-        foreach ($traces as $trace) {
-            if (++$index == 1 && sizeof($traces) != 1) continue;
+        foreach ($traces as $key=>$trace) {
             if (is_array($trace) && !empty($trace["file"])) {
                 $trace["keyword"] = $trace["keyword"] ?? "";
                 $sourceLine = self::errorFile($trace["file"], $trace["line"], $trace["keyword"]);
@@ -449,7 +560,8 @@ TPL
                 unset($sourceLine["line"]);
                 if ($sourceLine) {
                     $setArray[] = [
-                        "file" => $trace["file"],
+                        "title" => sprintf("#%s %s(%s)",$key,$trace['file'],$trace['line']),
+                        "func" => sprintf("%s%s%s(%s)",$trace["class"]??"",$trace["type"]??"",$trace['function']??"",convert_json($trace['args'])),
                         "line" => $trace["line"],
                         "data" => $sourceLine
                     ];

@@ -37,8 +37,6 @@ class Db
      * 使用指定数据库配置初始化数据库连接
      * @param DbFile $dbFile
      * @return Db
-     * @throws ExitApp
-     * @throws ExtendError
      */
     public static function init(DbFile $dbFile): Db
     {
@@ -54,8 +52,6 @@ class Db
     /**
      * 构造函数
      * @param DbFile $dbFile 数据库配置类
-     * @throws ExitApp
-     * @throws ExtendError
      */
     public function __construct(DbFile $dbFile)
     {
@@ -103,7 +99,6 @@ class Db
      * @param array $params 绑定的sql参数
      * @param false $readonly 是否为查询
      * @return array|int
-     * @throws ExitApp
      */
     public function execute(string $sql, array $params = [], bool $readonly = false)
     {
@@ -175,7 +170,6 @@ class Db
      * @param ?string $output 输出路径
      * @param bool $only_struct 是否只导出结构
      * @return string
-     * @throws ExitApp
      */
     public  function export(string $output = null, bool $only_struct=false): string
     {

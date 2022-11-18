@@ -8,6 +8,8 @@ namespace core\config;
 
 use core\App;
 use core\base\Variables;
+use core\event\EventListener;
+use core\event\EventManager;
 use core\exception\ExitApp;
 
 /**
@@ -37,9 +39,11 @@ class Config
     {
         $result = Variables::get("__frame_config__");
         if ($result) {
-            return $result["route"] ?? null;
+            $result = $result["route"] ?? null;
+            EventManager::trigger("__config_get_route__",$result);
+            return $result;
         }
-        return $result;
+        return [];
     }
 
     /**
