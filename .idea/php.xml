@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PhpIncludePathManager">
+    <include_path>
+      <path value="$PROJECT_DIR$/src/vendor/composer" />
+      <path value="$USER_HOME$/.composer/vendor/" />
+    </include_path>
+  </component>
+  <component name="PhpProjectSharedConfiguration" php_language_level="7.4" />
+  <component name="PhpUnit">
+    <phpunit_settings>
+      <PhpUnitSettings bootstrap_file_path="$PROJECT_DIR$/tests/TestAutoLoader.php" configuration_file_path="$PROJECT_DIR$/phpunit.xml" custom_loader_path="$USER_HOME$/.composer/vendor/autoload.php" phpunit_phar_path="/usr/local/bin/phpunit" use_bootstrap_file="true" use_configuration_file="true" />
+    </phpunit_settings>
+  </component>
+</project>

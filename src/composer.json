@@ -1,0 +1,20 @@
+{
+  "authors": [
+    {
+      "name": "ankio",
+      "email": "admin@ankio.net"
+    }
+  ],
+  "require": {
+    "ext-sockets": "*",
+    "ext-json": "*",
+    "ext-pdo": "*",
+    "ext-mbstring": "*",
+    "ext-zip": "*",
+    "ext-openssl": "*",
+    "ext-curl": "*",
+    "ext-iconv": "*",
+    "ext-redis": "*",
+    "ext-fileinfo": "*"
+  }
+}
