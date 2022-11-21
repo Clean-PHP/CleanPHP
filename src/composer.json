@@ -5,5 +5,7 @@
       "email": "admin@ankio.net"
     }
   ],
-  "require": {}
+  "require": {
+    "ext-pdo": "*"
+  }
 }
