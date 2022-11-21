@@ -231,6 +231,7 @@ TPL
 
     function render(...$data): string
     {
+
         App::$debug && Variables::set("__view_time_start__", microtime(true));
         $template_name = $data[0];
         if (!empty($this->layout)) {
@@ -243,11 +244,7 @@ TPL
         ob_start();
         extract($this->data, EXTR_OVERWRITE);
 
-        try{
-            include $complied_file;
-        }catch (\Throwable $e){
-            Error::err($e->getMessage(),$e->getTrace());
-        }
+        include $complied_file;
 
         App::$debug && Log::record("ViewEngine", sprintf("编译运行时间：%s 毫秒", round((microtime(true) - Variables::get("__view_time_start__", 0)) * 1000, 2)),Log::TYPE_WARNING);
         return ob_get_clean();
@@ -283,9 +280,9 @@ TPL
         //自动化模板名字
         $file = $this->template_dir . DS . $template_name;
         if (!file_exists($file)) {
-            dump($file,true);
-            $file2 = Variables::getViewPath($real_name);
+            $file2 = Variables::getViewPath($real_name.'.tpl');
             if (!file_exists($file2)) {
+
                 Error::err(sprintf("模板文件（%s）不存在", $file), [],"ViewEngine");
             }
             $file = $file2;
@@ -414,7 +411,6 @@ TPL
 
     function renderError(string $msg, array $traces, string $dumps,string $tag): string
     {
-
         Variables::set("__controller_module__", "");
         $tpl = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
@@ -524,7 +520,10 @@ pre {
 <body>
 <div id="main">
     <div id="contents">
-        <pre><{$dump nofilter}></pre>
+    <{if $dump!==""}>
+     <h2><pre>错误发生前已输出的内容：<br><{$dump}></pre></h2>
+    <{/if}>
+        
         <h2>
             <pre><{$msg nofilter}></pre>
         </h2>
@@ -551,8 +550,11 @@ pre {
 </html>';
         $file = Variables::getCachePath("temp_error.tpl");
         if(!is_dir(Variables::getCachePath()))File::mkDir(Variables::getCachePath());
+
         if (!file_exists($file)||App::$debug) file_put_contents($file, $tpl);
+
         $this->setTplDir(Variables::getCachePath());
+        $this->layout = '';
         $setArray = [];
         foreach ($traces as $key=>$trace) {
             if (is_array($trace) && !empty($trace["file"])) {
@@ -563,7 +565,7 @@ pre {
                 if ($sourceLine) {
                     $setArray[] = [
                         "title" => sprintf("#%s %s(%s)",$key,$trace['file'],$trace['line']),
-                        "func" => sprintf("%s%s%s(%s)",$trace["class"]??"",$trace["type"]??"",$trace['function']??"",convert_json($trace['args'])),
+                        "func" => sprintf("%s%s%s",$trace["class"]??"",$trace["type"]??"",$trace['function']??""),
                         "line" => $trace["line"],
                         "data" => $sourceLine
                     ];

@@ -70,7 +70,7 @@ class JsonEngine extends ResponseEngine
 
         $trace_text = [];
         foreach($traces as $i=>$call){
-            $trace_text[$i] = sprintf("#%s %s(%s): %s%s%s(%s)",$i,$call['file'],$call['line'],$call["class"],$call["type"],$call['function'],convert_json($call['args']));
+            $trace_text[$i] = sprintf("#%s %s(%s): %s%s%s",$i,$call['file'],$call['line'],$call["class"],$call["type"],$call['function']);
 
             Log::record($tag,$trace_text[$i],Log::TYPE_ERROR);
         }

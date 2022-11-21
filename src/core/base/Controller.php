@@ -54,7 +54,6 @@ class Controller
      */
     public function init()
     {
-        EventManager::trigger("__on_controller_init__", $this);
         return null;
     }
 

@@ -63,6 +63,7 @@ class Response
      */
     public function render(string $data = '', int $code = 200, string $content_type = 'text/html', array $header = []): Response
     {
+
         $this->data = $data;//需要渲染的数据
         $this->contentType($content_type);
         $this->header = array_merge($this->header, $header);

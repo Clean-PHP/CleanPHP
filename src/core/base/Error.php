@@ -99,10 +99,11 @@ class Error
             $msg = "DEPRECATED";
         }
         try{
+
             self::err("$msg: $err_str in $err_file on line $err_line");
-        }catch (ExitApp $e){
+       }catch (ExitApp $e){
             App::$debug && Log::record("Frame", sprintf("框架执行退出[appError]: %s", $e->getMessage()));
-        }
+            }
         return false;
     }
 
