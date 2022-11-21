@@ -2,7 +2,6 @@
 <project version="4">
   <component name="PhpIncludePathManager">
     <include_path>
-      <path value="$PROJECT_DIR$/src/vendor/composer" />
       <path value="$USER_HOME$/.composer/vendor/" />
     </include_path>
   </component>

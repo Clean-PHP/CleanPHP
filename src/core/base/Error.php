@@ -83,7 +83,7 @@ class Error
      * @param int $err_line
      * @return bool
      */
-    private static function appError(int $errno, string $err_str, string $err_file = '', int $err_line = 0): bool
+    public static function appError(int $errno, string $err_str, string $err_file = '', int $err_line = 0): bool
     {
         $msg = "ERROR";
         if ($errno == E_WARNING) {

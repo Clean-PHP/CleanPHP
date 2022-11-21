@@ -57,7 +57,7 @@ class Config
         date_default_timezone_set(Config::getConfig('frame')['time_zone']??"Asia/Shanghai");
         $frame = self::getConfig("frame");
         if (!in_array("0.0.0.0", $frame['host']) && !App::$cli && !in_array($_SERVER["SERVER_NAME"], $frame['host'])) {
-            App::exit(sprintf("您的域名绑定错误，当前域名为：%s , 请在 %s 中Host选项里添加该域名。", $_SERVER["SERVER_NAME"], Variables::getConfigPath() . "frame.yml"));
+            App::exit(sprintf("您的域名绑定错误，当前域名为：%s , 请在 %s 中Host选项里添加该域名。", $_SERVER["SERVER_NAME"], Variables::getConfigPath() . "frame.yml"),true);
         }
     }
 
@@ -78,6 +78,7 @@ class Config
     public function setLocation(string $path): Config
     {
         $this->path = $path;
+        if(!is_dir($path))mkdir($path,0777,true);
         return $this->getConfigFile();
     }
 
@@ -125,8 +126,11 @@ class Config
         $result = Variables::get("__frame_config__");
         if ($result) {
             return $result[$sub] ?? null;
+        }else{
+            $config = self::getInstance("config")->setLocation(Variables::getConfigPath())->getAll();
+            Variables::set("__frame_config__", $config);
+            return $config[$sub] ?? null;
         }
-        return $result;
     }
 
     /**

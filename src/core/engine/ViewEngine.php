@@ -12,6 +12,7 @@ use core\config\Config;
 use core\event\EventManager;
 use core\exception\ControllerError;
 use core\exception\ExitApp;
+use core\file\File;
 use core\file\Log;
 use core\base\Controller;
 use core\base\Response;
@@ -549,6 +550,7 @@ pre {
 </body>
 </html>';
         $file = Variables::getCachePath("temp_error.tpl");
+        if(!is_dir(Variables::getCachePath()))File::mkDir(Variables::getCachePath());
         if (!file_exists($file)||App::$debug) file_put_contents($file, $tpl);
         $this->setTplDir(Variables::getCachePath());
         $setArray = [];

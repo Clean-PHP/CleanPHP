@@ -17,7 +17,6 @@ use core\App;
 use core\config\Config;
 use core\event\EventManager;
 use core\exception\ExitApp;
-use core\file\Log;
 
 /**
  * Class Response
@@ -101,6 +100,7 @@ class Response
     {
         //允许跨域
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+
         if (in_array(str_replace(self::getHttpScheme(), '', $origin), Config::getConfig("frame")['host'])) {
             $this->header['Access-Control-Allow-Origin'] = $origin;
         }

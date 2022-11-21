@@ -32,9 +32,9 @@ class Controller
         $this->module = $m;
         $this->controller = $c;
         $this->action = $a;
-        EventManager::trigger("__on_controller_create__", $this);
         $this->setCode($this->eng()->getCode());
         $this->setContentType($this->eng()->getContentType());
+        EventManager::trigger("__on_controller_create__", $this);
         $this->init_data = $this->init();
 
     }
@@ -54,7 +54,6 @@ class Controller
      */
     public function init()
     {
-
         EventManager::trigger("__on_controller_init__", $this);
         return null;
     }

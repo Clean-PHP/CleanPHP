@@ -16,6 +16,7 @@ use core\base\Argument;
 use core\base\Dump;
 use core\base\Lang;
 use core\base\Route;
+use core\closure\SerializableClosure;
 use core\exception\ExitApp;
 
 /**
@@ -115,7 +116,6 @@ function dumps(...$args)
  * @param null $var 预输出的变量名
  * @param false $exit 输出变量后是否退出进程
  * @param string|null $line
- * @throws ExitApp
  */
 function dump($var, bool $exit = false, string $line = null)
 {
@@ -128,7 +128,7 @@ function dump($var, bool $exit = false, string $line = null)
         echo $line;
         var_dump($var);
         if ($exit) {
-            App::exit(lang("调用输出命令退出"));
+            App::exit("调用输出命令退出");
         }
         return;
     }
@@ -147,17 +147,17 @@ EOF;
     echo $dump->dumpType($var);
     echo '</pre></div>';
     if ($exit) {
-        App::exit(lang("调用输出命令退出"));
+        App::exit("调用输出命令退出");
     }
 }
 
 /**
  * 传入样例类型，对目标进行类型转换
- * @param $sample string 样例
+ * @param $sample ?string 样例
  * @param $data  mixed 需要转换的类型
  * @return bool|float|int|mixed|string
  */
-function parse_type(string $sample, $data)
+function parse_type(?string $sample, $data)
 {
     if (is_int($sample)) return intval($data);
     elseif (is_string($sample)) return strval($data);
@@ -223,4 +223,47 @@ function convert_json(?array $arg = []): string
     $data = json_encode($arg,JSON_UNESCAPED_UNICODE);
     $data = substr($data,1,strlen($data)-2);
     return str_replace("\"","",$data);
+}
+/**
+ * Serialize
+ *
+ * @param mixed $data
+ * @return string
+ */
+function __serialize($data): string
+{
+    SerializableClosure::enterContext();
+    SerializableClosure::wrapClosures($data);
+    $data = \serialize($data);
+    SerializableClosure::exitContext();
+    return $data;
+}
+
+/**
+ * Unserialize
+ *
+ * @param string $data
+ * @param array|null $options
+ * @return mixed
+ */
+function __unserialize(string $data, array $options = null)
+{
+    SerializableClosure::enterContext();
+    $data = ($options === null || \PHP_MAJOR_VERSION < 7)
+        ? \unserialize($data)
+        : \unserialize($data, $options);
+    SerializableClosure::unwrapClosures($data);
+    SerializableClosure::exitContext();
+    return $data;
+}
+
+/**
+ * 启动一个异步任务
+ * @param Closure $function 任务函数
+ * @param int $timeout 异步任务的最长运行时间,单位为秒
+ * @return string
+ */
+function go(Closure $function,int $timeout = 300): string
+{
+    return \core\process\Async::start($function,$timeout);
 }

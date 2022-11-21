@@ -919,7 +919,7 @@ class Spyc
      *
      * @return string
      */
-    public static function YAMLDump($array, $indent = false, $wordwrap = false, $no_opening_dashes = false)
+    public static function YAMLDump($array, $indent = false, $wordwrap = false, $no_opening_dashes = false): string
     {
         $spyc = new Spyc;
         return $spyc->dump($array, $indent, $wordwrap, $no_opening_dashes);
@@ -984,13 +984,15 @@ class Spyc
      *
      * @access private
      *
-     * @param $key    The name of the key
-     * @param $value  The value of the item
-     * @param $indent The indent of the current node
-     *
+     * @param $key   mixed The name of the key
+     * @param $value mixed The value of the item
+     * @param $indent mixed The indent of the current node
+     * @param int $previous_key
+     * @param int $first_key
+     * @param null $source_array
      * @return string
      */
-    private function _yamlize($key, $value, $indent, $previous_key = -1, $first_key = 0, $source_array = null)
+    private function _yamlize($key, $value, $indent, $previous_key = -1, $first_key = 0, $source_array = null): string
     {
         if (is_object($value)) $value = (array)$value;
         if (is_array($value)) {
@@ -1015,14 +1017,14 @@ class Spyc
      *
      * @access private
      *
-     * @param      $key    The name of the key
-     * @param      $value  The value of the item
-     * @param      $indent The indent of the current node
+     * @param      $key mixed   The name of the key
+     * @param      $value mixed  The value of the item
+     * @param      $indent mixed  The indent of the current node
      * @param null $source_array
      *
      * @return string
      */
-    private function _dumpNode($key, $value, $indent, $source_array = null)
+    private function _dumpNode($key, $value, $indent, $source_array = null): string
     {
         // do some folding here, for blocks
         if (is_string($value) && ((strpos($value, "\n") !== false || strpos($value, ": ") !== false || strpos($value, "- ") !== false ||
@@ -1058,6 +1060,8 @@ class Spyc
             $string = $spaces . '- ' . $value . "\n";
         } else {
             // if ($first_key===0)  throw new Exception('Keys are all screwy.  The first one was zero, now it\'s "'. $key .'"');
+            if($key==='')
+                $key='""';
             // It's mapped
             if (strpos($key, ":") !== false || strpos($key, "#") !== false) {
                 $key = '"' . $key . '"';

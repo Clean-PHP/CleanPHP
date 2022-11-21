@@ -54,11 +54,11 @@ class Cache implements CacheInterface
 
     function setData(int $exp_time, string $path)
     {
-        App::$debug && Log::record("Cache", "设置缓存时间与缓存位置");
         if ($path === "") $path = Variables::getCachePath();
         $this->cache_expire = $exp_time;
         $this->cache_path = $path;
-        if (!is_dir(dirname($path))) mkdir(dirname($path), 0777, true);
+        if (!is_dir($path))
+            mkdir($path, 0777, true);
         return $this;
     }
 
@@ -67,8 +67,8 @@ class Cache implements CacheInterface
      */
     public function set(string $key, $data)
     {
-        App::$debug && Log::record("Cache", lang("设置缓存：%s", $key));
-        file_put_contents($this->fileName($key), serialize($data));
+        App::$debug && Log::record("Cache", sprintf("设置缓存：%s", $key));
+        file_put_contents($this->fileName($key), __serialize($data));
     }
 
     /**
@@ -93,7 +93,7 @@ class Cache implements CacheInterface
         }
         if ($this->cache_expire == 0 || time() < (filemtime($filename) + $this->cache_expire)) {
             $data = file_get_contents($filename);
-            $result = unserialize($data);
+            $result = __unserialize($data);
             if ($result === false) return null;
             return $result;
         } else {

@@ -30,6 +30,7 @@ use core\event\EventManager;
 use core\exception\ControllerError;
 use core\exception\ExitApp;
 use core\file\Log;
+use core\process\Async;
 
 
 class App
@@ -39,9 +40,9 @@ class App
     protected static $engine = null;//输出引擎
     public static bool $exit = false;//标记是否退出运行
     /**
-     * @var $app MainApp
+     * @var $app ?MainApp
      */
-    private static MainApp $app;
+    private static ?MainApp $app = null;
 
 
     /**
@@ -53,10 +54,13 @@ class App
 
         error_reporting(E_ALL & ~(E_STRICT | E_NOTICE));
         ini_set("display_errors", "Off");
+        if(version_compare(PHP_VERSION,'7.4.0','<')){
+            self::exit("请使用PHP 7.4以上版本运行该应用", true);
+        }
         //禁用错误提醒
         App::$debug = $debug;
         self::$cli = !isset($_SERVER["SERVER_NAME"]);
-        define('APP_DIR', dirname(__FILE__, 2));//定义运行根目录
+
         define("DS", DIRECTORY_SEPARATOR);//定义斜杠符号
         define("APP_CORE", APP_DIR . DS . 'core' . DS);//定义程序的核心目录
         include_once APP_CORE . DS . "helper.php";//载入内置助手函数
@@ -84,6 +88,8 @@ class App
 
             Error::register();// 注册错误和异常处理机制
 
+            Async::register();//异步任务注册
+
             $app = "\app\Application"; //入口初始化
 
             if (class_exists($app) && ($imp = class_implements($app)) && in_array(MainApp::class, $imp)) {
@@ -97,11 +103,16 @@ class App
             App::$debug && self::cleanCache();
             //路由
             [$__module, $__controller, $__action] = Route::rewrite();
+
+            EventManager::trigger("__before_create_controller__");//框架初始化
+
             Variables::set("__controller_module__", $__module);
             //模块检查
 
+
             if (!self::isAvailableClassname($__module))
                 Error::err("模块 '$__module' 命名不符合规范!", [], "Module");
+
 
             if (!is_dir(Variables::getControllerPath($__module))) {
                 Error::err("模块 '$__module' 不存在!", [], "Module");
@@ -167,6 +178,7 @@ class App
         }
     }
 
+
     /**
      * 清除缓存文件
      * @return void
@@ -216,13 +228,15 @@ class App
     /**
      * 退出会话
      * @param $msg
+     * @param bool $output 直接输出
      * @return void
      * @throws ExitApp
      */
-    static function exit($msg)
+    static function exit($msg, bool $output = false)
     {
         if (self::$exit) return; //防止一个会话中重复抛出exit异常
         self::$exit = true;
+        if($output)echo $msg;
         throw new ExitApp($msg);
     }
 

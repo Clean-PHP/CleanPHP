@@ -32,13 +32,10 @@ class Route
      */
     public static function url(string $m, string $c, string $a, array $params = []): string
     {
-        $is_rewrite = Config::getConfig("frame")["rewrite"];
+        $is_rewrite = Config::getConfig("frame")["rewrite"]??false;
 
         $route = "$m/$c/$a";
-        if (!$is_rewrite) {
-            $params['route'] = $route;
-            $route = '';
-        }
+
         $param_str = empty($params) ? '' : '?' . http_build_query($params);
 
 
@@ -53,6 +50,7 @@ class Route
         $array = str_replace("<a>", $a, $array);
         $array = array_flip(array_unique($array));
 
+        //var_dump($array,$route);
         $route_find = $route;
         if (isset($array[$route])) {
             //处理参数部分
@@ -71,9 +69,14 @@ class Route
             }
         }
 
+        if(!$is_rewrite){
+            $params['s'] = $route_find;
+            $route_find = "";
+        }
         if ($route_find === $route || strpos($route_find, '<') !== false) {
             $ret_url = $default;
         } else {
+
             $param_str = empty($params) ? '' : '?' . http_build_query($params);
             $ret_url = $url . $route_find . $param_str;
         }

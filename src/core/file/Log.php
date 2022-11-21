@@ -32,10 +32,7 @@ class Log
     const TYPE_WARNING = 2;
     private int $type = 1;//写入的数据类型
 
-    public static function save()
-    {
-        self::$instance = null;
-    }
+
 
     /**
      * 输出信息
@@ -45,20 +42,38 @@ class Log
      */
     public static function record($tag, $msg, int $type = self::TYPE_INFO)
     {
-        self::getInstance($tag)->setType($type)->write($msg);
+        self::getInstance($tag)->temp .= self::getInstance($tag)->setType($type)->write($msg);
+    }
+
+    /**
+     * 输出信息,实时写入文件
+     * @param $tag
+     * @param $msg
+     * @param int $type
+     */
+    public static function recordFile($tag, $msg, int $type = self::TYPE_INFO)
+    {
+
+        $temp = self::getInstance($tag)->setType($type)->write($msg);
+        $handler = fopen(self::$instance->file, 'a');
+        if (flock($handler, LOCK_EX)) {
+            fwrite($handler, $temp, strlen($temp));
+            flock($handler, LOCK_UN);
+        }
+        fclose($handler);
     }
 
     /**
      * 写入日志文件
      * @param $msg
      */
-    protected function write($msg)
+    protected function write($msg): string
     {
         $m_timestamp = sprintf("%.3f", microtime(true)); // 带毫秒的时间戳
         $timestamp = floor($m_timestamp); // validate
-        $milliseconds = round(($m_timestamp - $timestamp) * 1000); // 毫秒
+        $milliseconds = str_pad(strval(round(($m_timestamp - $timestamp) * 1000)),3,"0"); // 毫秒
         $type = $this->type === Log::TYPE_INFO?"INFO":($this->type === Log::TYPE_ERROR?"ERROR":"WARNING");
-        $this->temp .= '[ ' . date('Y-m-d H:i:s',$timestamp).'.'.$milliseconds . ' ] [ ' .$type . ' ] [ ' . $this->tag . ' ] ' . $msg . "\n";
+       return '[ ' . date('Y-m-d H:i:s',$timestamp).'.'.$milliseconds . ' ] [ ' .$type . ' ] [ ' . $this->tag . ' ] ' . $msg . "\n";
     }
 
     /**
@@ -87,7 +102,8 @@ class Log
      */
     public function __destruct()
     {
-        $this->temp = "-----------[session start]-----------\n{$this->temp}-----------[session end]-----------\n\n";
+        $id = Variables::get("__async_task_id__","");
+        $this->temp = "-----------[session $id start]-----------\n{$this->temp}-----------[session $id end]-----------\n\n";
         $handler = fopen(self::$instance->file, 'a');
         if (flock($handler, LOCK_EX)) {
             fwrite($handler, $this->temp, strlen($this->temp));

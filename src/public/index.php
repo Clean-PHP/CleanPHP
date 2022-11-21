@@ -5,7 +5,7 @@
 declare(strict_types=1);
 
 use core\App;
-
-require_once __DIR__ . DIRECTORY_SEPARATOR . ".." . DIRECTORY_SEPARATOR . "core" . DIRECTORY_SEPARATOR . "App.php";
+define('APP_DIR', dirname(__FILE__, 2));//定义运行根目录
+require_once APP_DIR . DIRECTORY_SEPARATOR . "core" . DIRECTORY_SEPARATOR . "App.php";
 App::run(true);
 

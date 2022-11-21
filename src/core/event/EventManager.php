@@ -11,7 +11,8 @@
 namespace core\event;
 
 
-use core\base\Variables;
+use core\App;
+use core\file\Log;
 
 /**
  * Class EventManager
@@ -37,6 +38,7 @@ class EventManager
         }
         //一个事件名绑定多个监听器
         self::$events[$event_name][$level] = $listener;
+        App::$debug && Log::record("Event","注册事件：$event_name ,优先级：$level");
     }
 
 
@@ -47,6 +49,7 @@ class EventManager
     public static function removeListener($event_name)
     {
         unset(self::$events[$event_name]);
+        App::$debug && Log::record("Event","移除事件：$event_name ");
     }
 
     /**
@@ -65,6 +68,7 @@ class EventManager
                 unset(self::$events[$event_name][$key]);
                 continue;
             }
+            App::$debug && Log::record("Event","事件响应：$event_name ");
             $results[$key] = (new $event())->handleEvent($event_name, $data);
             if (false === $results[$key] || (!is_null($results[$key]) && $once)) {
                 break;

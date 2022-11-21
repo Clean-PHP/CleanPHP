@@ -1,34 +1,50 @@
+---
 frame:
-  time_zone: Asia/Shanghai # 服务器时区，默认上海
+  time_zone: Asia/Shanghai
   host:
-    # 绑定域名
-    - "0.0.0.0"
-  rewrite: false # 使用伪静态
-  mode: mvc # 应用模式
-  app_name: cleanPHP # 项目名
-  ver_code: 1 # 项目升级次数
-  ver_name: 1.0.0 # 项目版本名称
-  log: 30 # 日志有效期(天)
-  cache: "" # 缓存方式
-
+    - 0.0.0.0
+  rewrite: false
+  mode: mvc
+  app_name: cleanPHP
+  ver_code: 1
+  ver_name: 1.0.0
+  log: 30
+  cache: ""
 redis:
   host: 127.0.0.1
   port: 6379
-
-
-route: # 路由配置
-  "": "index/main/index" # index页面路由
-  "index-<dd>-<a>": "index/ankio/<a>" # index页面路由
-  "<m>/<c>/<a>": "<m>/<c>/<a>"# 默认路由方案
-
-database: # 数据库配置
-  # 主要配置文件
+route:
+  "": index/main/index
+  index-<dd>-<a>: 'index/ankio/<a>'
+  <m>/<c>/<a>: '<m>/<c>/<a>'
+database:
   main:
-    type: mysql  # 数据库类型，支持mysql、sqlite
-    host: 127.0.0.1  # 数据库地址
-    username: root  # 数据库用户名
-    password:   # 数据库密码
-    port: 3306  # 数据库端口
-    db: dx  # 数据库库名
-    charset: utf8 # 数据库编码
-
+    type: mysql
+    host: 127.0.0.1
+    username: root
+    password: ""
+    port: 3306
+    db: dx
+    charset: utf8
+websocket:
+  ip: 127.0.0.1
+  port: 4405
+rbac:
+  id_1:
+    role_name: 超级管理员
+    auth:
+      - all
+  id_2:
+    role_name: 管理员
+    auth:
+      - user/main/index
+      - user/main/logout
+      - user/main/admin
+      - user/admin
+  id_3:
+    role_name: 普通用户
+    auth:
+      - user/main/index
+      - user/main/logout
+      - user/main/user
+      - user/user

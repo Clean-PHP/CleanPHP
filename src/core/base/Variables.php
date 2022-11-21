@@ -20,7 +20,7 @@ class Variables
     /**
      * @var string[] 内部变量
      */
-    private static array $inner_arrays = [
+    public static array $inner_arrays = [
         "path_controller" => APP_DIR . DS . 'app' . DS . 'controller' . DS,
         "path_storage" => APP_DIR . DS . 'storage' . DS,
         "path_cache" => APP_DIR . DS . 'storage' . DS . 'cache' . DS,
