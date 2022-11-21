@@ -8,7 +8,7 @@
 <p align="center">
  <img src="https://img.shields.io/badge/Composer-885630?style=for-the-badge&logo=Composer&logoColor=white"/>
  <img src="https://img.shields.io/static/v1?label=licenes&message=MIT&color=important&style=for-the-badge"/>
- <img src="https://img.shields.io/static/v1?label=version&message=2.1&color=9cf&style=for-the-badge"/>
+ <img src="https://img.shields.io/static/v1?label=version&message=3.0&color=9cf&style=for-the-badge"/>
  <img src="https://img.shields.io/static/v1?label=php&message=%3E%3D7.4&color=777BB4&style=for-the-badge"/>
 </p>
 
@@ -19,7 +19,10 @@
 
 - 支持Composer
 - 支持插件化拓展（定时任务、WebSocket等...)
-- 支持`mvc`与`纯api`两种开发模式
+- 支持多种输出渲染引擎（视图渲染、Json渲染等）
+- 支持`伪协程`（类似于GO语言的go()函数，需要使用中间件运行PHP才能生效）
+- 支持数据库ORM模型
+- 面向应用的开发模式
 - 支持自动精简打包
 - 支持单文件运行
 - 支持自动检查代码问题并提供解决方案
@@ -27,7 +30,7 @@
 
 ## 文档
 
-[阅读Wiki](https://cleanphp.ankio.net/)
+[阅读文档](https://cleanphp.ankio.net/)
 
 ## 快速上手
 
