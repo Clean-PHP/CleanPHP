@@ -60,7 +60,6 @@ class Lang
         if(isset(self::$lang_map[$lang_set])){//如果获取映射，则立即
             $lang_set = self::$lang_map[$lang_set];
         }
-        self::setLang($lang_set);
         return $lang_set;
     }
 

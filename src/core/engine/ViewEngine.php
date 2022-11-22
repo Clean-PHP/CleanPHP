@@ -10,7 +10,7 @@ use core\App;
 use core\base\Error;
 use core\base\Lang;
 use core\base\Route;
-use core\config\Config;
+use core\cache\Cache;
 use core\event\EventManager;
 use core\exception\ControllerError;
 use core\exception\ExitApp;
@@ -235,14 +235,10 @@ TPL
     {
         App::$debug && Variables::set("__view_time_start__", microtime(true));
         $template_name = $data[0];
-        if (!empty($this->__layout)) {
-            if ($template_name === $this->__layout)
-                Error::err("父模板不能与当前模板一致，会导致死循环。",[],"ViewEngine");
-            $this->setData("__template_file", $template_name);
-            $template_name = $this->__layout;
-        }
+        [$file,$template_name] = $this->preCompileLayout($template_name);
+
         $this->setData("__lang", Lang::detect());
-        $complied_file = $this->compile($template_name);
+        $complied_file = $this->compile($template_name,$file);
         ob_start();
         extract($this->__data, EXTR_OVERWRITE);
         include $complied_file;
@@ -266,30 +262,16 @@ TPL
     /**
      * 模板编译
      * @param string $template_name 模板文件名
+     * @param string|null $file
      * @return string
      * @throws ExitApp
      */
-    public function compile(string $template_name): string
+    private function compile(string $template_name,string $file = null): string
     {
 
-        if (!is_dir($this->__compile_dir)) mkdir($this->__compile_dir, 0777, true);
-        if (!is_dir($this->__template_dir)) mkdir($this->__template_dir, 0777, true);
-
-        $__module = Variables::get("__controller_module__", "");
-        $real_name = $template_name;
-        $template_name = ($__module == '' ? '' : $__module . DS) . $template_name . '.tpl';
-        //自动化模板名字
-        $file = $this->__template_dir . DS . $template_name;
-        if (!file_exists($file)) {
-            $file2 = Variables::getViewPath($real_name.'.tpl');
-            if (!file_exists($file2)) {
-
-                Error::err(sprintf("模板文件（%s）不存在", $file), [],"ViewEngine");
-            }
-            $file = $file2;
-        }
-
-        $complied_file = $this->__compile_dir . DS . md5(realpath($file)) . '.' . filemtime($file) . '.' . basename($template_name) . '.php';
+        if($file==null)$file = $this->checkTplFile($template_name);
+        $hash =  md5(realpath($file));
+        $complied_file = $this->__compile_dir . DS .$hash . '.' . md5_file($file) . '.' . basename($template_name) . '.php';
 
         if (!App::$debug && file_exists($complied_file)) {//调试模式下，直接重新编译
             return $complied_file;
@@ -302,16 +284,99 @@ TPL
         $template_data = '<?php use core\engine; if(!class_exists("' . str_replace("\\", "\\\\", ViewEngine::class) . '", false)) exit("模板文件禁止被直接访问.");?>' . $template_data;
 
         $template_data = $this->_clean_remark($template_data);
-        $this->_clear_complied_file($template_name);
-
-       // $tmp_file = $complied_file . uniqid('_tpl', true);
+        $this->_clear_complied_file($hash);
         if (!file_put_contents($complied_file, $template_data))
             Error::err(sprintf("写入 %s 文件失败", $complied_file), [],"ViewEngine");
-
-
         return $complied_file;
     }
 
+    private function checkTplFile(string $template_name): string
+    {
+        $__module = Variables::get("__controller_module__", "");
+        $real_name = $template_name;
+        $template_name = ($__module == '' ? '' : $__module . DS) . $template_name . '.tpl';
+        //自动化模板名字
+        $file = $this->__template_dir . DS . $template_name;
+        if (!file_exists($file)) {
+            $file2 = Variables::getViewPath($real_name.'.tpl');
+            if (!file_exists($file2)) {
+                $file3 = Variables::getStoragePath('view',$real_name.'.tpl');
+                if (!file_exists($file3)) {
+                    Error::err(sprintf("模板文件（%s）不存在", $file3), [],"ViewEngine");
+                }else{
+                    $file = $file3;
+                }
+            }else{
+                $file = $file2;
+            }
+        }
+        return $file;
+    }
+    /**
+     * 预编译layout
+     * @param string $template_name
+     * @return
+     */
+    private function preCompileLayout(string $template_name): array
+    {
+        if (!is_dir($this->__compile_dir)) mkdir($this->__compile_dir, 0777, true);
+        if (!is_dir($this->__template_dir)) mkdir($this->__template_dir, 0777, true);
+        if (!empty($this->__layout)) {
+            if ($template_name === $this->__layout)
+                Error::err("父模板不能与当前模板一致，会导致死循环。",[],"ViewEngine");
+            $file = $this->checkTplFile($template_name);
+
+            $dir  = Variables::getStoragePath('view');
+            if (!is_dir($dir)) mkdir($dir, 0777, true);
+            $__module = Variables::get("__controller_module__", "");
+            $hash =  md5(realpath($file));
+            $file_name = $hash.'_'.$__module.'_'.$template_name.'_'.md5_file($file).'_pre';
+            $path = $dir.DS.$file_name.'.tpl';//直接预编译到文件
+            if(!App::$debug&&file_exists($path)){
+                $this->setData("__template_file", $file_name);
+                $this->setData("__template_headers",  Cache::init()->get($path."__template_headers")??"");
+                $this->setData("__template_scripts", Cache::init()->get($path."__template_scripts")??"");
+                return [$this->checkTplFile($this->__layout),$this->__layout];
+            }
+
+            $this->_clear_complied_file($hash);
+            $content = file_get_contents($file);
+            /* 处理需要放到头部的信息*/
+            $isMatched = preg_match_all('/<link.*?\/>/', $content, $matches);
+            $layout_head = '';
+            if($isMatched){
+                $layout_head.=implode('',$matches[0]);
+                foreach ($matches[0] as $match){
+                    $content = str_replace($match,'',$content);
+                }
+
+            }
+            $isMatched = preg_match_all('/<style>[\s\S]*?<\/style>/', $content, $matches);
+            if($isMatched){
+                $layout_head.=implode('',$matches[0]);
+                foreach ($matches[0] as $match){
+                    $content = str_replace($match,'',$content);
+                }
+            }
+            Cache::init()->set($path."__template_headers",$layout_head);
+            $this->setData("__template_headers", $layout_head);
+            $isMatched = preg_match_all('/<script[\s\S]*?<\/script>/', $content, $matches);
+            $layout_scripts = '';
+            if($isMatched){
+                $layout_scripts.=implode('',$matches[0]);
+                foreach ($matches[0] as $match){
+                    $content = str_replace($match,'',$content);
+                }
+            }
+            Cache::init()->set($path."__template_scripts",$layout_scripts);
+            $this->setData("__template_scripts", $layout_scripts);
+
+            file_put_contents($path,$content);
+            $this->setData("__template_file", $file_name);
+           return [$this->checkTplFile($this->__layout),$this->__layout];
+        }
+        return [$this->checkTplFile($template_name),$template_name];
+    }
     /**
      * 翻译模板语法
      * @param string $template_data
@@ -368,7 +433,7 @@ TPL
      * @param string $template_data
      * @return string
      */
-    public function _clean_remark(string $template_data): string
+    private function _clean_remark(string $template_data): string
     {
         $is_matched = preg_match_all('/<!--[\s\S]*?-->/', $template_data, $matches);
         if ($is_matched) {
@@ -385,15 +450,14 @@ TPL
 
     /**
      * 清除过期的文件
-     * @param string $template_name
+     * @param string $hash
      */
-    private function _clear_complied_file(string $template_name)
+    private function _clear_complied_file(string $hash)
     {
         $dir = scandir($this->__compile_dir);
         if ($dir) {
-            $part = md5(realpath($this->__template_dir . DS . $template_name));
             foreach ($dir as $d) {
-                if (substr($d, 0, strlen($part)) == $part) {
+                if (substr($d, 0, 32) == $hash) {
                     @unlink($this->__compile_dir . DS . $d);
                 }
             }

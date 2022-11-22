@@ -75,6 +75,9 @@ class App
 
             App::$debug && Log::record("Frame", "框架启动...");
 
+
+            if(!is_dir(Variables::getCachePath()))mkdir(Variables::getCachePath(),0777,true);
+
             Config::register();// 加载配置文件
 
             if (self::$debug) {
