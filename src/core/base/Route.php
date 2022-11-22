@@ -159,15 +159,32 @@ class Route
      */
     private static function beforeRoute($data)
     {
-        if ((new StringBuilder($data))->startsWith('CLEAN_STATIC')) {
-            $uri = str_replace('CLEAN_STATIC', "", $data);
-            $path = Variables::setPath(APP_DIR, "public", str_replace("..", ".", $uri));
+        if ((new StringBuilder($data))->startsWith('clean_static')) {
+            $uri = str_replace('clean_static', "", $data);
+            $path = Variables::setPath(APP_DIR,'app', "public", str_replace("..", ".", $uri));
             if (file_exists($path)) {
-                (new Response())->render(file_get_contents($path), 200, mime_content_type($path))->send();
+                (new Response())->render(self::replaceStatic(file_get_contents($path)), 200, mime_content_type($path))->send();
             } else {
                 Error::err(sprintf("找不到指定的静态资源：%s",$path),[],"Route");
             }
         }
+    }
+
+    /**
+     * 替换静态文件
+     * @param string $content
+     * @return string|string[]
+     */
+    public static function replaceStatic(string $content){
+        $is_rewrite = Config::getConfig("frame")["rewrite"];
+        $replaces = Variables::get("__static_replace__","../../public");
+        if($is_rewrite)
+            $template_data = str_replace($replaces,"/clean_static",$content);
+        else{
+            $template_data = str_replace($replaces,"/?s=clean_static",$content);
+        }
+
+        return $template_data;
     }
 
     /**

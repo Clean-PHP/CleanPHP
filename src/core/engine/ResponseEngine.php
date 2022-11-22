@@ -37,7 +37,6 @@ abstract class ResponseEngine
      * 渲染数据
      * @param $data
      * @return string
-     * @throws ExitApp
      */
     abstract function render(...$data): string;
 

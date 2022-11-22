@@ -8,6 +8,8 @@ namespace core\engine;
 
 use core\App;
 use core\base\Error;
+use core\base\Lang;
+use core\base\Route;
 use core\config\Config;
 use core\event\EventManager;
 use core\exception\ControllerError;
@@ -29,22 +31,22 @@ use core\objects\StringBuilder;
 class ViewEngine extends ResponseEngine
 {
 
-    private string $layout = "";
-    private bool $encode = true;
-    private int $code = 200;
-    private array $data = [];
-    private string $left_delimiter = "<{";
-    private string $right_delimiter = "}>";
-    private string $compile_dir;
-    private string $template_dir;
+    private string $__layout = "";
+    private bool $__encode = true;
+    private int $__code = 200;
+    private array $__data = [];
+    private string $__left_delimiter = "<{";
+    private string $__right_delimiter = "}>";
+    private string $__compile_dir;
+    private string $__template_dir;
 
     /**
      * 构造函数
      */
     public function __construct()
     {
-        $this->compile_dir = Variables::getStoragePath("view");
-        $this->template_dir = Variables::getViewPath();
+        $this->__compile_dir = Variables::getStoragePath("view");
+        $this->__template_dir = Variables::getViewPath();
     }
 
     /**
@@ -53,7 +55,7 @@ class ViewEngine extends ResponseEngine
      */
     function getCode(): int
     {
-        return $this->code;
+        return $this->__code;
     }
 
     /**
@@ -63,7 +65,7 @@ class ViewEngine extends ResponseEngine
      */
     public function setLayout(?string $file): ViewEngine
     {
-        $this->layout = $file;
+        $this->__layout = $file;
         return $this;
     }
 
@@ -73,7 +75,7 @@ class ViewEngine extends ResponseEngine
      */
     public function isEncode(): bool
     {
-        return $this->encode === true;
+        return $this->__encode === true;
     }
 
     /**
@@ -83,7 +85,7 @@ class ViewEngine extends ResponseEngine
      */
     public function setEncode(bool $encode): ViewEngine
     {
-        $this->encode = $encode;
+        $this->__encode = $encode;
         return $this;
     }
 
@@ -94,7 +96,7 @@ class ViewEngine extends ResponseEngine
      */
     function setArray(array $array): ViewEngine
     {
-        $this->data = $array;
+        $this->__data = $array;
         return $this;
     }
 
@@ -231,19 +233,18 @@ TPL
 
     function render(...$data): string
     {
-
         App::$debug && Variables::set("__view_time_start__", microtime(true));
         $template_name = $data[0];
-        if (!empty($this->layout)) {
-            if ($template_name === $this->layout)
+        if (!empty($this->__layout)) {
+            if ($template_name === $this->__layout)
                 Error::err("父模板不能与当前模板一致，会导致死循环。",[],"ViewEngine");
             $this->setData("__template_file", $template_name);
-            $template_name = $this->layout;
+            $template_name = $this->__layout;
         }
+        $this->setData("__lang", Lang::detect());
         $complied_file = $this->compile($template_name);
         ob_start();
-        extract($this->data, EXTR_OVERWRITE);
-
+        extract($this->__data, EXTR_OVERWRITE);
         include $complied_file;
 
         App::$debug && Log::record("ViewEngine", sprintf("编译运行时间：%s 毫秒", round((microtime(true) - Variables::get("__view_time_start__", 0)) * 1000, 2)),Log::TYPE_WARNING);
@@ -258,7 +259,7 @@ TPL
      */
     function setData(string $key, $value): ViewEngine
     {
-        $this->data[$key] = $value;
+        $this->__data[$key] = $value;
         return $this;
     }
 
@@ -271,14 +272,14 @@ TPL
     public function compile(string $template_name): string
     {
 
-        if (!is_dir($this->compile_dir)) mkdir($this->compile_dir, 0777, true);
-        if (!is_dir($this->template_dir)) mkdir($this->template_dir, 0777, true);
+        if (!is_dir($this->__compile_dir)) mkdir($this->__compile_dir, 0777, true);
+        if (!is_dir($this->__template_dir)) mkdir($this->__template_dir, 0777, true);
 
         $__module = Variables::get("__controller_module__", "");
         $real_name = $template_name;
         $template_name = ($__module == '' ? '' : $__module . DS) . $template_name . '.tpl';
         //自动化模板名字
-        $file = $this->template_dir . DS . $template_name;
+        $file = $this->__template_dir . DS . $template_name;
         if (!file_exists($file)) {
             $file2 = Variables::getViewPath($real_name.'.tpl');
             if (!file_exists($file2)) {
@@ -288,7 +289,7 @@ TPL
             $file = $file2;
         }
 
-        $complied_file = $this->compile_dir . DS . md5(realpath($file)) . '.' . filemtime($file) . '.' . basename($template_name) . '.php';
+        $complied_file = $this->__compile_dir . DS . md5(realpath($file)) . '.' . filemtime($file) . '.' . basename($template_name) . '.php';
 
         if (!App::$debug && file_exists($complied_file)) {//调试模式下，直接重新编译
             return $complied_file;
@@ -302,17 +303,12 @@ TPL
 
         $template_data = $this->_clean_remark($template_data);
         $this->_clear_complied_file($template_name);
-        $tmp_file = $complied_file . uniqid('_tpl', true);
-        if (!file_put_contents($tmp_file, $template_data))
-            Error::err(sprintf("写入 %s 文件失败", $tmp_file), [],"ViewEngine");
 
-        $success = @rename($tmp_file, $complied_file);
-        if (!$success) {
-            if (is_file($complied_file)) @unlink($complied_file);
-            $success = @rename($tmp_file, $complied_file);
-            if (!$success)
-                Error::err(sprintf("写入 %s 文件失败", $tmp_file), [],"ViewEngine");
-        }
+       // $tmp_file = $complied_file . uniqid('_tpl', true);
+        if (!file_put_contents($complied_file, $template_data))
+            Error::err(sprintf("写入 %s 文件失败", $complied_file), [],"ViewEngine");
+
+
         return $complied_file;
     }
 
@@ -331,7 +327,8 @@ TPL
             '(<{((?!}>).)*?)(\$[\w\"\'\[\]]+?)\.(\w+)(.*?}>)' => '$1$3[\'$4\']$5',
             '(<{.*?)(\$(\w+)@(index|iteration|first|last|total))+(.*?}>)' => '$1$_foreach_$3_$4$5',
             '<{(\$[\$\w\.\"\'\[\]]+?)\snofilter\s*}>' => '<?php echo $1; ?>',
-            '<{(\$[\$\w\"\'\[\]]+?)\s*=(.*?)\s*}>' => '<?php $1 =$2; ?>',
+            '<{([\w\$\.\[\]\=\'"\s]+)\?([\w\$\.\[\]\=\'":\s]+)}>' => '<?php echo $1?$2; ?>',
+            '<{(\$[\$\w\"\'\[\]]+?)\s*=(.*?)\s*}>' => '<?php $1 = $2; ?>',
             '<{(\$[\$\w\.\"\'\[\]]+?)\s*}>' => '<?php echo htmlspecialchars($1, ENT_QUOTES, "UTF-8"); ?>',
             '<{if\s*(.+?)}>' => '<?php if ($1) : ?>',
             '<{else\s*if\s*(.+?)}>' => '<?php elseif ($1) : ?>',
@@ -346,7 +343,7 @@ TPL
         ];
 
         foreach ($pattern_map as $p => $r) {
-            $pattern = '/' . str_replace(["<{", "}>"], [$this->left_delimiter . '\s*', '\s*' . $this->right_delimiter], $p) . '/i';
+            $pattern = '/' . str_replace(["<{", "}>"], [$this->__left_delimiter . '\s*', '\s*' . $this->__right_delimiter], $p) . '/i';
             $count = 1;
             while ($count != 0) {
                 $template_data = preg_replace($pattern, $r, $template_data, -1, $count);
@@ -362,7 +359,7 @@ TPL
      */
     private function _compile_function(string $template_data)
     {
-        $pattern = '/' . $this->left_delimiter . '(\w+)\s*(.*?)' . $this->right_delimiter . '/';
+        $pattern = '/' . $this->__left_delimiter . '(\w+)\s*(.*?)' . $this->__right_delimiter . '/';
         return preg_replace_callback($pattern, [$this, '_compile_function_callback'], $template_data);
     }
 
@@ -380,12 +377,7 @@ TPL
                 $template_data = str_replace($match, "", $template_data);
             }
         }
-        $is_rewrite = Config::getConfig("frame")["rewrite"];
-        if($is_rewrite)
-            $template_data = str_replace("../../public","/CLEAN_STATIC",$template_data);
-        else{
-            $template_data = str_replace("../../public","/?s=CLEAN_STATIC",$template_data);
-        }
+        $template_data  = Route::replaceStatic($template_data);
 
         if(!App::$debug) return str_replace(["\r","\n"], "", $template_data);//换行符清理了
         return $template_data;
@@ -397,12 +389,12 @@ TPL
      */
     private function _clear_complied_file(string $template_name)
     {
-        $dir = scandir($this->compile_dir);
+        $dir = scandir($this->__compile_dir);
         if ($dir) {
-            $part = md5(realpath($this->template_dir . DS . $template_name));
+            $part = md5(realpath($this->__template_dir . DS . $template_name));
             foreach ($dir as $d) {
                 if (substr($d, 0, strlen($part)) == $part) {
-                    @unlink($this->compile_dir . DS . $d);
+                    @unlink($this->__compile_dir . DS . $d);
                 }
             }
         }
@@ -554,7 +546,7 @@ pre {
         if (!file_exists($file)||App::$debug) file_put_contents($file, $tpl);
 
         $this->setTplDir(Variables::getCachePath());
-        $this->layout = '';
+        $this->__layout = '';
         $setArray = [];
         foreach ($traces as $key=>$trace) {
             if (is_array($trace) && !empty($trace["file"])) {
@@ -572,7 +564,7 @@ pre {
                 }
             }
         }
-        $this->data = ["msg" => $msg, "dump" => $dumps, "array" => $setArray];
+        $this->__data = ["msg" => $msg, "dump" => $dumps, "array" => $setArray];
         return $this->render("temp_error");
     }
 
@@ -582,7 +574,7 @@ pre {
      */
     public function setTplDir(string $dir)
     {
-        $this->template_dir = $dir;
+        $this->__template_dir = $dir;
     }
 
     /**
