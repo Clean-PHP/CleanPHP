@@ -22,20 +22,19 @@ class Controller
 
     private $engine;
 
-    private ?string $init_data;
 
     private string $content_type = "";
     private int $code = 200;
 
-    public function __construct(string $m, string $c, string $a)
+    public function __construct(?string $m, ?string $c, ?string $a)
     {
-        $this->module = $m;
-        $this->controller = $c;
-        $this->action = $a;
+        $this->module = $m??'';
+        $this->controller = $c??'';
+        $this->action = $a??'';
         $this->setCode($this->eng()->getCode());
         $this->setContentType($this->eng()->getContentType());
         EventManager::trigger("__on_controller_create__", $this);
-        $this->init_data = $this->init();
+        $this->init();
 
     }
 
@@ -54,16 +53,10 @@ class Controller
      */
     public function init()
     {
-        return null;
+
     }
 
-    /**
-     * 获取初始化结果
-     */
-    public function getInit(): ?string
-    {
-        return $this->init_data;
-    }
+
 
     /**
      * 设置引擎

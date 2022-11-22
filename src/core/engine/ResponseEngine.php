@@ -14,8 +14,8 @@
 
 namespace core\engine;
 
+use core\base\Controller;
 use core\base\Response;
-use core\exception\ControllerError;
 use core\exception\ExitApp;
 
 abstract class ResponseEngine
@@ -72,12 +72,12 @@ abstract class ResponseEngine
 
     /**
      * 当控制器错误的时候
-     * @return bool 返回true表示处理错误，返回false表示不处理
+     * @return string|null
      */
-    public function onControllerError(ControllerError $error): bool
+    public function onControllerError(): ?string
     {
         //默认不处理错误
-        return false;
+        return null;
     }
 
 

@@ -109,9 +109,12 @@ class App
 
             EventManager::trigger("__before_create_controller__");//框架初始化
 
-            Variables::set("__controller_module__", $__module);
-            //模块检查
 
+            //模块检查
+            Variables::set("__request_module__", $__module);
+            Variables::set("__request_controller__", $__controller);
+
+            Variables::set("__request_action__", $__action);
 
             if (!self::isAvailableClassname($__module))
                 Error::err("模块 '$__module' 命名不符合规范!", [], "Module");
@@ -121,6 +124,8 @@ class App
                 Error::err("模块 '$__module' 不存在!", [], "Module");
             }
 
+
+
             // 控制器检查
             if (strtolower($__controller) === 'basecontroller')
                 Error::err("基类 'BaseController' 不允许被访问！", [], "Controller");
@@ -128,24 +133,27 @@ class App
             if (!self::isAvailableClassname($__controller))
                 Error::err("控制器 '".htmlspecialchars($__controller)."' 命名不符合规范!", [], "Controller");
 
-
             $controller_name = ucfirst($__controller);
 
             $controller_class = 'app\\controller\\' . $__module . '\\' . $controller_name;
 
             $cls = class_exists($controller_class, true);
-            $method = method_exists($controller_class, $__action);
+
             if (!$cls) {
-                throw new ControllerError("控制器 '$controller_name' 不存在!", $__module, $__controller, $__action, $method);
+                Error::err("模块 ( $__module )  控制器 ( $controller_name ) 不存在!", [],"Controller");
             }
 
+
+
+            $method = method_exists($controller_class, $__action);
             if (!$method) {
-                throw new ControllerError("控制器 '$controller_name' 中的方法 '$__action' 不存在!", $__module, $__controller, $__action, true);
+
+                Error::err("模块 ( $__module )  控制器 ( $controller_name ) 中的方法 ( $__action ) 不存在!", [],"Action");
             }
 
 
             if (!in_array($__action, get_class_methods($controller_class))) {
-                throw new ControllerError("控制器 '$controller_name' 中的方法 '$__action' 为私有方法，禁止访问!", $__module, $__controller, $__action, true);
+                Error::err("模块 ( $__module ) 控制器 ( $controller_name ) 中的方法 ( $__action ) 为私有方法，禁止访问!", [],"Action");
             }
 
             /**
@@ -154,17 +162,10 @@ class App
 
             $controller_obj = new $controller_class($__module, $__controller, $__action);
 
-            $result = $controller_obj->init();
-            //获取初始化结果
-            if ($result === null)
-                $result = $controller_obj->$__action();
+            $result = $controller_obj->$__action();
             if ($result !== null)
                 (new Response())->render($result, $controller_obj->getCode(), $controller_obj->getContentType())->send();
-        } catch (ControllerError $controller_error) {
-            if (!App::getEngine()->onControllerError($controller_error)) {
-                Error::err($controller_error->getMessage(), [], "Controller");
-            }
-        } catch (ExitApp $exit_app) {//执行退出
+        }  catch (ExitApp $exit_app) {//执行退出
             App::$debug && Log::record("Frame", sprintf("框架执行退出: %s", $exit_app->getMessage()));
         } finally {
             Error::appShutdown();

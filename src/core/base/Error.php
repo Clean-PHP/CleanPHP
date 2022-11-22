@@ -15,6 +15,9 @@
 namespace core\base;
 
 use core\App;
+use core\engine\JsonEngine;
+use core\engine\ResponseEngine;
+use core\engine\ViewEngine;
 use core\event\EventManager;
 use core\exception\ExitApp;
 use core\file\Log;
@@ -68,11 +71,42 @@ class Error
             //判断是否有应用进行了异常处理
             if (EventManager::trigger("__on_system_error__", $msg, true)) return;
 
-            if (App::$debug) {
-                (new Response())->render(App::getEngine()->renderError($msg, $traces, $dump,$log_tag), 200, App::getEngine()->getContentType())->send();
+            $engine = self::getEngine($result);
+            if($result!==null){
+                (new Response())->render($result, 200, $engine->getContentType())->send();
+            }else if (App::$debug) {
+                (new Response())->render($engine->renderError($msg, $traces, $dump,$log_tag), 200, $engine->getContentType())->send();
             } else {
-                (new Response())->render(App::getEngine()->renderMsg(true, 404, lang("404 Not Found"), lang("您访问的资源不存在。"), 5, "/", lang("立即跳转")), 404, App::getEngine()->getContentType())->send();
+                (new Response())->render($engine->renderMsg(true, 404, lang("404 Not Found"), lang("您访问的资源不存在。"), 5, "/", lang("立即跳转")), 404, $engine->getContentType())->send();
             }
+    }
+
+    /**
+     * 获取渲染器
+     * @return JsonEngine|ResponseEngine|ViewEngine|null
+     */
+    private static function getEngine(&$result){
+        $__module = Variables::get("__request_module__",'');
+        $__controller = Variables::get("__request_controller__",'');
+        $__action = Variables::get("__request_action__",'');
+        if($__module==='') return App::getEngine();
+        $controller = 'app\\controller\\' . $__module . '\\' . ucfirst($__controller);
+        $base = 'app\\controller\\' . $__module . '\\BaseController';
+        $_controller_exist = class_exists($controller);
+        if(!$_controller_exist && class_exists($base)){
+            $controller = $base;
+            $_controller_exist = true;
+        }
+        if($_controller_exist){
+            /**
+             * @var $obj Controller
+             */
+            $obj = new $controller($__module, $__controller, $__action);
+            $result = $obj->eng()->onControllerError();
+
+            return $obj->eng();
+        }
+        return App::getEngine();
     }
 
     /**

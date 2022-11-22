@@ -178,52 +178,25 @@ TPL
     }
 
 
-    public function onControllerError(ControllerError $error): bool
+
+    public function onControllerError():?string
     {
-        $__module = $error->__module;
-        $__controller = $error->__controller;
-        $__action = $error->__action;
-        $_controller_exist = $error->_controller_exist;
+        $__module = Variables::get("__request_module__",'');
+        $__controller = Variables::get("__request_controller__",'');
+        $__action = Variables::get("__request_action__",'');
         //构建模板
         $tpl_name = $__controller . '_' . $__action;
-        //构建控制器
-        $controller = 'app\\controller\\' . $__module . '\\' . $__controller;
-        //构建基类控制器
-        $base = 'app\\controller\\' . $__module . '\\BaseController';
 
         $tpl = Variables::getViewPath($__module, $tpl_name . ".tpl");
+        
         //模板存在，使用模板渲染
         $tpl_exist = file_exists($tpl);
-        //确认使用的渲染引擎
-        if (!$_controller_exist && class_exists($base) ){
-            $controller = $base;
-            $_controller_exist = true;
+        //获取初始化结果
+        if ($tpl_exist) {
+            return $this->setEncode(false)->render($tpl_name);
         }
-        $result = null;
-        $content_type = $this->getContentType();
-        if ($_controller_exist) {
-            /**
-             * @var $obj Controller
-             */
-            $obj = new $controller($__module, $__controller, $__action);
-            if (!$obj->eng() instanceof ViewEngine) {
-                Error::err("模板引擎异常：不允许操作的类型",[],"ViewEngine");
-            }
-            $result = $obj->init();
-            //获取初始化结果
-            if ($result === null && $tpl_exist) {
-                $content_type = $obj->eng()->getContentType();
-                $result = $obj->eng()->setEncode(false)->render($tpl_name);
-            }
-        } elseif ($tpl_exist) {
-            $result = $this->setEncode(false)->render($tpl_name);
-        }
-        //初始化如果有输出则直接输出，不执行函数。
-        if (!$result)
-            Error::err(sprintf("模板资源不存在：%s", $tpl),[],"ViewEngine");
 
-        (new Response())->render($result, 200, $content_type)->send();
-        return true;
+        return null;
     }
 
     function getContentType(): string
@@ -292,7 +265,7 @@ TPL
 
     private function checkTplFile(string $template_name): string
     {
-        $__module = Variables::get("__controller_module__", "");
+        $__module = Variables::get("__request_module__", "");
         $real_name = $template_name;
         $template_name = ($__module == '' ? '' : $__module . DS) . $template_name . '.tpl';
         //自动化模板名字
@@ -328,7 +301,7 @@ TPL
 
             $dir  = Variables::getStoragePath('view');
             if (!is_dir($dir)) mkdir($dir, 0777, true);
-            $__module = Variables::get("__controller_module__", "");
+            $__module = Variables::get("__request_module__", "");
             $hash =  md5(realpath($file));
             $file_name = $hash.'_'.$__module.'_'.$template_name.'_'.md5_file($file).'_pre';
             $path = $dir.DS.$file_name.'.tpl';//直接预编译到文件
@@ -467,7 +440,7 @@ TPL
 
     function renderError(string $msg, array $traces, string $dumps,string $tag): string
     {
-        Variables::set("__controller_module__", "");
+        Variables::set("__request_module__", "");
         $tpl = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN">
