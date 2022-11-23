@@ -27,7 +27,8 @@ class Variables
         "path_logs" => APP_DIR . DS . 'storage' . DS . 'logs' . DS,
         "path_extend" => APP_DIR . DS . 'extend' . DS,
         "path_config" => APP_DIR . DS . 'config' . DS,
-        "path_model" => APP_DIR . DS . 'app' . DS . 'model' . DS,
+        "path_db" => APP_DIR . DS . 'app' . DS . 'database' . DS,
+        "path_app" => APP_DIR . DS . 'app' . DS ,
         "path_lib" => APP_DIR . DS . 'library' . DS,
         "path_view" => APP_DIR . DS . 'app' . DS . 'view' . DS,
         "path_public" => APP_DIR . DS . 'public' . DS,
@@ -162,9 +163,9 @@ class Variables
      * @param string ...$path
      * @return string
      */
-    public static function getModelPath(string ...$path): string
+    public static function getDbPath(string ...$path): string
     {
-        return self::setPath(self::getInner("path_model"), ...$path);
+        return self::setPath(self::getInner("path_db"), ...$path);
     }
 
     /**
@@ -186,6 +187,16 @@ class Variables
     public static function getViewPath(string ...$path): string
     {
         return self::setPath(self::getInner("path_view"), ...$path);
+    }
+
+    /**
+     * 获取App路径
+     * @param string ...$path
+     * @return string
+     */
+    public static function getAppPath(string ...$path): string
+    {
+        return self::setPath(self::getInner("path_app"), ...$path);
     }
 
 

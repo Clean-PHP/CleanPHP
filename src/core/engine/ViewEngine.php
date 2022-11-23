@@ -31,7 +31,7 @@ use core\objects\StringBuilder;
 class ViewEngine extends ResponseEngine
 {
 
-    private string $__layout = "";
+    private ?string $__layout = "";
     private bool $__encode = true;
     private int $__code = 200;
     private array $__data = [];
@@ -188,7 +188,7 @@ TPL
         $tpl_name = $__controller . '_' . $__action;
 
         $tpl = Variables::getViewPath($__module, $tpl_name . ".tpl");
-        
+
         //模板存在，使用模板渲染
         $tpl_exist = file_exists($tpl);
         //获取初始化结果
@@ -263,26 +263,34 @@ TPL
         return $complied_file;
     }
 
+    /**
+     * @throws ExitApp
+     */
     private function checkTplFile(string $template_name): string
     {
+
         $__module = Variables::get("__request_module__", "");
-        $real_name = $template_name;
-        $template_name = ($__module == '' ? '' : $__module . DS) . $template_name . '.tpl';
-        //自动化模板名字
-        $file = $this->__template_dir . DS . $template_name;
-        if (!file_exists($file)) {
-            $file2 = Variables::getViewPath($real_name.'.tpl');
-            if (!file_exists($file2)) {
-                $file3 = Variables::getStoragePath('view',$real_name.'.tpl');
-                if (!file_exists($file3)) {
-                    Error::err(sprintf("模板文件（%s）不存在", $file3), [],"ViewEngine");
-                }else{
-                    $file = $file3;
-                }
-            }else{
-                $file = $file2;
+
+        $tpl_names = [
+            $this->__template_dir.DS. $__module . DS. $template_name . '.tpl',
+            $this->__template_dir.DS. $template_name . '.tpl',
+            Variables::getViewPath($template_name.'.tpl'),
+            Variables::getStoragePath('view',$template_name.'.tpl')
+        ];
+        $file = null;
+        foreach ($tpl_names as $tpl_name){
+            if(file_exists($tpl_name)){
+                $file = $tpl_name;
+                break;
             }
         }
+        if($file === null){
+            $error = '';
+            foreach ($tpl_names as $tpl_name)
+                $error.= sprintf("模板文件（%s）不存在 \n ", $tpl_name);
+            Error::err($error, [],"ViewEngine");
+        }
+
         return $file;
     }
     /**
@@ -608,10 +616,12 @@ pre {
     /**
      * 设置模板目录
      * @param string $dir
+     * @return ViewEngine
      */
-    public function setTplDir(string $dir)
+    public function setTplDir(string $dir): ViewEngine
     {
         $this->__template_dir = $dir;
+        return $this;
     }
 
     /**
