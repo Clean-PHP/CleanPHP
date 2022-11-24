@@ -74,9 +74,7 @@ class Session
      */
     public function set(string $name, $value, int $expire = 0)
     {
-        if (is_array($value) || is_object($value)) {
-            $value = json_encode($value);
-        }
+
         if ($expire != 0) {
             $expire = time() + $expire;
             $_SESSION[$name . "_expire"] = $expire;

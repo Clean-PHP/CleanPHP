@@ -32,6 +32,7 @@ class Dump
     private function dumpObject($param, int $i = 0)
     {
         $className = get_class($param);
+
         if ($className == 'stdClass' && $result = json_encode($param)) {
             $this->dumpArray(json_decode($result, true), $i);
             return;
@@ -125,7 +126,7 @@ class Dump
      */
     public function dumpProp($obj, $className, $num)
     {
-        if ($className == get_class($obj) && $num > 2) return;
+       // if ($className == get_class($obj) && $num > 2) return;
         static $pads = [];
         try {
             $reflect = new ReflectionClass($obj);
@@ -135,7 +136,6 @@ class Dump
         }
 
         $prop = $reflect->getProperties();
-
         $len = count($prop);
         $this->output .= "<i style='color: #333;'> (size=$len)</i>";
         array_push($pads, "    ");
@@ -143,7 +143,7 @@ class Dump
             $index = $i;
             $prop[$index]->setAccessible(true);
             $prop_name = $prop[$index]->getName();
-            $this->output .= "\n" . implode('', $pads) . sprintf("<i style='color: #333;'> %s </i><i style='color:#888a85'>=&gt;", $prop_name);
+            $this->output .= "\n" . implode('', $pads) . sprintf("<i style='color: #333;'> %s </i><i style='color:#888a85'>=&gt;&nbsp;", $prop_name);
             $this->dumpType($prop[$index]->getValue($obj), $num);
         }
         array_pop($pads);

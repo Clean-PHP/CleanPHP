@@ -72,6 +72,7 @@ class Error
             if (EventManager::trigger("__on_system_error__", $msg, true)) return;
 
             $engine = self::getEngine($result);
+
             if($result!==null){
                 (new Response())->render($result, 200, $engine->getContentType())->send();
             }else if (App::$debug) {
@@ -101,8 +102,13 @@ class Error
             /**
              * @var $obj Controller
              */
-            $obj = new $controller($__module, $__controller, $__action);
-            $result = $obj->eng()->onControllerError();
+            try{
+                $obj = new $controller($__module, $__controller, $__action);
+                $result = $obj->eng()->onControllerError();
+            }catch (\Exception $exception){
+                Log::record('Controller','控制器初始化函数存在严重的错误',Log::TYPE_ERROR);
+                return App::getEngine();
+            }
 
             return $obj->eng();
         }

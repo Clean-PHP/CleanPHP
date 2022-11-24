@@ -33,9 +33,10 @@ class Controller
         $this->action = $a??'';
         $this->setCode($this->eng()->getCode());
         $this->setContentType($this->eng()->getContentType());
-        EventManager::trigger("__on_controller_create__", $this);
+
         $this->init();
 
+        EventManager::trigger("__on_controller_create__", $this);
     }
 
     /**

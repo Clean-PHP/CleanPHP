@@ -339,6 +339,7 @@ TPL
                     $content = str_replace($match,'',$content);
                 }
             }
+            $layout_head = Route::replaceStatic($layout_head);
             Cache::init()->set($path."__template_headers",$layout_head);
             $this->setData("__template_headers", $layout_head);
             $isMatched = preg_match_all('/<script[\s\S]*?<\/script>/', $content, $matches);
@@ -349,8 +350,9 @@ TPL
                     $content = str_replace($match,'',$content);
                 }
             }
+            $layout_scripts = Route::replaceStatic($layout_scripts);
             Cache::init()->set($path."__template_scripts",$layout_scripts);
-            $this->setData("__template_scripts", $layout_scripts);
+            $this->setData("__template_scripts",$layout_scripts);
 
             file_put_contents($path,$content);
             $this->setData("__template_file", $file_name);
