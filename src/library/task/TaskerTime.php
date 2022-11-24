@@ -61,7 +61,7 @@ class TaskerTime
     }
 
     /**
-     * 每天每小时的【第{@link $mintue}分钟】执行任务
+     * 【每隔{@link $mintue}分钟】执行任务
      * @param $minute int 分钟
      * @return array
      */

@@ -34,7 +34,7 @@ abstract class VerityObject extends ArgObject
             return false;
         }
         $rule = $rules[$key];
-        if (!preg_match($rule, strval($val))){
+        if (empty(strval($val))||!preg_match('/'.$rule.'/', strval($val))){
             throw new VerityException("字段 $key 验证失败！");
         }
        return false;

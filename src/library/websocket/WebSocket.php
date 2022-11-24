@@ -18,6 +18,7 @@ use core\base\Variables;
 use core\cache\Cache;
 use core\config\Config;
 use core\event\EventListener;
+use core\event\EventManager;
 use core\file\Log;
 
 
@@ -33,8 +34,10 @@ class WebSocket implements EventListener
         //加锁
         if(!self::isLock(Config::getConfig("websocket")["port"]))
         {
+
             App::$debug && Log::record("Websocket","WebSocket进程未锁定，下发任务",Log::TYPE_WARNING);
             go(function (){
+                EventManager::trigger('__on_start_websocket__');
                 Variables::set("__frame_log_tag__", "ws_");
                 $websocket = new WS(Config::getConfig("websocket")["ip"], Config::getConfig("websocket")["port"], App::$debug, self::$WSEvent);
                 $websocket->run();

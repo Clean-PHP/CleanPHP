@@ -1,6 +1,8 @@
 <?php
 namespace library\upload;
 
+use core\event\EventManager;
+
 /**
  * Class FileUpload
  * Created By ankio.
@@ -12,10 +14,12 @@ namespace library\upload;
 class Upload {
     public string $path = '';  //上传文件保存的路径
     public array $allow_type = ['jpg','gif','png','jpeg']; //设置限制上传文件的类型
-    public int $max_size = 1000000; //限制文件上传大小（字节）
+    public int $max_size = 50*1024*1024; //限制文件上传大小（字节），默认50M
     public bool $check_php = false;//是否检测php
+    /**
+     * @var UploadFile[] $uploads
+     */
     private array $uploads = [];
-
     /**
      * 调用该方法上传文件，如果出现问题则抛出异常。
      * @throws UploadException
@@ -54,10 +58,18 @@ class Upload {
 
     /**
      * 返回上传的数据数组
-     * @return array 只上传一个文件也返回数组，数组类型是{@link UploadFile}
+     * @param $use_array bool 是否使用纯数组
+     * @return array[]|UploadFile[] 只上传一个文件也返回数组，数组类型是{@link UploadFile}
      */
-    function getUploadFiles(): array
+    function getUploadFiles(bool $use_array = true): array
     {
+        if($use_array){
+            $ret = [];
+            foreach ($this->uploads as $upload){
+                $ret[] = $upload->toArray();
+            }
+            return $ret;
+        }
         return $this->uploads;
     }
 
@@ -155,7 +167,7 @@ class Upload {
 
     private function setFiles(string $name="", string $tmp_name="", int $size=0, int $error_num=0): UploadFile
     {
-        $result = strrchr($tmp_name,'.');
+        $result = strrchr($name,'.');
         $ext = "";
         if($result !== false)
             $ext = substr($result,1);
@@ -182,7 +194,7 @@ class Upload {
      */
 
     private function setNewFileName(UploadFile &$file) {
-        $file->new_name = uniqid("upload_").$file->type;
+        $file->new_name = uniqid("upload_");
     }
 
 
@@ -211,8 +223,11 @@ class Upload {
 
     private function copyFile(UploadFile &$file): void
     {
-        if (!move_uploaded_file($file->tmp_name, $this->path) && !copy($file->tmp_name, $this->path))
+        $name = $this->path.DS.$file->new_name.'.'.$file->type;
+        if (!move_uploaded_file($file->tmp_name, $name) && !copy($file->tmp_name, $name))
             throw new UploadException("文件写入失败，可能由于目标目录没有写入权限",10002,$file);
+        $file->path = $this->path;
+        EventManager::trigger("__on_upload_saved_file__",$file);
     }
 
 }

@@ -27,7 +27,7 @@ class RedisCache implements CacheInterface
 
     private ?Redis $redis = null;
     private ?string $cache_path = null;
-    private int $cache_expire = 3600;
+    private ?int $cache_expire = null;
 
     /**
      * @throws RedisCacheException|ExtendError
@@ -80,7 +80,7 @@ class RedisCache implements CacheInterface
      */
     function setData(int $exp_time, string $path): ?RedisCache
     {
-
+        if($exp_time<=0)$exp_time = null;
         $this->cache_expire = $exp_time;
         $this->cache_path = md5($path) . "_";
 
@@ -98,7 +98,7 @@ class RedisCache implements CacheInterface
         App::$debug && Log::record("Redis", sprintf("读取缓存：%s", $key));
         $string = $this->redis->get($this->cache_path . $key);
         if (is_string($string)) {
-            return unserialize($string);
+            return __unserialize($string);
         }
         return null;
     }
@@ -112,7 +112,7 @@ class RedisCache implements CacheInterface
     public function set(string $key, $data): bool
     {
         App::$debug && Log::record("Redis", sprintf("设置缓存：%s", $key));
-        $values = serialize($data);
+        $values = __serialize($data);
         return $this->redis->set($this->cache_path . $key, $values, $this->cache_expire);
     }
 

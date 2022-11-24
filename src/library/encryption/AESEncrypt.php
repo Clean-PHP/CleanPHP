@@ -18,8 +18,9 @@ class AESEncrypt
     /**
      * AESEncryptHelper constructor.
      */
-    public function __construct($secret_key, $method = 'AES-256-CBC')
+    public function __construct($secret_key = '', $method = 'AES-256-CBC')
     {
+        if($secret_key === '')$secret_key = $this->createSecretKey($secret_key);
         $this->secretKey = $secret_key;
         $this->method = $method;
     }

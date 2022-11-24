@@ -23,14 +23,14 @@ class ArgObject
     public function __construct(array $item = [])
     {
         foreach (get_object_vars($this) as $key => $val) {
+            $data = $val;
             if (isset($item[$key])) {
                 $data = $item[$key];
-                if(!$this->onParseType($key,$data,$val)){
-                    $this->$key = parse_type($val, $data);
-                }else{
-                    $this->$key = $data;
-                }
-
+            }
+            if(!$this->onParseType($key,$data,$val)){
+                $this->$key = parse_type($val, $data);
+            }else{
+                $this->$key = $data;
             }
         }
     }
