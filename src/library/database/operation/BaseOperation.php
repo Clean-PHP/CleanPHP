@@ -17,7 +17,6 @@ namespace library\database\operation;
 
 use core\base\Error;
 use library\database\Db;
-use library\database\exception\DbTransferError;
 use PDOStatement;
 
 abstract class BaseOperation

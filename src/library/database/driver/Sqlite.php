@@ -14,6 +14,7 @@
 
 namespace library\database\driver;
 
+use core\base\Variables;
 use library\database\exception\DbConnectError;
 use library\database\object\DbFile;
 use library\database\object\Model;
@@ -34,7 +35,7 @@ class Sqlite extends Driver
         $this->dbFile = $dbFile;
         //pdo初始化
         try {
-            $this->pdo = new PDO("sqlite:{$this->dbFile->host}",
+            $this->pdo = new PDO("sqlite:".Variables::getAppPath($this->dbFile->host),
                 '',
                 '',
                 [
@@ -64,7 +65,14 @@ class Sqlite extends Driver
             if ($value instanceof SqlKey) {
                 $name = $value->name;
                 $primary[] = $name;
-                $sql .= $this->renderKey($value) . $value->auto?" PRIMARY KEY,":",";
+                $sql .= $this->renderKey($value) ;
+                //AUTOINCREMENT
+                if($value->type === SqlKey::TYPE_INT && $value->auto){
+                    $sql .= " PRIMARY KEY AUTOINCREMENT,";
+                }else{
+                    $sql .= ",";
+                }
+
             } else {
                 $primary[] = $value;
             }
@@ -73,7 +81,9 @@ class Sqlite extends Driver
             if (in_array($key, $primary)) continue;
             $sql .= $this->renderKey(new SqlKey($key, $value)) . ",";
         }
-
+        if(substr($sql,strlen($sql)-1,1)===','){
+            $sql = substr($sql,0,strlen($sql)-1);
+        }
         $sql .= ');';
 
         return $sql;
@@ -82,12 +92,12 @@ class Sqlite extends Driver
 
     public function renderKey(SqlKey $sqlKey): string
     {
+
+
         if ($sqlKey->type === SqlKey::TYPE_TEXT && $sqlKey->value !== null)
             $sqlKey->value = str_replace("'", "\'", $sqlKey->value);
 
-        if ($sqlKey->type === SqlKey::TYPE_INT && $sqlKey->auto) return "`$sqlKey->name` INTEGER autoincrement";
-
-        elseif ($sqlKey->type === SqlKey::TYPE_INT && !$sqlKey->auto) return "`$sqlKey->name` INTEGER";
+        if ($sqlKey->type === SqlKey::TYPE_INT ) return "`$sqlKey->name` INTEGER";
 
         elseif ($sqlKey->type === SqlKey::TYPE_BOOLEAN) return "`$sqlKey->name` INTEGER";
 
@@ -112,7 +122,7 @@ class Sqlite extends Driver
 
     function renderEmpty(string $table): string
     {
-        return "DELETE FROM  '$table';";
+        return /** @lang text */ "DELETE FROM  '$table';";
     }
 
     function onInsertModel(int $model): string

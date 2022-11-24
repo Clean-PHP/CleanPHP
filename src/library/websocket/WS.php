@@ -13,15 +13,20 @@
 
 namespace library\websocket;
 
+use core\App;
 use core\base\Variables;
 use core\cache\Cache;
 use core\file\Log;
+use core\objects\ArgObject;
 
 class WS
 {
 
     private bool $log = false;//客户端sockets
     private $master;
+    /**
+     * @var SocketInfo[] $sockets
+     */
     private array $sockets = [];
     private ?WSEvent $event_handler = null;
 
@@ -56,7 +61,7 @@ class WS
             socket_bind($this->master, $address, $port);
             socket_listen($this->master);
             $this->log("开始监听: $address : $port");
-            $this->sockets[0] = ['resource' => $this->master];
+            $this->sockets[0] = new SocketInfo(['resource' => $this->master]);
         } catch (\Exception $exception) {
             $error = socket_strerror(socket_last_error());
             throw new WebsocketException($error);
@@ -71,8 +76,7 @@ class WS
     private function log(string $t)
     {//控制台输出
         if ($this->log) {
-            var_dump($t);
-           // Log::recordFile("WebSocket", $t);
+            Log::recordFile("WebSocket", $t);
         }
     }
 
@@ -83,11 +87,19 @@ class WS
      */
     public function run()
     {
-
+        file_put_contents(Variables::getCachePath('websocket.lock'),getmypid());
         while (true) {
-            Cache::init(20)->set("websocket", getmypid());
+            if(!file_exists(Variables::getCachePath('websocket.lock'))){
+                App::$debug && Log::recordFile("Tasker","定时任务进程发生变化，当前进程结束");
+                break;
+            }
+
             $write = $except = null;
-            $sockets = array_column($this->sockets, 'resource');
+
+            $sockets = [];
+            foreach ($this->sockets as $item){
+                $sockets[] = $item->resource;
+            }
 
             $read_num = socket_select($sockets, $write, $except, null);
             // select作为监视函数,参数分别是(监视可读,可写,异常,超时时间),返回可操作数目,出错时返回false;
@@ -95,9 +107,8 @@ class WS
                 $this->log(socket_strerror(socket_last_error()));
                 break;
             }
-
             foreach ($sockets as $socket) {
-                Cache::init(20)->set("websocket", getmypid());
+
                 // 如果可读的是服务器socket,则处理连接逻辑
                 if ($socket === $this->master) {
                     $client = socket_accept($this->master);
@@ -110,25 +121,22 @@ class WS
                     }
                 } else {
                     // 如果可读的是其他已连接socket,则读取其数据,并处理应答逻辑
-                    [$buffer, $bytes] = $this->read($socket);;
+                    [$buffer, $bytes] = $this->read($socket);
                     if ($bytes < 9) {
+                        $this->event_handler && $this->event_handler->onClose($this,$this->sockets[(int)$socket]);
                         $this->disconnect($socket);
-                        $this->event_handler && $this->event_handler->onClose();
+
                     } else {
-                        if (!$this->sockets[(int)$socket]['handshake']) {
+                        if (!$this->sockets[(int)$socket]->handshake) {
                             $this->handShake($socket, $buffer);
-                            $this->event_handler && $this->event_handler->onConnect($this, $socket);
+                            $this->event_handler && $this->event_handler->onConnect($this, $this->sockets[(int)$socket]);
                         } else {
-                            $this->event_handler && $this->event_handler->onMsg($this, $this->decode($buffer), $socket);
+                            $this->event_handler && $this->event_handler->onMsg($this, $this->decode($buffer), $this->sockets[(int)$socket]);
                         }
                     }
                 }
             }
 
-            if (Cache::init()->get("websocket") !== getmypid()) {
-                $this->log("WebSocket进程发生变化，当前进程结束");
-                break;
-            }
         }
     }
 
@@ -140,13 +148,12 @@ class WS
     public function connect($socket)
     {
         socket_getpeername($socket, $ip, $port);
-        $socket_info = [
+        $this->sockets[(int)$socket] = new SocketInfo([
             'resource' => $socket,
             'handshake' => false,
             'ip' => $ip,
             'port' => $port,
-        ];
-        $this->sockets[(int)$socket] = $socket_info;
+        ]);
     }
 
     /**
@@ -198,7 +205,7 @@ class WS
         $upgrade_message .= "Connection: Upgrade\r\n";
         $upgrade_message .= "Sec-WebSocket-Accept:" . $upgrade_key . "\r\n\r\n";
         socket_write($socket, $upgrade_message, strlen($upgrade_message));// 向socket里写入升级信息
-        $this->sockets[(int)$socket]['handshake'] = true;
+        $this->sockets[(int)$socket]->handshake = true;
     }
 
     /**
@@ -235,10 +242,10 @@ class WS
     public function pushAll(string $msg)
     {
         foreach ($this->sockets as $socket) {
-            if ($socket['resource'] == $this->master) {
+            if ($socket->resource == $this->master) {
                 continue;
             }
-            $this->push($socket['resource'], $msg);
+            $this->push($socket->resource, $msg);
         }
     }
 
@@ -250,7 +257,7 @@ class WS
      */
     public function pushWithId(int $id,$msg){
         if(isset($this->sockets[$id])){
-            $socket = $this->sockets[$id]['resource'];
+            $socket = $this->sockets[$id]->resource;
             $this->push($socket,$msg);
         }
 
@@ -263,10 +270,10 @@ class WS
      */
     public function pushAllWithoutSelf(string $msg,$self){
         foreach ($this->sockets as $socket) {
-            if ($socket['resource'] == $this->master || $socket['resource']==$self) {
+            if ($socket->resource == $this->master || $socket->resource==$self||$self==0) {
                 continue;
             }
-            $this->push($socket['resource'], $msg);
+            $this->push($socket->resource, $msg);
         }
     }
 
@@ -278,6 +285,7 @@ class WS
      */
     public function push($socket, string $msg)
     {
+        App::$debug && Log::recordFile('Websocket','消息推送：'.$msg);
         $t = $this->encode($msg);
         return socket_write($socket, $t, strlen($t));
     }

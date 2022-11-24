@@ -21,7 +21,8 @@ use core\exception\ExitApp;
 use core\exception\ExtendError;
 use core\file\File;
 use core\file\Log;
-use library\database\driver\DriverInterface;
+use library\database\driver\Driver;
+use library\database\exception\DbExecuteError;
 use library\database\object\DbFile;
 use library\database\object\Model;
 use PDO;
@@ -29,7 +30,7 @@ use PDOStatement;
 
 class Db
 {
-    private ?DriverInterface $db = null;
+    private ?Driver $db = null;
 
     private ?DbFile $dbFile = null;
 
@@ -41,6 +42,7 @@ class Db
     public static function init(DbFile $dbFile): Db
     {
         $hash = $dbFile->hash();
+
         $db = Variables::get($hash);
         if($db === null){
             $db = new self($dbFile);
@@ -58,9 +60,15 @@ class Db
         if (!class_exists("PDO")) {
             throw new ExtendError(lang("缺少PDO拓展支持，请安装PDO拓展并启用。%s", "https://www.php.net/manual/zh/pdo.installation.php"),"pdo");
         }
+
+        if(empty($dbFile->type)){
+            Error::err("数据库驱动错误，没有为数据库配置设置数据库驱动",[],"Database Driver");
+        }
+
        $this->dbFile = $dbFile;
        //select driver
         $drive_cls = "library\\database\\driver\\".ucfirst($dbFile->type);
+
         if(class_exists($drive_cls)){
             $this->db = new $drive_cls($dbFile);
         }elseif (class_exists($dbFile->type)){
@@ -77,12 +85,13 @@ class Db
      * @param string $model
      * @param string $table
      * @return void
-     * @throws ExitApp
+     * @throws ExitApp|DbExecuteError
      */
     function initTable(string $model,string $table){
         App::$debug && Log::record("SQL",lang("创建数据表 `%s`",$table));
         if(class_exists($model)){
-           /**@var Model $m*/ $m = new $model();
+           /**@var Model $m*/
+            $m = new $model();
             $this->execute($this->db->renderCreateTable($m,$table));
             $m->onCreateTable($this);
         }
@@ -99,6 +108,7 @@ class Db
      * @param array $params 绑定的sql参数
      * @param false $readonly 是否为查询
      * @return array|int
+     * @throws DbExecuteError|ExitApp
      */
     public function execute(string $sql, array $params = [], bool $readonly = false)
     {
@@ -110,7 +120,7 @@ class Db
         $sth = $this->db->getDbConnect()->prepare($sql);
 
         if ($sth == false){
-            Error::err(sprintf("Sql语句【%s】预编译出错：%s",$sql,implode(" , ",$this->db->getDbConnect()->errorInfo())),[],"Database Execute");
+            throw new DbExecuteError(sprintf("Sql语句【%s】预编译出错：%s",$sql,implode(" , ",$this->db->getDbConnect()->errorInfo())));
         }
 
         if (is_array($params) && !empty($params)) foreach ($params as $k => $v) {
@@ -141,15 +151,14 @@ class Db
             Log::record("SQL",lang("执行时间：%s 毫秒",$end * 1000));
         }
         if($ret_data!==null)return $ret_data;
-        Error::err(sprintf("执行SQL语句【%s】出错：%s",$sql,implode(" , ",$sth->errorInfo())),[],"Database Execute");
-        return null;
+        throw new DbExecuteError(sprintf("执行SQL语句【%s】出错：%s",$sql,implode(" , ",$sth->errorInfo())));
     }
 
     /**
      * 获取数据库驱动
-     * @return DriverInterface
+     * @return Driver
      */
-    public function getDriver(): ?DriverInterface
+    public function getDriver(): ?Driver
     {
         return $this->db;
     }
@@ -206,7 +215,8 @@ class Db
                 $info .= "-- ----------------------------\r\n";
 
                 foreach ($result as  $value){
-                    $sqlStr = "INSERT INTO `".$val."` VALUES (";
+                    $sqlStr = /** @lang text */
+                        "INSERT INTO `".$val."` VALUES (";
                     foreach($value as  $k){
                         $sqlStr .= "'".$k."', ";
                     }

@@ -89,6 +89,7 @@ class Role
      * @return mixed|null
      */
     public function get($id){
+
         if(isset($this->config["id_".$id])){
             return $this->config["id_".$id];
         }

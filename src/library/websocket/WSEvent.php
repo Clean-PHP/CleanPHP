@@ -18,23 +18,23 @@ interface WSEvent
     /**
      * 当Websocket链接上的时候
      * @param WS $ws
-     * @param $socket
+     * @param SocketInfo $socket
      * @return mixed
      */
-    public function onConnect(WS $ws,  $socket);
+    public function onConnect(WS $ws,  SocketInfo &$socket);
 
     /**
      * 当websocket关闭的时候
      * @return mixed
      */
-    public function onClose();
+    public function onClose(WS $ws,  SocketInfo &$socket);
 
     /**
      * 当收到websocket信息的时候
      * @param WS $ws
      * @param string|null $msg
-     * @param $socket
+     * @param SocketInfo $socket
      * @return mixed
      */
-    public function onMsg(WS $ws,?string $msg, $socket);
+    public function onMsg(WS $ws,?string $msg,   SocketInfo &$socket);
 }

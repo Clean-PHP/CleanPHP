@@ -16,7 +16,7 @@ namespace library\database\exception;
 use core\App;
 use core\file\Log;
 
-class DbTransferError extends \Exception
+class DbExecuteError extends \Exception
 {
     public function __construct($message = "")
     {

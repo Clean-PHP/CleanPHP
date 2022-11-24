@@ -34,7 +34,10 @@ class RBACEvent implements EventListener
      */
     public function handleEvent(string $event, &$data)
     {
+
         $role_data =  Role::getInstance()->get(RBAC::getRole());
+
+        //没有角色信息，就默认可以执行
         if($role_data==null)return null;
         $json = $role_data["auth"];
         foreach ($json as $item){
@@ -45,8 +48,8 @@ class RBACEvent implements EventListener
         }
         //没有返回就是需要授权才能访问
         if(!App::$debug){
-            EventManager::trigger("__on_need_auth__");
-            (new Response())->code(403)->render($data->eng()->renderMsg(true,401,"403 Forbidden",lang("对不起，你没有访问权限。")))->send();
+
+            (new Response())->code(403)->render($data->eng()->renderMsg(true,403,"403 Forbidden",lang("对不起，你没有访问权限。")))->send();
         }else{
             dumps("当前为调试模式","对不起您没有访问权限","权限信息",$role_data);
             App::exit("对不起您没有访问权限");

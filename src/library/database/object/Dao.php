@@ -22,7 +22,7 @@ use library\database\operation\InsertOperation;
 use library\database\operation\SelectOperation;
 use library\database\operation\UpdateOperation;
 
-abstract class Dao implements DaoInterface
+abstract class Dao
 {
 
     protected ?Db $db = null;
@@ -30,20 +30,47 @@ abstract class Dao implements DaoInterface
 
     public function __construct(string $model = null)
     {
-        $this->db = Db::init(new DbFile(Config::getConfig("database")["main"]));//数据库初始化
+
+        $this->dbInit();
         $this->model = $model;
+
+    }
+
+    /**
+     * 数据库初始化
+     * @return void
+     */
+    protected function dbInit()
+    {
+
+        $this->db = Db::init(new DbFile(Config::getConfig("database")["main"]));//数据库初始化
     }
 
     /**
      * 获取数据库实例
+     * @param string|null $model 绑定的具体模型
      * @return $this
      */
-    static function getInstance($model = null): Dao
+    static function getInstance(string $model = null): Dao
     {
         $cls = get_called_class();
         $instance = Variables::get($cls) ?? new static($model);
         Variables::set($cls, $instance);
         return $instance;
+    }
+
+    /**
+     * 删除当前表
+     * @return array|int
+     */
+    public function dropTable()
+    {
+        return $this->db->execute("DROP TABLE IF EXISTS `{$this->getTable()}`");
+    }
+
+    public function emptyTable()
+    {
+        return $this->db->execute($this->db->getDriver()->renderEmpty($this->getTable()));
     }
 
     /**
@@ -53,12 +80,29 @@ abstract class Dao implements DaoInterface
      */
     protected function insertModel(Model $model): int
     {
-       $primary =  $this->getAutoPrimary($model);//自增主键不去赋值
-       $kv = $model->toArray();
-       if($primary!==null){
-           if(isset($kv[$primary]))unset($kv[$primary]);
-       }
+        $primary = $this->getAutoPrimary($model);//自增主键不去赋值
+        $kv = $model->toArray();
+        if ($primary !== null) {
+            if (isset($kv[$primary])) unset($kv[$primary]);
+        }
         return $this->insert()->keyValue($kv)->commit();
+    }
+
+    /**
+     * 获取自增主键
+     * @param Model $old_model
+     * @return string|null
+     */
+    private function getAutoPrimary(Model $old_model): ?string
+    {
+        $primary_keys = $old_model->getPrimaryKey() instanceof SqlKey ? [$old_model->getPrimaryKey()] : $old_model->getPrimaryKey();
+        /**
+         * @var $value SqlKey
+         */
+        foreach ($primary_keys as $value) {
+            if ($value->auto) return $value->name;
+        }
+        return null;
     }
 
     /**
@@ -68,8 +112,14 @@ abstract class Dao implements DaoInterface
      */
     protected function insert(int $model = InsertOperation::INSERT_NORMAL): InsertOperation
     {
-        return (new InsertOperation($this->db,$this->model, $model))->table($this->getTable());
+        return (new InsertOperation($this->db, $this->model, $model))->table($this->getTable());
     }
+
+    /**
+     * 当前操作的表
+     * @return string
+     */
+    abstract protected function getTable(): string;
 
     /**
      * 更新模型
@@ -85,29 +135,13 @@ abstract class Dao implements DaoInterface
     }
 
     /**
-     * 获取自增主键
-     * @param Model $old_model
-     * @return string|null
-     */
-    private function getAutoPrimary(Model $old_model): ?string
-    {
-        $primary_keys = $old_model->getPrimaryKey() instanceof SqlKey?[$old_model->getPrimaryKey()]:$old_model->getPrimaryKey();
-        /**
-         * @var $value SqlKey
-         */
-        foreach ($primary_keys as $value) {
-            if($value->auto)return $value->name;
-        }
-        return null;
-    }
-    /**
      * 获取主键数组
      * @param Model $old_model
      * @return array
      */
     private function getPrimaryCondition(Model $old_model): array
     {
-        $primary_keys = $old_model->getPrimaryKey() instanceof SqlKey?[$old_model->getPrimaryKey()]:$old_model->getPrimaryKey();
+        $primary_keys = $old_model->getPrimaryKey() instanceof SqlKey ? [$old_model->getPrimaryKey()] : $old_model->getPrimaryKey();
         $condition = [];
         /**
          * @var $value SqlKey
@@ -127,7 +161,7 @@ abstract class Dao implements DaoInterface
      */
     protected function update(): UpdateOperation
     {
-        return (new UpdateOperation($this->db,$this->model))->table($this->getTable());
+        return (new UpdateOperation($this->db, $this->model))->table($this->getTable());
     }
 
     /**
@@ -147,7 +181,7 @@ abstract class Dao implements DaoInterface
      */
     protected function delete(): DeleteOperation
     {
-        return (new DeleteOperation($this->db,$this->model))->table($this->getTable());
+        return (new DeleteOperation($this->db, $this->model))->table($this->getTable());
     }
 
     /**
@@ -169,11 +203,11 @@ abstract class Dao implements DaoInterface
     /**
      * 查找
      * @param ...$field string|Field 需要查询的字段
-      * @return SelectOperation
+     * @return SelectOperation
      */
     protected function select(...$field): SelectOperation
     {
-        return (new SelectOperation($this->db,$this->model, ...$field))->table($this->getTable());
+        return (new SelectOperation($this->db, $this->model, ...$field))->table($this->getTable());
     }
 
     /**
@@ -188,17 +222,6 @@ abstract class Dao implements DaoInterface
         return $this->db->execute($sql, $params, $readonly);
     }
 
-    /**
-     * 删除当前表
-     * @return array|int
-     */
-    public function dropTable(){
-        return $this->db->execute("DROP TABLE IF EXISTS `{$this->getTable()}`");
-    }
-
-    public function emptyTable(){
-        return $this->db->execute($this->db->getDriver()->renderEmpty($this->getTable()));
-    }
     /**
      * 事务开始
      */
