@@ -210,8 +210,7 @@ class App
      * 获取渲染引擎
      * @return JsonEngine|ResponseEngine|ViewEngine|null
      */
-    public
-    static function getEngine()
+    public static function getEngine()
     {
         //如果之前没有设置输出引擎，则启用文档引擎
         !self::$engine && self::setDefaultEngine(new ViewEngine());

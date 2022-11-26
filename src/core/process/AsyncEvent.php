@@ -27,7 +27,7 @@ class AsyncEvent implements EventListener
     public function handleEvent(string $event, &$data)
     {
         $array = $data;
-        if( $array["m"] === "async" && $array["c"] === "task" && $array["a"] === "start"){
+        if($array["m"] === "async" && $array["c"] === "task" && $array["a"] === "start"){
             Variables::set("__frame_log_tag__", "async_");
             Async::response();
         }

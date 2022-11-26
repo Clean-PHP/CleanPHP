@@ -16,6 +16,8 @@ class Upload {
     public array $allow_type = ['jpg','gif','png','jpeg']; //设置限制上传文件的类型
     public int $max_size = 50*1024*1024; //限制文件上传大小（字节），默认50M
     public bool $check_php = false;//是否检测php
+
+
     /**
      * @var UploadFile[] $uploads
      */
@@ -24,8 +26,9 @@ class Upload {
      * 调用该方法上传文件，如果出现问题则抛出异常。
      * @throws UploadException
      */
-    function upload()
+    function upload($on_set_file = null)
     {
+
         /* 检查文件路径合法 */
         $this->checkFilePath();
         /* 格式化文件上传数组 */
@@ -48,6 +51,11 @@ class Upload {
             if($this->check_php)  $this->checkIsPHP($file);
             /* 为上传文件设置新文件名 */
             $this->setNewFileName($file);
+
+            if($on_set_file){
+                $on_set_file($file);
+            }
+
            /** 复制临时文件到目标目录 */
             $this->copyFile($file);
             /**  加入上传队列 */
@@ -61,7 +69,7 @@ class Upload {
      * @param $use_array bool 是否使用纯数组
      * @return array[]|UploadFile[] 只上传一个文件也返回数组，数组类型是{@link UploadFile}
      */
-    function getUploadFiles(bool $use_array = true): array
+    function getUploadFiles(bool $use_array = false): array
     {
         if($use_array){
             $ret = [];

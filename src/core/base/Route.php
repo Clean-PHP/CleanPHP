@@ -104,11 +104,12 @@ class Route
 
         $array = self::parseUrl($url);
 
-        EventManager::trigger("__route_end__", $array);//路由之后
-
         if (!isset($array['m']) || !isset($array['a']) || !isset($array['c'])) {
             Error::err("路由不完整，缺少模块或控制器或执行方法！",[],"Route");
         }
+
+        EventManager::trigger("__route_end__", $array);//路由之后
+
         $__module = $array['m'];
         $__controller = ($array['c']);
         $__action = ($array['a']);
@@ -162,11 +163,18 @@ class Route
         if ((new StringBuilder($data))->startsWith('clean_static')) {
             $uri = str_replace('clean_static', "", $data);
             $path = Variables::setPath(APP_DIR,'app', "public", str_replace("..", ".", $uri));
-            if (file_exists($path)) {
-                (new Response())->render(self::replaceStatic(file_get_contents($path)), 200, mime_content_type($path))->send();
-            } else {
-                Error::err(sprintf("找不到指定的静态资源：%s",$path),[],"Route");
-            }
+           self::renderStatic($path);
+        }
+    }
+
+    /**
+     * @throws ExitApp
+     */
+    public static function renderStatic($path){
+        if (file_exists($path)) {
+            (new Response())->render(self::replaceStatic(file_get_contents($path)), 200, mime_content_type($path))->send();
+        } else {
+            Error::err(sprintf("找不到指定的静态资源：%s",$path),[],"Route");
         }
     }
 
@@ -204,6 +212,7 @@ class Route
         ini_set('pcre.recursion_limit', 200);
 
         foreach (Config::getRouteTable() as $_rule => $mapper) {
+
             empty($_rule) && $_rule = "/";
             $rule = strtolower($_rule);
             $rule = '@' . str_ireplace(
@@ -212,6 +221,7 @@ class Route
                     $rule)
                 . '$@u';
             if (preg_match($rule, $query, $matches)) {
+
                 $route = explode("/", trim($mapper));
                 if (isset($route[2])) {
                     [$array["m"], $array["c"], $array["a"]] = $route;
