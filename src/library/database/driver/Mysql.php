@@ -41,7 +41,6 @@ class Mysql extends Driver
                 $this->dbFile->password,
                 [
                     PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES \'' . $this->dbFile->charset . '\'',
-                    PDO::ATTR_PERSISTENT => true,
                 ]);
         } catch (PDOException $e) {
             throw new DbConnectError($e->getMessage(), $e->errorInfo, "Mysql");

@@ -33,7 +33,6 @@ abstract class Dao
 
         $this->dbInit();
         $this->model = $model;
-
     }
 
     /**

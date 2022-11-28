@@ -153,11 +153,11 @@ EOF;
 
 /**
  * 传入样例类型，对目标进行类型转换
- * @param $sample ?string 样例
+ * @param $sample mixed 样例
  * @param $data  mixed 需要转换的类型
  * @return bool|float|int|mixed|string
  */
-function parse_type(?string $sample, $data)
+function parse_type( $sample, $data)
 {
     if (is_int($sample)) return intval($data);
     elseif (is_string($sample)) return strval($data);

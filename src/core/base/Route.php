@@ -114,6 +114,9 @@ class Route
         $__controller = ($array['c']);
         $__action = ($array['a']);
 
+
+        App::$debug && Log::record("Route", sprintf("路由结果：%s/%s/%s", $__module,$__controller,$__action));
+
         unset($array['m']);
         unset($array['c']);
         unset($array['a']);
@@ -212,10 +215,9 @@ class Route
         ini_set('pcre.recursion_limit', 200);
 
         foreach (Config::getRouteTable() as $_rule => $mapper) {
-
             empty($_rule) && $_rule = "/";
             $rule = strtolower($_rule);
-            $rule = '@' . str_ireplace(
+            $rule = '@^' . str_ireplace(
                     ['\\\\', '/', '<', '>', '.'],
                     ['', '\/', '(?P<', '>[\x{4e00}-\x{9fa5}a-zA-Z0-9_\.-\/]+)', '\.'],
                     $rule)

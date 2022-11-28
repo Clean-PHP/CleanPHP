@@ -137,9 +137,9 @@ class App
 
             $controller_class = 'app\\controller\\' . $__module . '\\' . $controller_name;
 
-            $cls = class_exists($controller_class, true);
 
-            if (!$cls) {
+
+            if (!class_exists($controller_class, true)) {
                 Error::err("模块 ( $__module )  控制器 ( $controller_name ) 不存在!", [],"Controller");
             }
 
