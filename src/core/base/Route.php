@@ -108,6 +108,7 @@ class Route
             Error::err("路由不完整，缺少模块或控制器或执行方法！",[],"Route");
         }
 
+
         EventManager::trigger("__route_end__", $array);//路由之后
 
         $__module = $array['m'];
@@ -223,7 +224,6 @@ class Route
                     $rule)
                 . '$@u';
             if (preg_match($rule, $query, $matches)) {
-
                 $route = explode("/", trim($mapper));
                 if (isset($route[2])) {
                     [$array["m"], $array["c"], $array["a"]] = $route;

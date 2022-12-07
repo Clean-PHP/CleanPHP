@@ -159,6 +159,7 @@ EOF;
  */
 function parse_type( $sample, $data)
 {
+    if(is_array($data))return $data;
     if (is_int($sample)) return intval($data);
     elseif (is_string($sample)) return strval($data);
     elseif (is_bool($sample)) return boolval($data);
@@ -255,4 +256,52 @@ function __unserialize(string $data, array $options = null)
 function go(Closure $function,int $timeout = 300): string
 {
     return \core\process\Async::start($function,$timeout);
+}
+
+/**
+ * 不区分大小写的in_array
+ * @param $value
+ * @param $array
+ * @return bool
+ */
+function in_array_case($value,$array): bool
+{
+    if(!is_array($array))return false;
+    return in_array(strtolower($value),array_map('strtolower',$array));
+}
+
+/**
+ *  获取随机字符串
+ * @param int $length  字符串长度
+ * @param bool $upper   是否包含大写字母
+ * @param bool $lower   是否包含小写字母
+ * @param bool $number  是否包含数字
+ * @return string
+ */
+function rand_str(int $length = 8, bool $upper = true, bool $lower = true, bool $number = true): string
+{
+    $charsList = [
+        'abcdefghijklmnopqrstuvwxyz',
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+        '0123456789',
+    ];
+    $chars     = "";
+    if ($upper) {
+        $chars .= $charsList[0];
+    }
+    if ($lower) {
+        $chars .= $charsList[1];
+    }
+    if ($number) {
+        $chars .= $charsList[2];
+    }
+    if ($chars === "") {
+        $chars = $charsList[2];
+    }
+    $password = '';
+    for ($i = 0; $i < $length; $i++) {
+        $password .= $chars[mt_rand(0, strlen($chars) - 1)];
+    }
+
+    return $password;
 }

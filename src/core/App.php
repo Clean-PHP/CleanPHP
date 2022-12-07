@@ -19,6 +19,7 @@ use core\base\Error;
 use core\base\Lang;
 use core\base\Loader;
 use core\base\MainApp;
+use core\base\Request;
 use core\base\Response;
 use core\base\Route;
 use core\base\Variables;
@@ -83,8 +84,13 @@ class App
             if (self::$debug) {
                 if (self::$cli)
                     Log::record("Request", "命令行启动框架", Log::TYPE_WARNING);
-                else
+                else{
                     Log::record("Request", $_SERVER["REQUEST_METHOD"] . " " . $_SERVER["REQUEST_URI"]);
+                    if(Request::isPost()){
+                        Log::record("Post", file_get_contents('php://input'));
+                    }
+                }
+
             }
 
             Lang::register();//加载语言文件
@@ -92,6 +98,7 @@ class App
             Error::register();// 注册错误和异常处理机制
 
             Async::register();//异步任务注册
+
 
             $app = "\app\Application"; //入口初始化
 
@@ -152,7 +159,7 @@ class App
             }
 
 
-            if (!in_array($__action, get_class_methods($controller_class))) {
+            if (!in_array_case($__action, get_class_methods($controller_class))||$__action === '__init') {
                 Error::err("模块 ( $__module ) 控制器 ( $controller_name ) 中的方法 ( $__action ) 为私有方法，禁止访问!", [],"Action");
             }
 
@@ -168,7 +175,6 @@ class App
         }  catch (ExitApp $exit_app) {//执行退出
             App::$debug && Log::record("Frame", sprintf("框架执行退出: %s", $exit_app->getMessage()));
         } finally {
-            Error::appShutdown();
             self::$app && self::$app->onRequestEnd();
             if (App::$debug) {
                 Log::record("Frame", "框架响应结束...");

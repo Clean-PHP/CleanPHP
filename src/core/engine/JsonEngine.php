@@ -86,7 +86,7 @@ class JsonEngine extends ResponseEngine
     public function renderMsg(bool $err = false, int $code = 404, string $title = "", $msg = "", int $time = 3, string $url = '', string $desc = "立即跳转"): string
     {
         $array = [
-            "code"=>$code,"msg"=>$title,"data"=>[$msg,$url]
+            "code"=>$code,"msg"=>$title,"data"=>$msg,'url'=>$url
         ];
         EventManager::trigger("__json_render_msg__", $array, true);
         return Json::encode($array);

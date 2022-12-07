@@ -34,8 +34,10 @@ class Controller
         $this->setCode($this->eng()->getCode());
         $this->setContentType($this->eng()->getContentType());
 
-        $this->init();
-
+        $result = $this->__init();
+        if (!empty($result)){
+            (new Response())->render($result)->code(200)->contentType($this->eng()->getContentType())->send();
+        }
         EventManager::trigger("__on_controller_create__", $this);
     }
 
@@ -52,9 +54,9 @@ class Controller
     /**
      * 初始化函数
      */
-    public function init()
+    public function __init()
     {
-
+        return null;
     }
 
 
