@@ -32,7 +32,10 @@ class Log
     const TYPE_WARNING = 2;
     private int $type = 1;//写入的数据类型
 
-
+    public function __construct($temp)
+    {
+        $this->temp = Variables::getLogPath($temp.'.log');
+    }
 
     /**
      * 输出信息
@@ -42,7 +45,7 @@ class Log
      */
     public static function record($tag, $msg, int $type = self::TYPE_INFO)
     {
-        self::getInstance($tag)->temp .= self::getInstance($tag)->setType($type)->write($msg);
+        self::getInstance($tag)->addTemp(self::getInstance($tag)->setType($type)->write($msg));
     }
 
     /**
@@ -53,13 +56,18 @@ class Log
      */
     public static function recordFile($tag, $msg, int $type = self::TYPE_INFO)
     {
-
         $temp = self::getInstance($tag)->setType($type)->write($msg);
         $handler = fopen(self::$instance->file, 'a');
         if (flock($handler, LOCK_EX)) {
             fwrite($handler, $temp, strlen($temp));
             flock($handler, LOCK_UN);
         }
+        fclose($handler);
+    }
+
+    private function addTemp($msg){
+        $handler = fopen($this->temp, 'a');
+        fwrite($handler, $msg, strlen($msg));
         fclose($handler);
     }
 
@@ -85,7 +93,7 @@ class Log
     public static function getInstance($tag, string $filename = "cleanphp"): Log
     {
         if (self::$instance == null) {
-            self::$instance = new Log();
+            self::$instance = new Log(uniqid());
         }
         self::$instance->tag = $tag;
         self::$instance->file = Variables::getLogPath(date('Y-m-d'), Variables::get("__frame_log_tag__", "") . $filename . '.log');
@@ -103,10 +111,22 @@ class Log
     public function __destruct()
     {
         $id = Variables::get("__async_task_id__","");
-        $this->temp = "-----------[session $id start]-----------\n{$this->temp}-----------[session $id end]-----------\n\n";
+        $start= "-----------[session $id start]-----------\n";
+        $end= "-----------[session $id end]-----------\n\n";
         $handler = fopen(self::$instance->file, 'a');
         if (flock($handler, LOCK_EX)) {
-            fwrite($handler, $this->temp, strlen($this->temp));
+            fwrite($handler, $start, strlen($start));
+            $file_handle = fopen($this->temp,"r");
+            if ($file_handle){
+                //接着采用 while 循环一行行地读取文件，然后输出每行的文字
+                while (!feof($file_handle)) { //判断是否到最后一行
+                    $line = fgets($file_handle,4096); //读取一行文本
+                    fwrite($handler, $line, strlen($line));
+                }
+            }
+            fclose($file_handle);//关闭文件
+            unlink($this->temp);
+            fwrite($handler, $end, strlen($end));
             flock($handler, LOCK_UN);
         }
         fclose($handler);

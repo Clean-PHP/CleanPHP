@@ -121,7 +121,7 @@ class Upload {
      */
    private function checkFileType(UploadFile &$file)
     {
-        if(!in_array(strtolower($file->type), $this->allow_type)){
+        if(!empty($this->allow_type) && !in_array(strtolower($file->type), $this->allow_type)){
             throw new UploadException("未允许的上传类型",10001,$file);
         }
     }

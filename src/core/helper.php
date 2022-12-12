@@ -30,75 +30,72 @@ function lang(string $str, ...$args): string
     return Lang::get($str, ...$args);
 }
 
-if (!function_exists('mime_content_type')) {
-    /**
-     * 获取文件mime类型
-     * @param $filename string 文件绝对路径
-     * @return string
-     */
-    function mime_content_type(string $filename): string
-    {
+function file_type(string $filename): string
+{
 
-        $mime_types = array(
-            'txt' => 'text/plain',
-            'htm' => 'text/html',
-            'html' => 'text/html',
-            'php' => 'text/html',
-            'css' => 'text/css',
-            'js' => 'application/javascript',
-            'json' => 'application/json',
-            'xml' => 'application/xml',
-            'swf' => 'application/x-shockwave-flash',
-            'flv' => 'video/x-flv',
-            // images
-            'png' => 'image/png',
-            'jpe' => 'image/jpeg',
-            'jpeg' => 'image/jpeg',
-            'jpg' => 'image/jpeg',
-            'gif' => 'image/gif',
-            'bmp' => 'image/bmp',
-            'ico' => 'image/vnd.microsoft.icon',
-            'tiff' => 'image/tiff',
-            'tif' => 'image/tiff',
-            'svg' => 'image/svg+xml',
-            'svgz' => 'image/svg+xml',
-            // archives
-            'zip' => 'application/zip',
-            'rar' => 'application/x-rar-compressed',
-            'exe' => 'application/x-msdownload',
-            'msi' => 'application/x-msdownload',
-            'cab' => 'application/vnd.ms-cab-compressed',
-            // audio/video
-            'mp3' => 'audio/mpeg',
-            'qt' => 'video/quicktime',
-            'mov' => 'video/quicktime',
-            // adobe
-            'pdf' => 'application/pdf',
-            'psd' => 'image/vnd.adobe.photoshop',
-            'ai' => 'application/postscript',
-            'eps' => 'application/postscript',
-            'ps' => 'application/postscript',
-            // ms office
-            'doc' => 'application/msword',
-            'rtf' => 'application/rtf',
-            'xls' => 'application/vnd.ms-excel',
-            'ppt' => 'application/vnd.ms-powerpoint',
-            // open office
-            'odt' => 'application/vnd.oasis.opendocument.text',
-            'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
-        );
+    $mime_types = array(
+        'txt' => 'text/plain',
+        'htm' => 'text/html',
+        'html' => 'text/html',
+        'php' => 'text/html',
+        'css' => 'text/css',
+        'js' => 'application/javascript',
+        'json' => 'application/json',
+        'xml' => 'application/xml',
+        'swf' => 'application/x-shockwave-flash',
+        'flv' => 'video/x-flv',
+        // images
+        'png' => 'image/png',
+        'jpe' => 'image/jpeg',
+        'jpeg' => 'image/jpeg',
+        'jpg' => 'image/jpeg',
+        'gif' => 'image/gif',
+        'bmp' => 'image/bmp',
+        'ico' => 'image/vnd.microsoft.icon',
+        'tiff' => 'image/tiff',
+        'tif' => 'image/tiff',
+        'svg' => 'image/svg+xml',
+        'svgz' => 'image/svg+xml',
+        // archives
+        'zip' => 'application/zip',
+        'rar' => 'application/x-rar-compressed',
+        'exe' => 'application/x-msdownload',
+        'msi' => 'application/x-msdownload',
+        'cab' => 'application/vnd.ms-cab-compressed',
+        // audio/video
+        'mp3' => 'audio/mpeg',
+        'qt' => 'video/quicktime',
+        'mov' => 'video/quicktime',
+        // adobe
+        'pdf' => 'application/pdf',
+        'psd' => 'image/vnd.adobe.photoshop',
+        'ai' => 'application/postscript',
+        'eps' => 'application/postscript',
+        'ps' => 'application/postscript',
+        // ms office
+        'doc' => 'application/msword',
+        'rtf' => 'application/rtf',
+        'xls' => 'application/vnd.ms-excel',
+        'ppt' => 'application/vnd.ms-powerpoint',
+        // open office
+        'odt' => 'application/vnd.oasis.opendocument.text',
+        'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
+    );
 
-        $array = explode('.', $filename);
-        $ext = strtolower(array_pop($array));
-
-        if (array_key_exists($ext, $mime_types)) {
-            return $mime_types[$ext];
-        } else {
-            return 'application/octet-stream';
-        }
+    $result = '';
+    if (function_exists('finfo_file')) {
+        $result = finfo_file(finfo_open(FILEINFO_MIME_TYPE), $filename);
     }
-
+    $array = explode('.', $filename);
+    $ext = strtolower(array_pop($array));
+    if (array_key_exists($ext, $mime_types)) {
+        if ($result === 'text/plain'||$result === '') return $mime_types[$ext];
+    }
+    if($result === '')
+    return 'application/octet-stream';
+    return $result;
 }
+
 /**
  * 输出所有变量
  * @param ...$args
@@ -157,9 +154,9 @@ EOF;
  * @param $data  mixed 需要转换的类型
  * @return bool|float|int|mixed|string
  */
-function parse_type( $sample, $data)
+function parse_type($sample, $data)
 {
-    if(is_array($data))return $data;
+    if (is_array($data)) return $data;
     if (is_int($sample)) return intval($data);
     elseif (is_string($sample)) return strval($data);
     elseif (is_bool($sample)) return boolval($data);
@@ -200,12 +197,13 @@ function arg(string $key = null, $default = null)
 {
     return Argument::arg($key, $default);
 }
+
 /**
  * 生成符合路由规则的URL
- * @param string $m      模块名
- * @param string $c      控制器名
- * @param string $a      方法
- * @param array $param  参数数组
+ * @param string $m 模块名
+ * @param string $c 控制器名
+ * @param string $a 方法
+ * @param array $param 参数数组
  *
  * @return string
  */
@@ -253,9 +251,9 @@ function __unserialize(string $data, array $options = null)
  * @param int $timeout 异步任务的最长运行时间,单位为秒
  * @return string
  */
-function go(Closure $function,int $timeout = 300): string
+function go(Closure $function, int $timeout = 300): string
 {
-    return \core\process\Async::start($function,$timeout);
+    return \core\process\Async::start($function, $timeout);
 }
 
 /**
@@ -264,18 +262,18 @@ function go(Closure $function,int $timeout = 300): string
  * @param $array
  * @return bool
  */
-function in_array_case($value,$array): bool
+function in_array_case($value, $array): bool
 {
-    if(!is_array($array))return false;
-    return in_array(strtolower($value),array_map('strtolower',$array));
+    if (!is_array($array)) return false;
+    return in_array(strtolower($value), array_map('strtolower', $array));
 }
 
 /**
  *  获取随机字符串
- * @param int $length  字符串长度
- * @param bool $upper   是否包含大写字母
- * @param bool $lower   是否包含小写字母
- * @param bool $number  是否包含数字
+ * @param int $length 字符串长度
+ * @param bool $upper 是否包含大写字母
+ * @param bool $lower 是否包含小写字母
+ * @param bool $number 是否包含数字
  * @return string
  */
 function rand_str(int $length = 8, bool $upper = true, bool $lower = true, bool $number = true): string
@@ -285,7 +283,7 @@ function rand_str(int $length = 8, bool $upper = true, bool $lower = true, bool 
         'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         '0123456789',
     ];
-    $chars     = "";
+    $chars = "";
     if ($upper) {
         $chars .= $charsList[0];
     }

@@ -176,7 +176,9 @@ class Route
      */
     public static function renderStatic($path){
         if (file_exists($path)) {
-            (new Response())->render(self::replaceStatic(file_get_contents($path)), 200, mime_content_type($path))->send();
+            $type = file_type($path);
+            //\dump($type,true);
+            (new Response())->render(self::replaceStatic(file_get_contents($path)), 200,$type)->send();
         } else {
             Error::err(sprintf("找不到指定的静态资源：%s",$path),[],"Route");
         }

@@ -35,8 +35,8 @@ class ViewEngine extends ResponseEngine
     private bool $__encode = true;
     private int $__code = 200;
     private array $__data = [];
-    private string $__left_delimiter = "<{";
-    private string $__right_delimiter = "}>";
+    private string $__left_delimiter = "{";
+    private string $__right_delimiter = "}";
     private string $__compile_dir;
     private string $__template_dir;
 
@@ -185,7 +185,7 @@ TPL
         $__controller = Variables::get("__request_controller__",'');
         $__action = Variables::get("__request_action__",'');
         //构建模板
-        $tpl_name = $__controller . '_' . $__action;
+        $tpl_name = $__controller . '_system_error' ;
 
         $tpl = Variables::getViewPath($__module, $tpl_name . ".tpl");
 
@@ -370,28 +370,28 @@ TPL
         $foreach_inner_before = '<?php if(!empty($1)){ $_foreach_$3_counter = 0; $_foreach_$3_total = count($1);?>';
         $foreach_inner_after = '<?php $_foreach_$3_index = $_foreach_$3_counter;$_foreach_$3_iteration = $_foreach_$3_counter + 1;$_foreach_$3_first = ($_foreach_$3_counter == 0);$_foreach_$3_last = ($_foreach_$3_counter == $_foreach_$3_total - 1);$_foreach_$3_counter++;?>';
         $pattern_map = [
-            '<{\*([\s\S]+?)\*}>' => '<?php /* $1*/?>',
-            '<{#(.*?)}>' => '<?php echo $1; ?>',
-            '(<{((?!}>).)*?)(\$[\w\"\'\[\]]+?)\.(\w+)(.*?}>)' => '$1$3[\'$4\']$5',
-            '(<{.*?)(\$(\w+)@(index|iteration|first|last|total))+(.*?}>)' => '$1$_foreach_$3_$4$5',
-            '<{(\$[\$\w\.\"\'\[\]]+?)\snofilter\s*}>' => '<?php echo $1; ?>',
-            '<{([\w\$\.\[\]\=\'"\s]+)\?([\w\$\.\[\]\=\'":\s]+)}>' => '<?php echo $1?$2; ?>',
-            '<{(\$[\$\w\"\'\[\]]+?)\s*=(.*?)\s*}>' => '<?php $1 = $2; ?>',
-            '<{(\$[\$\w\.\"\'\[\]]+?)\s*}>' => '<?php echo htmlspecialchars($1, ENT_QUOTES, "UTF-8"); ?>',
-            '<{if\s*(.+?)}>' => '<?php if ($1) : ?>',
-            '<{else\s*if\s*(.+?)}>' => '<?php elseif ($1) : ?>',
-            '<{else}>' => '<?php else : ?>',
-            '<{break}>' => '<?php break; ?>',
-            '<{continue}>' => '<?php continue; ?>',
-            '<{\/if}>' => '<?php endif; ?>',
-            '<{foreach\s*(\$[\$\w\.\"\'\[\]]+?)\s*as(\s*)\$([\w\"\'\[\]]+?)}>' => $foreach_inner_before . '<?php foreach( $1 as $$3 ) : ?>' . $foreach_inner_after,
-            '<{foreach\s*(\$[\$\w\.\"\'\[\]]+?)\s*as\s*(\$[\w\"\'\[\]]+?)\s*=>\s*\$([\w\"\'\[\]]+?)}>' => $foreach_inner_before . '<?php foreach( $1 as $2 => $$3 ) : ?>' . $foreach_inner_after,
-            '<{\/foreach}>' => '<?php endforeach; }?>',
-            '<{include\s*file=(.+?)}>' => '<?php include $this->compile($1); ?>',
+            '{\*([\s\S]+?)\*}' => '<?php /* $1*/?>',
+            '{#(.*?)}' => '<?php echo $1; ?>',
+            '({((?!}).)*?)(\$[\w\"\'\[\]]+?)\.(\w+)(.*?})' => '$1$3[\'$4\']$5',
+            '({.*?)(\$(\w+)@(index|iteration|first|last|total))+(.*?})' => '$1$_foreach_$3_$4$5',
+            '{(\$[\$\w\.\"\'\[\]]+?)\snofilter\s*}' => '<?php echo $1; ?>',
+            '{([\w\$\.\[\]\=\'"\s]+)\?([\w\$\.\[\]\=\'":\s]+)}' => '<?php echo $1?$2; ?>',
+            '{(\$[\$\w\"\'\[\]]+?)\s*=(.*?)\s*}' => '<?php $1 = $2; ?>',
+            '{(\$[\$\w\.\"\'\[\]]+?)\s*}' => '<?php echo htmlspecialchars($1, ENT_QUOTES, "UTF-8"); ?>',
+            '{if\s*(.+?)}' => '<?php if ($1) : ?>',
+            '{else\s*if\s*(.+?)}' => '<?php elseif ($1) : ?>',
+            '{else}' => '<?php else : ?>',
+            '{break}' => '<?php break; ?>',
+            '{continue}' => '<?php continue; ?>',
+            '{\/if}' => '<?php endif; ?>',
+            '{foreach\s*(\$[\$\w\.\"\'\[\]]+?)\s*as(\s*)\$([\w\"\'\[\]]+?)}' => $foreach_inner_before . '<?php foreach( $1 as $$3 ) : ?>' . $foreach_inner_after,
+            '{foreach\s*(\$[\$\w\.\"\'\[\]]+?)\s*as\s*(\$[\w\"\'\[\]]+?)\s*=>\s*\$([\w\"\'\[\]]+?)}' => $foreach_inner_before . '<?php foreach( $1 as $2 => $$3 ) : ?>' . $foreach_inner_after,
+            '{\/foreach}' => '<?php endforeach; }?>',
+            '{include\s*file=(.+?)}' => '<?php include $this->compile($1); ?>',
         ];
 
         foreach ($pattern_map as $p => $r) {
-            $pattern = '/' . str_replace(["<{", "}>"], [$this->__left_delimiter . '\s*', '\s*' . $this->__right_delimiter], $p) . '/i';
+            $pattern = '/' . str_replace(["{", "}"], [$this->__left_delimiter . '\s*', '\s*' . $this->__right_delimiter], $p) . '/i';
             $count = 1;
             while ($count != 0) {
                 $template_data = preg_replace($pattern, $r, $template_data, -1, $count);
@@ -456,7 +456,7 @@ TPL
 <html xmlns="http://www.w3.org/1999/xhtml" lang="zh-CN">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title><{$msg nofilter}></title>
+    <title>{$msg nofilter}</title>
     <style type="">
     body {
 	padding: 0;
@@ -559,29 +559,29 @@ pre {
 <body>
 <div id="main">
     <div id="contents">
-    <{if $dump!==""}>
-     <h2><pre>错误发生前已输出的内容：<br><{$dump}></pre></h2>
-    <{/if}>
+    {if $dump!==""}
+     <h2><pre>错误发生前已输出的内容：<br>{$dump}</pre></h2>
+    {/if}
         
         <h2>
-            <pre><{$msg nofilter}></pre>
+            <pre>{$msg nofilter}</pre>
         </h2>
-        <{foreach $array as $key => $trace}>
+        {foreach $array as $key => $trace}
             <ul>
                 <li><span>
-                <{$trace["title"]}></span>  
+                {$trace["title"]}</span>  
                 <span style="color: #094e5a">
-                <{$trace["func"]}></span>  
+                {$trace["func"]}</span>  
                 </li>
             </ul>
             <div id="oneborder">
                
-                <{foreach $trace["data"] as $singleLine}>
-                    <{$singleLine nofilter}>
-                <{/foreach}>
+                {foreach $trace["data"] as $singleLine}
+                    {$singleLine nofilter}
+                {/foreach}
 </div>
           
-        <{/foreach}>
+        {/foreach}
     </div>
 </div>
 <div style="clear:both;padding-bottom:50px;"></div>
@@ -712,8 +712,6 @@ pre {
             foreach ($matches_inner as $m) $params .= '\'' . $m[1] . "'=>" . $m[2] . ", ";
             $params .= ")";
             return '<?php echo ' . $matches[1] . '(' . $params . ');?>';
-        } else {
-            Error::err(sprintf('%s 函数的参数不正确', $matches[1]),[],"ViewEngine");
         }
         return "";
     }

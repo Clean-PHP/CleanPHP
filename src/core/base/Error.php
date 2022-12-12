@@ -40,17 +40,12 @@ class Error
      */
     public static function appException(Throwable $e)
     {
-        //捕获异常后清除数据
-        error_clear_last();
+
         if ($e instanceof ExitApp) {
             App::$debug && Log::record("Frame", sprintf("框架执行退出: %s", $e->getMessage()));
             return;//Exit异常不进行处理
         }
-        try{
-            self::err($e->getMessage(),$e->getTrace(),get_class($e));
-        }catch (ExitApp $e){
-            App::$debug && Log::record("Frame", sprintf("框架执行退出[Exception]: %s", $e->getMessage()));
-        }
+        self::err($e->getMessage(),$e->getTrace(),get_class($e));
     }
 
     /**
@@ -62,14 +57,22 @@ class Error
      */
     public static function err(string $msg, array $errInfo = [],string $log_tag = "ErrorInfo")
     {
+        if(Variables::get('__frame_error__',false))return;
+        //捕获异常后清除数据
+        error_clear_last();
+        //避免递归调用
+            Variables::set('__frame_error__',true);
             Log::record($log_tag, $msg,Log::TYPE_ERROR);
             $traces = sizeof($errInfo) === 0 ? debug_backtrace() : $errInfo;
+
+        foreach($traces as $i=>$call){
+            $trace_text[$i] = sprintf("#%s %s(%s): %s%s%s",$i,$call['file']??"",$call['line']??"",$call["class"]??"",$call["type"]??"",$call['function']??"");
+            Log::record($log_tag,$trace_text[$i],Log::TYPE_ERROR);
+        }
 
             if ($dump = ob_get_contents()) {
                 ob_end_clean();
             }
-            //判断是否有应用进行了异常处理
-            if (EventManager::trigger("__on_system_error__", $msg, true)) return;
 
             $engine = self::getEngine($result);
 
@@ -80,6 +83,7 @@ class Error
             } else {
                 (new Response())->render($engine->renderMsg(true, 404, lang("404 Not Found"), lang("您访问的资源不存在。"), 5, "/", lang("立即跳转")), 404, $engine->getContentType())->send();
             }
+
     }
 
     /**
@@ -138,12 +142,7 @@ class Error
         if ($errno == 8192) {
             $msg = "DEPRECATED";
         }
-        try{
-
-            self::err("$msg: $err_str in $err_file on line $err_line");
-       }catch (ExitApp $e){
-            App::$debug && Log::record("Frame", sprintf("框架执行退出[appError]: %s", $e->getMessage()));
-            }
+        self::err("$msg: $err_str in $err_file on line $err_line");
         return false;
     }
 
@@ -153,11 +152,7 @@ class Error
     public static function appShutdown()
     {
         if ($err = error_get_last())
-            try{
-                self::err("Fatal error: {$err['message']} in {$err['file']} on line {$err['line']}");
-            }catch (ExitApp $e){
-                App::$debug && Log::record("Frame", sprintf("框架执行退出[shutDown]: %s", $e->getMessage()));
-            }
+            self::err("Fatal error: {$err['message']} in {$err['file']} on line {$err['line']}");
 
     }
 
