@@ -13,14 +13,14 @@
 
 namespace library\websocket;
 
-use core\file\Log;
+//use core\file\Log;
 use Throwable;
 
 class WebsocketException extends \Exception
 {
     public function __construct($message = "")
     {
-        Log::record("Websocket",$message,Log::TYPE_ERROR);
+     //   Log::record("Websocket",$message,Log::TYPE_ERROR);
         parent::__construct($message, 0, null);
     }
 }

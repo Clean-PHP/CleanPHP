@@ -1,27 +1,29 @@
 <?php
 /*******************************************************************************
- * Copyright (c) 2022. CleanPHP. All Rights Reserved.
+ * Copyright (c) 2022. Ankio. All Rights Reserved.
  ******************************************************************************/
 
 /**
- * Class WS
+ * Package: library\websocket\main
+ * Class Server
  * Created By ankio.
- * Date : 2022/8/8
- * Time : 17:05
+ * Date : 2022/12/16
+ * Time : 11:28
  * Description :
  */
 
-namespace library\websocket;
+namespace library\websocket\main;
 
 use core\App;
 use core\base\Variables;
-use core\cache\Cache;
+use core\exception\WarningException;
 use core\file\Log;
-use core\objects\ArgObject;
+use library\websocket\SocketInfo;
+use library\websocket\WebsocketException;
+use library\websocket\WSEvent;
 
-class WS
+class Server extends Base
 {
-
     private bool $log = false;//客户端sockets
     private $master;
     /**
@@ -43,7 +45,7 @@ class WS
         set_time_limit(0);
         ob_implicit_flush();
         $this->log = $log;
-        $this->WebSocket($ip, $port);
+        $this->server($ip, $port);
         $this->event_handler = $event_handler;
     }
 
@@ -53,7 +55,7 @@ class WS
      * @param $port int 端口
      * @throws WebsocketException
      */
-    private function WebSocket(string $address, int $port)
+    private function server(string $address, int $port)
     {
         try {
             $this->master = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
@@ -87,17 +89,15 @@ class WS
      */
     public function run()
     {
-        file_put_contents(Variables::getCachePath('websocket.lock'),getmypid());
+        file_put_contents(Variables::getCachePath('websocket.lock'), getmypid());
         while (true) {
-            if(!file_exists(Variables::getCachePath('websocket.lock'))){
-                App::$debug && Log::recordFile("Tasker","定时任务进程发生变化，当前进程结束");
+            if (!file_exists(Variables::getCachePath('websocket.lock'))) {
+                App::$debug && Log::recordFile("Tasker", "定时任务进程发生变化，当前进程结束");
                 break;
             }
-
             $write = $except = null;
-
             $sockets = [];
-            foreach ($this->sockets as $item){
+            foreach ($this->sockets as $item) {
                 $sockets[] = $item->resource;
             }
 
@@ -108,7 +108,6 @@ class WS
                 break;
             }
             foreach ($sockets as $socket) {
-
                 // 如果可读的是服务器socket,则处理连接逻辑
                 if ($socket === $this->master) {
                     $client = socket_accept($this->master);
@@ -120,20 +119,39 @@ class WS
                         $this->connect($client);
                     }
                 } else {
-                    // 如果可读的是其他已连接socket,则读取其数据,并处理应答逻辑
-                    [$buffer, $bytes] = $this->read($socket);
-                    if ($bytes < 9) {
-                        $this->event_handler && $this->event_handler->onClose($this,$this->sockets[(int)$socket]);
-                        $this->disconnect($socket);
-
-                    } else {
-                        if (!$this->sockets[(int)$socket]->handshake) {
-                            $this->handShake($socket, $buffer);
-                            $this->event_handler && $this->event_handler->onConnect($this, $this->sockets[(int)$socket]);
-                        } else {
-                            $this->event_handler && $this->event_handler->onMsg($this, $this->decode($buffer), $this->sockets[(int)$socket]);
-                        }
+                    if (!$this->sockets[(int)$socket]->handshake) {
+                        $this->handShake($socket, $this->read($socket) ?? "");
+                        $this->event_handler && $this->event_handler->onConnect($this, $this->sockets[(int)$socket]);
+                        continue;
                     }
+                    $data_frame = $this->readFrame($socket);
+                    // 如果可读的是其他已连接socket,则读取其数据,并处理应答逻辑
+                    switch ($data_frame->opcode) {
+                        case self::OPCODE_PING:
+                            $this->pong();
+                            break;
+                        case self::OPCODE_PONG:
+                            break;
+                        case self::OPCODE_TEXT_FRAME:
+                        case self::OPCODE_BINARY_FRAME:
+                            /**
+                             * Log::recordFile("data",print_r($data_frame,true));
+                             * if ($data_frame->fin == 0) {
+                             * do {
+                             * $continueFrame = $this->readFrame($socket);
+                             * $data_frame->payload .= $continueFrame->payload;
+                             * } while ($continueFrame->fin == 0);
+                             * }**/
+                            $this->event_handler && $this->event_handler->onMsg($this, $data_frame->payload, $this->sockets[(int)$socket]);
+                            break;
+                        case self::OPCODE_CLOSE:
+                            $this->event_handler && $this->event_handler->onClose($this, $this->sockets[(int)$socket]);
+                            $this->disconnect($socket);
+                            break;
+                        default:
+                            throw new WebsocketException('无法识别的frame数据');
+                    }
+
                 }
             }
 
@@ -157,21 +175,41 @@ class WS
     }
 
     /**
+     * 执行握手
+     * @param $socket resource
+     * @param $buffer string 请求数据
+     * @return void
+     */
+    private function handshake($socket, string $buffer): void
+    {
+        // 获取到客户端的升级密匙
+        $line_with_key = substr($buffer, strpos($buffer, 'Sec-WebSocket-Key:') + 18);
+        $key = trim(substr($line_with_key, 0, strpos($line_with_key, "\r\n")));
+        // 生成升级密匙,并拼接websocket升级头
+        $upgrade_key = base64_encode(sha1($key . "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", true));// 升级key的算法
+        $upgrade_message = "HTTP/1.1 101 Switching Protocols\r\n";
+        $upgrade_message .= "Upgrade: websocket\r\n";
+        $upgrade_message .= "Sec-WebSocket-Version: 13\r\n";
+        $upgrade_message .= "Connection: Upgrade\r\n";
+        $upgrade_message .= "Sec-WebSocket-Accept:" . $upgrade_key . "\r\n\r\n";
+        socket_write($socket, $upgrade_message, strlen($upgrade_message));// 向socket里写入升级信息
+        $this->sockets[(int)$socket]->handshake = true;
+    }
+
+    /**
      * 循环读取
      * @param $socket
-     * @return array
+     * @return mixed|string|null
      */
-    private function read($socket): array
+    private function read($socket)
     {
         $received_data = null;
-        $received_bytes = null;
         socket_set_nonblock($socket);
         socket_clear_error();
-        while ( $read = @socket_recv($socket, $buf,4096, 0) >= 1) {
+        while (@socket_recv($socket, $buf, 4096, 0) >= 1) {
             $received_data = (isset($received_data)) ? $received_data . $buf : $buf;
-            $received_bytes = (isset($received_bytes)) ? $received_bytes + $read : $read;
         }
-        return [$received_data, $received_bytes];
+        return $received_data;
     }
 
     /**
@@ -186,94 +224,20 @@ class WS
     }
 
     /**
-     * 执行握手
-     * @param $socket resource
-     * @param $buffer string 请求数据
-     * @return void
-     */
-    private function handshake($socket, string $buffer): void
-    {
-        // 获取到客户端的升级密匙
-        $line_with_key = substr($buffer, strpos($buffer, 'Sec-WebSocket-Key:') + 18);
-        $key = trim(substr($line_with_key, 0, strpos($line_with_key, "\r\n")));
-
-        // 生成升级密匙,并拼接websocket升级头
-        $upgrade_key = base64_encode(sha1($key . "258EAFA5-E914-47DA-95CA-C5AB0DC85B11", true));// 升级key的算法
-        $upgrade_message = "HTTP/1.1 101 Switching Protocols\r\n";
-        $upgrade_message .= "Upgrade: websocket\r\n";
-        $upgrade_message .= "Sec-WebSocket-Version: 13\r\n";
-        $upgrade_message .= "Connection: Upgrade\r\n";
-        $upgrade_message .= "Sec-WebSocket-Accept:" . $upgrade_key . "\r\n\r\n";
-        socket_write($socket, $upgrade_message, strlen($upgrade_message));// 向socket里写入升级信息
-        $this->sockets[(int)$socket]->handshake = true;
-    }
-
-    /**
-     * 解码websocket数据
-     * @param string $str 数据
-     * @return string
-     */
-    private function decode(string $str): ?string
-    {
-        $decoded = '';
-        $len = ord($str[1]) & 127;
-        if ($len === 126) {
-            $masks = substr($str, 4, 4);
-            $data = substr($str, 8);
-        } else if ($len === 127) {
-            $masks = substr($str, 10, 4);
-            $data = substr($str, 14);
-        } else {
-            $masks = substr($str, 2, 4);
-            $data = substr($str, 6);
-        }
-        for ($index = 0; $index < strlen($data); $index++) {
-            $decoded .= $data[$index] ^ $masks[$index % 4];
-        }
-
-        return $decoded;
-    }
-
-    /**
      * 推送给所有客户端
      * @param $msg string
+     * @param int $opcode
+     * @param bool $is_mask
+     * @param int $state
      * @return void
      */
-    public function pushAll(string $msg)
+    public function pushAll(string $msg, int $opcode = self::OPCODE_TEXT_FRAME, bool $is_mask = false, int $state = 1000)
     {
         foreach ($this->sockets as $socket) {
             if ($socket->resource == $this->master) {
                 continue;
             }
-            $this->push($socket->resource, $msg);
-        }
-    }
-
-    /**
-     * 向指定id推送消息
-     * @param int $id
-     * @param $msg
-     * @return void
-     */
-    public function pushWithId(int $id,$msg){
-        if(isset($this->sockets[$id])){
-            $socket = $this->sockets[$id]->resource;
-            $this->push($socket,$msg);
-        }
-
-    }
-    /**
-     * 推送消息给所有客户端，除了自己
-     * @param string $msg
-     * @param $self
-     * @return void
-     */
-    public function pushAllWithoutSelf(string $msg,$self){
-        foreach ($this->sockets as $socket) {
-            if ($socket->resource == $this->master || $socket->resource==$self||$self==0) {
-                continue;
-            }
-            $this->push($socket->resource, $msg);
+            $this->push($socket->resource, $msg, $opcode, $is_mask, $state);
         }
     }
 
@@ -281,58 +245,63 @@ class WS
      * 推送消息
      * @param $socket resource
      * @param $msg string
-     * @return false|int
+     * @param int $opcode
+     * @param bool $is_mask
+     * @param int $state
+     * @return void
      */
-    public function push($socket, string $msg)
+    public function push($socket, string $msg, int $opcode = self::OPCODE_TEXT_FRAME, bool $is_mask = false, int $state = 1000)
     {
-        App::$debug && Log::recordFile('Websocket','消息推送：'.$msg);
-        $t = $this->encode($msg);
-        return socket_write($socket, $t, strlen($t));
+
+        $id = (int)$socket;
+        if (!isset($this->sockets[$id])) {
+            return;
+        }
+        try {
+            App::$debug && Log::recordFile('Websocket', '消息推送：' . $msg);
+            $t = $this->packFrame($opcode, $msg, $is_mask, $state);
+            socket_write($socket, $t, strlen($t));
+        } catch (WarningException $exception) {
+            if (isset($this->sockets[$id]))
+                unset($this->sockets[$id]);
+            Log::recordFile("Exception", $exception->getMessage());
+        }
     }
 
     /**
-     * 编码
-     * @param $msg string
-     * @return false|string
+     * 向指定id推送消息
+     * @param int $id
+     * @param $msg
+     * @param int $opcode
+     * @param bool $is_mask
+     * @param int $state
+     * @return void
      */
-    private function encode(string $msg)
+    public function pushWithId(int $id, $msg, int $opcode = self::OPCODE_TEXT_FRAME, bool $is_mask = false, int $state = 1000)
     {
-        $frame = [];
-        $frame[0] = '81';
-        $len = strlen($msg);
-        if ($len < 126) {
-            $frame[1] = $len < 16 ? '0' . dechex($len) : dechex($len);
-        } else if ($len < 65025) {
-            $s = dechex($len);
-            $frame[1] = '7e' . str_repeat('0', 4 - strlen($s)) . $s;
-        } else {
-            $s = dechex($len);
-            $frame[1] = '7f' . str_repeat('0', 16 - strlen($s)) . $s;
+        if (isset($this->sockets[$id])) {
+            $socket = $this->sockets[$id]->resource;
+            $this->push($socket, $msg, $opcode, $is_mask, $state);
         }
-
-        $data = '';
-        $l = strlen($msg);
-        for ($i = 0; $i < $l; $i++) {
-            $data .= dechex(ord($msg[$i]));
-        }
-        $frame[2] = $data;
-
-        $data = implode('', $frame);
-
-        return pack("H*", $data);
     }
 
     /**
-     * @param $data
-     * @return string
+     * 推送消息给所有客户端，除了自己
+     * @param string $msg
+     * @param $self
+     * @param int $opcode
+     * @param bool $is_mask
+     * @param int $state
+     * @return void
      */
-    private function ord_hex($data): string
+    public function pushAllWithoutSelf(string $msg, $self, int $opcode = self::OPCODE_TEXT_FRAME, bool $is_mask = false, int $state = 1000)
     {
-        $msg = '';
-        $l = strlen($data);
-        for ($i = 0; $i < $l; $i++) {
-            $msg .= dechex(ord($data[$i]));
+        foreach ($this->sockets as $socket) {
+            if ($socket->resource == $this->master || $socket->resource == $self || $self == 0) {
+                continue;
+            }
+            $this->push($socket->resource, $msg, $opcode, $is_mask, $state);
         }
-        return $msg;
     }
+
 }

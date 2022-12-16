@@ -13,28 +13,30 @@
 
 namespace library\websocket;
 
+use library\websocket\main\Server;
+
 interface WSEvent
 {
     /**
      * 当Websocket链接上的时候
-     * @param WS $ws
+     * @param Server $ws
      * @param SocketInfo $socket
      * @return mixed
      */
-    public function onConnect(WS $ws,  SocketInfo &$socket);
+    public function onConnect(Server $ws,  SocketInfo &$socket);
 
     /**
      * 当websocket关闭的时候
      * @return mixed
      */
-    public function onClose(WS $ws,  SocketInfo &$socket);
+    public function onClose(Server $ws,  SocketInfo &$socket);
 
     /**
      * 当收到websocket信息的时候
-     * @param WS $ws
+     * @param Server $ws
      * @param string|null $msg
      * @param SocketInfo $socket
      * @return mixed
      */
-    public function onMsg(WS $ws,?string $msg,   SocketInfo &$socket);
+    public function onMsg(Server $ws,?string $msg,   SocketInfo &$socket);
 }

@@ -20,6 +20,7 @@ use core\config\Config;
 use core\event\EventListener;
 use core\event\EventManager;
 use core\file\Log;
+use library\websocket\main\Server;
 
 
 class WebSocket implements EventListener
@@ -39,7 +40,7 @@ class WebSocket implements EventListener
             go(function (){
                 EventManager::trigger('__on_start_websocket__');
                 Variables::set("__frame_log_tag__", "ws_");
-                $websocket = new WS(Config::getConfig("websocket")["ip"], Config::getConfig("websocket")["port"], App::$debug, self::$WSEvent);
+                $websocket = new Server(Config::getConfig("websocket")["ip"], Config::getConfig("websocket")["port"], App::$debug, self::$WSEvent);
                 $websocket->run();
             },0);
         }

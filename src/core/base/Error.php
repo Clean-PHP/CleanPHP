@@ -19,7 +19,12 @@ use core\engine\JsonEngine;
 use core\engine\ResponseEngine;
 use core\engine\ViewEngine;
 use core\event\EventManager;
+use core\exception\DeprecatedException;
+use core\exception\ErrorException;
 use core\exception\ExitApp;
+use core\exception\NoticeException;
+use core\exception\StrictException;
+use core\exception\WarningException;
 use core\file\Log;
 use Throwable;
 
@@ -37,6 +42,7 @@ class Error
      *
      * App异常退出
      * @param $e Throwable
+     * @throws ExitApp
      */
     public static function appException(Throwable $e)
     {
@@ -126,34 +132,27 @@ class Error
      * @param string $err_file
      * @param int $err_line
      * @return bool
+     * @throws WarningException
+     * @throws ErrorException
+     * @throws DeprecatedException
+     * @throws StrictException
+     * @throws NoticeException
      */
     public static function appError(int $errno, string $err_str, string $err_file = '', int $err_line = 0): bool
     {
-        $msg = "ERROR";
         if ($errno == E_WARNING) {
-            $msg = "WARNING";
+            throw new WarningException("WARNING: $err_str in $err_file on line $err_line");
         }
-        if ($errno == E_NOTICE) {
-            $msg = "NOTICE";
+        elseif ($errno == E_NOTICE) {
+            throw new NoticeException("NOTICE: $err_str in $err_file on line $err_line");
         }
-        if ($errno == E_STRICT) {
-            $msg = "STRICT";
+        elseif ($errno == E_STRICT) {
+            throw new StrictException("STRICT: $err_str in $err_file on line $err_line");
         }
-        if ($errno == 8192) {
-            $msg = "DEPRECATED";
+        elseif ($errno == 8192) {
+            throw new DeprecatedException("DEPRECATED: $err_str in $err_file on line $err_line");
         }
-        self::err("$msg: $err_str in $err_file on line $err_line");
-        return false;
-    }
-
-    /**
-     * app正常退出前检查异常
-     */
-    public static function appShutdown()
-    {
-        if ($err = error_get_last())
-            self::err("Fatal error: {$err['message']} in {$err['file']} on line {$err['line']}");
-
+        else throw new ErrorException("ERROR: $err_str in $err_file on line $err_line");
     }
 
 }
