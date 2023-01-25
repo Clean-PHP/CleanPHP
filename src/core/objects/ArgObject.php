@@ -22,6 +22,7 @@ class ArgObject
      */
     public function __construct(array $item = [])
     {
+        if(empty($item))return;
         foreach (get_object_vars($this) as $key => $val) {
             $data = $val;
             if (isset($item[$key])) {
@@ -42,7 +43,15 @@ class ArgObject
      */
     public function toArray(): array
     {
-        return get_object_vars($this);
+        $ret = get_object_vars($this);
+        foreach ($ret as $key => &$value){
+            $this->onToArray($key,$value);
+        }
+        return $ret;
+    }
+
+    public function onToArray($key,&$value){
+
     }
 
     /**
