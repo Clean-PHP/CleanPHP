@@ -14,7 +14,6 @@
 
 namespace core\engine;
 
-use core\base\Controller;
 use core\base\Response;
 use core\exception\ExitApp;
 
@@ -60,7 +59,6 @@ abstract class ResponseEngine
 
 
     /**
-     * @throws ExitApp
      */
     function renderMsg(bool $err = false, int $code = 404, string $title = "", $msg = "", int $time = 3, string $url = '', string $desc = "立即跳转"): string
     {

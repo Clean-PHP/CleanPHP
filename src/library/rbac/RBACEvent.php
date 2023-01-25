@@ -19,7 +19,6 @@ use core\App;
 use core\base\Controller;
 use core\base\Response;
 use core\event\EventListener;
-use core\event\EventManager;
 use core\exception\ExitApp;
 use core\objects\StringBuilder;
 
@@ -49,7 +48,7 @@ class RBACEvent implements EventListener
         //没有返回就是需要授权才能访问
         if(!App::$debug){
 
-            (new Response())->code(403)->render($data->eng()->renderMsg(true,403,"403 Forbidden",lang("对不起，你没有访问权限。")))->send();
+            (new Response())->code(403)->render($data->eng()->renderMsg(true, 403, "403 Forbidden", "对不起，你没有访问权限。"))->send();
         }else{
             dumps("当前为调试模式","对不起您没有访问权限","权限信息",$role_data);
             App::exit("对不起您没有访问权限");

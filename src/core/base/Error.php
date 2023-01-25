@@ -18,7 +18,6 @@ use core\App;
 use core\engine\JsonEngine;
 use core\engine\ResponseEngine;
 use core\engine\ViewEngine;
-use core\event\EventManager;
 use core\exception\DeprecatedException;
 use core\exception\ErrorException;
 use core\exception\ExitApp;
@@ -59,36 +58,35 @@ class Error
      * @param string $msg 错误信息
      * @param array $errInfo 堆栈
      * @param string $log_tag 记录日志的tag
-     * @throws ExitApp
      */
     public static function err(string $msg, array $errInfo = [],string $log_tag = "ErrorInfo")
     {
-        if(Variables::get('__frame_error__',false))return;
+        if (Variables::get('__frame_error__', false)) return;
         //捕获异常后清除数据
         error_clear_last();
         //避免递归调用
-            Variables::set('__frame_error__',true);
-            Log::record($log_tag, $msg,Log::TYPE_ERROR);
-            $traces = sizeof($errInfo) === 0 ? debug_backtrace() : $errInfo;
+        Variables::set('__frame_error__', true);
+        Log::record($log_tag, $msg, Log::TYPE_ERROR);
+        $traces = sizeof($errInfo) === 0 ? debug_backtrace() : $errInfo;
 
-        foreach($traces as $i=>$call){
-            $trace_text[$i] = sprintf("#%s %s(%s): %s%s%s",$i,$call['file']??"",$call['line']??"",$call["class"]??"",$call["type"]??"",$call['function']??"");
-            Log::record($log_tag,$trace_text[$i],Log::TYPE_ERROR);
+        foreach ($traces as $i => $call) {
+            $trace_text[$i] = sprintf("#%s %s(%s): %s%s%s", $i, $call['file'] ?? "", $call['line'] ?? "", $call["class"] ?? "", $call["type"] ?? "", $call['function'] ?? "");
+            Log::record($log_tag, $trace_text[$i], Log::TYPE_ERROR);
         }
 
-            if ($dump = ob_get_contents()) {
-                ob_end_clean();
-            }
+        if ($dump = ob_get_contents()) {
+            ob_end_clean();
+        }
 
-            $engine = self::getEngine($result);
+        $engine = self::getEngine($result);
 
-            if($result!==null){
-                (new Response())->render($result, 200, $engine->getContentType())->send();
-            }else if (App::$debug) {
-                (new Response())->render($engine->renderError($msg, $traces, $dump,$log_tag), 200, $engine->getContentType())->send();
-            } else {
-                (new Response())->render($engine->renderMsg(true, 404, lang("404 Not Found"), lang("您访问的资源不存在。"), 5, "/", lang("立即跳转")), 404, $engine->getContentType())->send();
-            }
+        if ($result !== null) {
+            (new Response())->render($result, 200, $engine->getContentType())->send();
+        } else if (App::$debug) {
+            (new Response())->render($engine->renderError($msg, $traces, $dump, $log_tag), 200, $engine->getContentType())->send();
+        } else {
+            (new Response())->render($engine->renderMsg(true, 404, lang("404 Not Found"), lang("您访问的资源不存在。"), 5, "/", lang("立即跳转")), 404, $engine->getContentType())->send();
+        }
 
     }
 

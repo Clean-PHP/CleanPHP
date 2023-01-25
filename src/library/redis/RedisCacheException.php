@@ -20,7 +20,7 @@ class RedisCacheException extends Exception
 {
     public function __construct($message = "")
     {
-        //App::$debug && Log::record("Redis", lang("Redis异常：%s", $message),Log::TYPE_ERROR);
+        //App::$debug && Log::record("Redis", sprintf("Redis异常：%s", $message),Log::TYPE_ERROR);
 
         parent::__construct($message);
     }

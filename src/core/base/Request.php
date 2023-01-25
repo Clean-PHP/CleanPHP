@@ -209,6 +209,11 @@ class Request
         return $_SERVER['REQUEST_METHOD'] == 'GET';
     }
 
+    public static function getRequestMethod()
+    {
+        return $_SERVER['REQUEST_METHOD'];
+    }
+
     /**
      * 是否POST请求
      * @return bool

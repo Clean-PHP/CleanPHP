@@ -17,6 +17,7 @@ use core\App;
 use core\config\Config;
 use core\event\EventManager;
 use core\exception\ExitApp;
+use core\objects\StringBuilder;
 
 /**
  * Class Response
@@ -40,10 +41,14 @@ class Response
      * 直接跳转
      * @param string $url 跳转路径
      * @param int $timeout 延时跳转
-     * @throws ExitApp
      */
     public static function location(string $url, int $timeout = 0)
     {
+        if (!(new StringBuilder($url))->startsWith("http")) {
+            $url = Response::getHttpScheme() . Request::getDomain() . $url;
+        }
+
+
         if ($timeout !== 0) {
             header("refresh:$timeout," . $url);
         } else {

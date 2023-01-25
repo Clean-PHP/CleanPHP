@@ -133,7 +133,7 @@ class Route
      * 获取路径
      * @return string
      */
-    private static function getQuery(): string
+    public static function getQuery(): string
     {
         $query = Variables::get("__route_query__");
         if ($query === null) {
@@ -160,7 +160,6 @@ class Route
 
     /**
      * 事件
-     * @throws ExitApp
      */
     private static function beforeRoute($data)
     {
@@ -172,7 +171,9 @@ class Route
     }
 
     /**
-     * @throws ExitApp
+     * 渲染静态资源
+     * @param $path
+     * @return void
      */
     public static function renderStatic($path){
         if (file_exists($path)) {

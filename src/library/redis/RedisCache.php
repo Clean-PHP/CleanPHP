@@ -15,11 +15,11 @@
 namespace library\redis;
 
 use core\App;
+use core\base\Variables;
 use core\cache\CacheInterface;
 use core\config\Config;
 use core\exception\ExtendError;
 use core\file\Log;
-use core\base\Variables;
 use Redis;
 
 class RedisCache implements CacheInterface
@@ -36,19 +36,19 @@ class RedisCache implements CacheInterface
     {
         $config = Config::getConfig("redis");
         if (!isset($config["host"]) || !isset($config["port"]))
-            throw new RedisCacheException(lang("Redis配置文件缺失，请在 config/config.yml 中添加配置"));
+            throw new RedisCacheException("Redis配置文件缺失，请在 config/config.yml 中添加配置");
         if (!class_exists("\\Redis")) {
-            throw new ExtendError(lang("缺少Redis拓展，请在php.ini中启用，配置参考链接：%s", "https://redis.com.cn/topics/php-redis-extension.html"),"redis");
+            throw new ExtendError(sprintf("缺少Redis拓展，请在php.ini中启用，配置参考链接：%s", "https://redis.com.cn/topics/php-redis-extension.html"), "redis");
         }
         $this->redis = new Redis();
         try{
             $boolean = $this->redis->connect($config["host"], intval($config["port"]));
         }catch (\RedisException $e){
-            throw new RedisCacheException(lang("Redis连接失败，请检查Redis服务：%s:%s，错误信息：%s", $config["host"], $config["port"],$e->getMessage()));
+            throw new RedisCacheException(sprintf("Redis连接失败，请检查Redis服务：%s:%s，错误信息：%s", $config["host"], $config["port"], $e->getMessage()));
         }
 
         if (!$boolean) {
-            throw new RedisCacheException(lang("Redis连接失败，请检查Redis服务：%s:%s", $config["host"], $config["port"]));
+            throw new RedisCacheException(sprintf("Redis连接失败，请检查Redis服务：%s:%s", $config["host"], $config["port"]));
         }
         $passwd = $config["password"] ?? null;
         if ($passwd) {
