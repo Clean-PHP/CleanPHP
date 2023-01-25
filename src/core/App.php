@@ -52,7 +52,7 @@ class App
      */
     static function run(bool $debug)
     {
-
+        date_default_timezone_set("Asia/Shanghai");
         error_reporting(E_ALL & ~(E_STRICT | E_NOTICE));
         ini_set("display_errors", "Off");
         if(version_compare(PHP_VERSION,'7.4.0','<')){
@@ -86,6 +86,9 @@ class App
                     Log::record("Request", "命令行启动框架", Log::TYPE_WARNING);
                 else{
                     Log::record("Request", $_SERVER["REQUEST_METHOD"] . " " . $_SERVER["REQUEST_URI"]);
+                    foreach (Request::getHeaders() as $key => $v){
+                        Log::record("Headers", " [ $key ] => $v");
+                    }
                     if(Request::isPost()){
                         Log::record("Post", file_get_contents('php://input'));
                     }
@@ -93,7 +96,6 @@ class App
 
             }
 
-            Lang::register();//加载语言文件
 
             Error::register();// 注册错误和异常处理机制
 
@@ -239,7 +241,6 @@ class App
      * @param $msg
      * @param bool $output 直接输出
      * @return void
-     * @throws ExitApp
      */
     static function exit($msg, bool $output = false)
     {
