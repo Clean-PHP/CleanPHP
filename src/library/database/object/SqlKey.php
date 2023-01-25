@@ -48,8 +48,6 @@ class SqlKey
         }
         elseif (is_bool($default_value)) {
             $this->type = self::TYPE_BOOLEAN;
-            if($default_value)$this->value = 1;
-            else $this->value = 0;
         }
         elseif (is_float($default_value)) $this->type = self::TYPE_FLOAT;
         elseif (is_double($default_value)) $this->type = self::TYPE_FLOAT;

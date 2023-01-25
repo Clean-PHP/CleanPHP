@@ -28,9 +28,11 @@ abstract class Dao
     protected ?Db $db = null;
     protected ?string $model = null;//具体的模型
 
+    /**
+     * @param string|null $model 指定具体模型
+     */
     public function __construct(string $model = null)
     {
-
         $this->dbInit();
         $this->model = $model;
     }
@@ -41,7 +43,6 @@ abstract class Dao
      */
     protected function dbInit()
     {
-
         $this->db = Db::init(new DbFile(Config::getConfig("database")["main"]));//数据库初始化
     }
 
@@ -59,6 +60,34 @@ abstract class Dao
     }
 
     /**
+     * 设置单项
+     * @param $key_name
+     * @param $key_value
+     * @param $set_key
+     * @param $set_value
+     * @return void
+     */
+    public function setOption($key_name,$key_value,$set_key,$set_value){
+        $this->update()->set([$set_key=>$set_value])->where([$key_name=>$key_value])->commit();
+    }
+
+    /**
+     * 获取指定条件下的数据量
+     * @return int|mixed
+     */
+    function getCount($condition = []){
+        return $this->select()->count($condition);
+    }
+
+    /**
+     * 获取指定参数的求和
+     * @return int|mixed
+     */
+    function getSum($condition = [],$field = "id"){
+        return $this->select()->sum($condition,$field);
+    }
+
+    /**
      * 删除当前表
      * @return array|int
      */
@@ -67,17 +96,27 @@ abstract class Dao
         return $this->db->execute("DROP TABLE IF EXISTS `{$this->getTable()}`");
     }
 
+    /**
+     * 清空当前表
+     * @return array|int
+     */
     public function emptyTable()
     {
         return $this->db->execute($this->db->getDriver()->renderEmpty($this->getTable()));
     }
 
     /**
+     * 当表被创建的时候
+     * @return mixed
+     */
+    public abstract function onCreateTable();
+
+    /**
      * 插入模型
      * @param Model $model
      * @return int
      */
-    protected function insertModel(Model $model): int
+    public function insertModel(Model $model): int
     {
         $primary = $this->getAutoPrimary($model);//自增主键不去赋值
         $kv = $model->toArray();
@@ -111,7 +150,7 @@ abstract class Dao
      */
     protected function insert(int $model = InsertOperation::INSERT_NORMAL): InsertOperation
     {
-        return (new InsertOperation($this->db, $this->model, $model))->table($this->getTable());
+        return (new InsertOperation($this->db, $this,$this->model, $model))->table($this->getTable());
     }
 
     /**
@@ -126,7 +165,7 @@ abstract class Dao
      * @param Model $new_model 新的模型
      * @return void
      */
-    protected function updateModel(Model $old_model, Model $new_model)
+    public function updateModel(Model $old_model, Model $new_model)
     {
         $condition = $this->getPrimaryCondition($old_model);
         //获取到更新数据的条件
@@ -160,15 +199,16 @@ abstract class Dao
      */
     protected function update(): UpdateOperation
     {
-        return (new UpdateOperation($this->db, $this->model))->table($this->getTable());
+        return (new UpdateOperation($this->db,$this, $this->model))->table($this->getTable());
     }
+
 
     /**
      * 删除模型
      * @param Model $model
      * @return void
      */
-    protected function deleteModel(Model $model)
+    public function deleteModel(Model $model)
     {
         $condition = $this->getPrimaryCondition($model);
         $this->delete()->where($condition)->commit();
@@ -180,7 +220,7 @@ abstract class Dao
      */
     protected function delete(): DeleteOperation
     {
-        return (new DeleteOperation($this->db, $this->model))->table($this->getTable());
+        return (new DeleteOperation($this->db, $this,$this->model))->table($this->getTable());
     }
 
     /**
@@ -206,8 +246,9 @@ abstract class Dao
      */
     protected function select(...$field): SelectOperation
     {
-        return (new SelectOperation($this->db, $this->model, ...$field))->table($this->getTable());
+        return (new SelectOperation($this->db, $this,$this->model, ...$field))->table($this->getTable());
     }
+
 
     /**
      * 数据库执行

@@ -17,6 +17,7 @@ namespace library\database\operation;
 use Exception;
 use library\database\Db;
 use library\database\exception\DbFieldError;
+use library\database\object\Dao;
 use library\database\object\Field;
 use library\database\object\Page;
 
@@ -35,9 +36,9 @@ class SelectOperation extends BaseOperation
      * @param Db $db
      * @param mixed ...$field 需要的字段
      */
-    public function __construct(Db &$db,$m, ...$field)
+    public function __construct(Db &$db,Dao &$dao,$m, ...$field)
     {
-        parent::__construct($db,$m);
+        parent::__construct($db,$dao,$m);
         $this->opt = [];
         $this->opt['type'] = 'select';
         $this->opt['field'] = (isset($field[0]) && $field[0] instanceof Field)? $field[0]->toString() : (new Field(...$field))->toString();
@@ -54,10 +55,10 @@ class SelectOperation extends BaseOperation
     public function orderBy(string $string, string $type = self::SORT_DESC): SelectOperation
     {
         if (!Field::isName($string)) {
-            throw new DbFieldError(lang("字段名称只允许为字母、点、下划线"),$string);
+            throw new DbFieldError("字段名称只允许为字母、点、下划线",$string);
         }
         if (!in_array($type, [self::SORT_DESC, self::SORT_ASC])) {
-            throw new DbFieldError(lang("排序方式只允许使用 DESC 和 ASC 两种"),$string);
+            throw new DbFieldError("排序方式只允许使用 DESC 和 ASC 两种",$string);
         }
         if (isset($this->opt['order']) && $this->opt['order'] !== "") {
             $this->opt['order'] = $this->opt['order'] . "," . $string . " " . $type;
@@ -77,7 +78,7 @@ class SelectOperation extends BaseOperation
     public function groupBy(string $string): SelectOperation
     {
         if (!Field::isName($string))
-            throw new DbFieldError(lang("字段名称只允许为字母、点、下划线"),$string);
+            throw new DbFieldError("字段名称只允许为字母、点、下划线",$string);
         $this->opt['group_by'] = $string;
         return $this;
     }
@@ -172,7 +173,7 @@ class SelectOperation extends BaseOperation
      */
     private function pager(int $page, int $page_size = 10, int $scope = 10, int $total = 0): ?array
     {
-        $page = [
+        $page_array = [
             'total_count' => $total,//总数量
             'page_size' => $page_size,//一页大小
             'total_page' => 1,//总页数
@@ -188,22 +189,22 @@ class SelectOperation extends BaseOperation
         if ($total > $page_size) {
             $total_page = ceil($total / $page_size);
             $page = min(intval(max($page, 1)), $total_page);
-            $page["total_page"] = $total_page;
-            $page["next_page"] = (($page == $total_page) ? $total_page : ($page + 1));//下一页
-            $page["last_page"] = $total_page;
+            $page_array["total_page"] = $total_page;
+            $page_array["next_page"] = (($page == $total_page) ? $total_page : ($page + 1));//下一页
+            $page_array["last_page"] = $total_page;
 
             if ($total_page <= $scope) {
-                $page['all_pages'] = range(1, $total_page);
+                $page_array['all_pages'] = range(1, $total_page);
             } elseif ($page <= $scope / 2) {
-                $page['all_pages'] = range(1, $scope);
+                $page_array['all_pages'] = range(1, $scope);
             } elseif ($page <= $total_page - $scope / 2) {
                 $right = $page + (int)($scope / 2);
-                $page['all_pages'] = range($right - $scope + 1, $right);
+                $page_array['all_pages'] = range($right - $scope + 1, $right);
             } else {
-                $page['all_pages'] = range($total_page - $scope + 1, $total_page);
+                $page_array['all_pages'] = range($total_page - $scope + 1, $total_page);
             }
         }
-        return $page;
+        return $page_array;
     }
 
     /**
@@ -214,7 +215,7 @@ class SelectOperation extends BaseOperation
     public function count(array $conditions)
     {
         if (!empty($conditions)) $this->where($conditions);
-        $sql = "SELECT COUNT(*) AS M_COUNTER FROM " . $this->opt['table_name'] . "  " . (empty($conditions) ? '' : 'where ' . $this->opt['where']);
+        $sql = /** @lang text */"SELECT COUNT(*) AS M_COUNTER FROM " . $this->opt['table_name'] . "  " . (empty($conditions) ? '' : 'where ' . $this->opt['where']);
 
         $count = $this->db->execute($sql, $this->bind_param, true);
         return isset($count[0]['M_COUNTER']) && $count[0]['M_COUNTER'] ? $count[0]['M_COUNTER'] : 0;
@@ -238,9 +239,13 @@ class SelectOperation extends BaseOperation
      */
     public function sum(array $conditions, string $param)
     {
+        if (!Field::isName($param)) {
+            throw new DbFieldError("字段名称只允许为字母、点、下划线",$param);
+        }
         if (!empty($conditions)) $this->where($conditions);
 
-        $sql = "SELECT SUM($param) AS M_COUNTER FROM " . $this->opt['table_name'] . " " . (empty($conditions) ? '' : 'where ' . $this->opt['where']);
+        $sql = /** @lang text */
+            "SELECT SUM($param) AS M_COUNTER FROM " . $this->opt['table_name'] . " " . (empty($conditions) ? '' : 'where ' . $this->opt['where']);
         try {
             $count = $this->db->execute($sql, $this->bind_param, true);
         } catch (Exception $e) {

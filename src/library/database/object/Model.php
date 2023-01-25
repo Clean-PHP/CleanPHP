@@ -19,17 +19,6 @@ use library\database\Db;
 
 abstract class Model extends ArgObject
 {
-
-    /**
-     * 当创建数据表的时候
-     * @param Db $db
-     * @return void
-     */
-    public function onCreateTable(Db &$db)
-    {
-
-    }
-
     /**
      * 获取主键
      * @return array|SqlKey

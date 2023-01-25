@@ -17,6 +17,8 @@ namespace library\database\operation;
 
 use core\base\Error;
 use library\database\Db;
+use library\database\exception\DbFieldError;
+use library\database\object\Dao;
 use PDOStatement;
 
 abstract class BaseOperation
@@ -28,15 +30,17 @@ abstract class BaseOperation
     protected Db $db;
 
     protected ?string $model;
+    private Dao $dao;
 
     /**
      * @param $db DB 数据库对象
      * @param $model ?string 数据模型
      */
-    public function __construct(Db &$db, string $model = null)
+    public function __construct(Db &$db,Dao &$dao, string $model = null)
     {
         $this->db = $db;
         $this->model = $model;
+        $this->dao = $dao;
     }
 
     /**
@@ -64,7 +68,7 @@ abstract class BaseOperation
             $table_exist =  $result instanceof PDOStatement && ($result->rowCount() === 1);
             if(!$table_exist){
                 if($this->model!==null){
-                    $this->db->initTable($this->model,$table);
+                    $this->db->initTable($this->dao,$this->model,$table);
                 }
             }
         }
@@ -75,10 +79,7 @@ abstract class BaseOperation
      * 编译sql语句
      * @return void
      */
-    protected function translateSql()
-    {
-
-    }
+    abstract protected function translateSql();
 
     /**
      * 获取存储的数据选项
@@ -96,6 +97,7 @@ abstract class BaseOperation
      * 设置查询条件
      * @param array $conditions 条件内容，必须是数组,格式如下["name"=>"张三","i > :hello",":hello"=>"hi"," id in (:in)",":in"=>"1,3,4,5"]
      * @return BaseOperation $this
+     * @throws DbFieldError
      */
     protected function where(array $conditions): BaseOperation
     {
@@ -105,8 +107,9 @@ abstract class BaseOperation
             reset($conditions);
 
             foreach ($conditions as $key => &$condition) {
+                if(is_array($condition))throw new DbFieldError("数组元素不允许出现在查询语句中：".json_encode($condition),$condition);
                 if (is_int($key)) {
-                    $isMatched = preg_match_all('/in(\s+)?\((\s+)?(:\w+)\)/', $condition, $matches);
+                    $isMatched = preg_match_all('/in(\s+)?\((\s+)?(:\w+)\)/', strval($condition), $matches);
 
                     if ($isMatched) {
                         for ($i = 0; $i < $isMatched; $i++) {
@@ -131,7 +134,7 @@ abstract class BaseOperation
                         }
                     }
                     //识别Like语句
-                    $isMatched = preg_match_all('/like\s+(\')?(%)?(:\w+)(%)?(\')?/', $condition, $matches);
+                    $isMatched = preg_match_all('/like\s+(\')?(%)?(:\w+)(%)?(\')?/', strval($condition), $matches);
 
                     if ($isMatched) {
                         for ($i = 0; $i < $isMatched; $i++) {

@@ -23,6 +23,7 @@ use core\file\File;
 use core\file\Log;
 use library\database\driver\Driver;
 use library\database\exception\DbExecuteError;
+use library\database\object\Dao;
 use library\database\object\DbFile;
 use library\database\object\Model;
 use PDO;
@@ -58,7 +59,7 @@ class Db
     public function __construct(DbFile $dbFile)
     {
         if (!class_exists("PDO")) {
-            throw new ExtendError(lang("缺少PDO拓展支持，请安装PDO拓展并启用。%s", "https://www.php.net/manual/zh/pdo.installation.php"),"pdo");
+            throw new ExtendError(sprintf("缺少PDO拓展支持，请安装PDO拓展并启用。%s", "https://www.php.net/manual/zh/pdo.installation.php"),"pdo");
         }
 
         if(empty($dbFile->type)){
@@ -82,18 +83,19 @@ class Db
 
     /**
      * 数据表初始化
+     * @param Dao $dao
      * @param string $model
      * @param string $table
      * @return void
-     * @throws ExitApp|DbExecuteError
+     * @throws DbExecuteError
      */
-    function initTable(string $model,string $table){
-        App::$debug && Log::record("SQL",lang("创建数据表 `%s`",$table));
+    function initTable(Dao $dao,string $model,string $table){
+        App::$debug && Log::record("SQL",sprintf("创建数据表 `%s`",$table));
         if(class_exists($model)){
            /**@var Model $m*/
             $m = new $model();
             $this->execute($this->db->renderCreateTable($m,$table));
-            $m->onCreateTable($this);
+            $dao->onCreateTable();
         }
     }
     public function __destruct()
@@ -108,7 +110,7 @@ class Db
      * @param array $params 绑定的sql参数
      * @param false $readonly 是否为查询
      * @return array|int
-     * @throws DbExecuteError|ExitApp
+     * @throws DbExecuteError
      */
     public function execute(string $sql, array $params = [], bool $readonly = false)
     {
@@ -148,7 +150,7 @@ class Db
                 $sql_default = str_replace($k, "\"$v\"", $sql_default);
             }
             Log::record("SQL",$sql_default);
-            Log::record("SQL",lang("执行时间：%s 毫秒",$end * 1000));
+            Log::record("SQL",sprintf("执行时间：%s 毫秒",$end * 1000));
         }
         if($ret_data!==null)return $ret_data;
         throw new DbExecuteError(sprintf("执行SQL语句【%s】出错：%s",$sql,implode(" , ",$sth->errorInfo())));

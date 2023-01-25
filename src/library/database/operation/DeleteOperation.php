@@ -18,9 +18,9 @@ use core\exception\ExitApp;
 class DeleteOperation extends BaseOperation
 {
 
-    public function __construct(&$db,$model)
+    public function __construct(&$db,&$dao,$model)
     {
-        parent::__construct($db,$model);
+        parent::__construct($db,$dao,$model);
         $this->opt = [];
         $this->opt['type'] = 'delete';
         $this->bind_param = [];
