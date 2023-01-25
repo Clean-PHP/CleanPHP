@@ -12,9 +12,10 @@
  * Description :
  */
 
-namespace core\base;
+namespace library\language;
 
 use core\App;
+use core\base\Variables;
 use core\config\Config;
 use core\file\Log;
 
