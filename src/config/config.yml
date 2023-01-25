@@ -1,15 +1,12 @@
 ---
 frame:
-  time_zone: Asia/Shanghai
   host:
     - 0.0.0.0
   rewrite: false
-  mode: mvc
   app_name: cleanPHP
   ver_code: 1
   ver_name: 1.0.0
   log: 30
-  cache: ""
 redis:
   host: 127.0.0.1
   port: 6379

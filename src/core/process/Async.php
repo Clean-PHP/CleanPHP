@@ -21,17 +21,16 @@ use core\base\Variables;
 use core\cache\Cache;
 use core\event\EventManager;
 use core\exception\ExitApp;
+use core\exception\NoticeException;
 use core\file\Log;
 
 
 class Async
 {
-    private static bool $in_task = false;
-
-    static function register(){
-      EventManager::addListener("__route_end__",AsyncEvent::class);
+    public static function register(){
+        EventManager::addListener("__route_end__",AsyncEvent::class);
     }
-
+    private static bool $in_task = false;
     /**
      * 启动一个异步任务
      * @param Closure $function 任务函数
@@ -63,6 +62,7 @@ class Async
             ]
         ];
         $context = stream_context_create($contextOptions);
+
         $fp = stream_socket_client($scheme . $url_array['host'] . ":" . $port, $errno, $err_str, 5, STREAM_CLIENT_CONNECT, $context);
         if ($fp === false) {
             Error::err('异步任务处理失败，可能超出服务器处理上限: ' . $err_str,[],"Async");
@@ -84,8 +84,12 @@ class Async
         $header .= "Connection: Close" . PHP_EOL;
         $header .=  PHP_EOL;
         fwrite($fp, $header);
+        usleep(5*1000);
         fclose($fp);
-        App::$debug && Log::record("Async","异步任务已下发：$key");
+        if(App::$debug) {
+            Log::record("Async","异步任务已下发：$key");
+            Log::record("Async","异步请求包：\n$header");
+        }
         return $key;
     }
 
@@ -122,6 +126,11 @@ class Async
      */
     public static function response()
     {
+        try{
+            self::noWait();
+        }catch (NoticeException $exception){
+
+        }
         self::$in_task = true;
         if (!self::checkToken($key)) {
             Log::record("Async","Token检查失败！");
@@ -132,9 +141,9 @@ class Async
         $timeout =  $cache->get($key."_timeout");
         $cache->del($key."_function");
         $cache->del($key."_timeout");
-
+        set_time_limit($timeout);
         Variables::set("__async_task_id__",$key);
-        self::noWait($timeout);
+
         App::$debug && Log::record("Async","异步任务开始执行");
         $function();
         App::exit("异步任务执行完毕");
@@ -156,7 +165,7 @@ class Async
     private static function checkToken(&$task_key): bool
     {
 
-        if(Request::getClientIP() !== "127.0.0.1") return false;
+        if(Request::getClientIP() !== Request::getServerIp()) return false;
 
         $token = Request::getHeaderValue("Token")??"";
 
