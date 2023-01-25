@@ -13,6 +13,8 @@
 
 namespace library\verity;
 
+use core\App;
+use core\file\Log;
 use core\objects\ArgObject;
 
 abstract class VerityObject extends ArgObject
@@ -24,19 +26,5 @@ abstract class VerityObject extends ArgObject
      */
     abstract function getRules():array;
 
-    /**
-     * @throws VerityException
-     */
-    public function onParseType(string $key, &$val, $demo): bool
-    {
-        $rules = $this->getRules();
-        if(!isset($rules[$key])){
-            return false;
-        }
-        $rule = $rules[$key];
-        if (empty(strval($val))||!preg_match('/'.$rule.'/', strval($val))){
-            throw new VerityException("字段 $key 验证失败！");
-        }
-       return false;
-    }
+    use VerityTrait;
 }

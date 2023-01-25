@@ -17,8 +17,10 @@ use Throwable;
 
 class VerityException extends \Exception
 {
-    public function __construct($message = "")
+    public string $key = "";
+    public function __construct($message = "",$key = "")
     {
+        $this->key = $key;
         parent::__construct($message);
     }
 }
