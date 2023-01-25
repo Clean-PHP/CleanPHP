@@ -16,7 +16,6 @@ namespace core\engine;
 
 
 use core\event\EventManager;
-use core\file\Log;
 use core\json\Json;
 
 
@@ -69,16 +68,17 @@ class JsonEngine extends ResponseEngine
     {
 
         $trace_text = [];
-        foreach($traces as $i=>$call){
-            $trace_text[$i] = sprintf("#%s %s(%s): %s%s%s",$i,$call['file'],$call['line'],$call["class"],$call["type"],$call['function']);
+        foreach ($traces as $i => $call) {
+            $trace_text[$i] = sprintf("#%s %s(%s): %s%s%s", $i, $call['file'], $call['line'], $call["class"], $call["type"], $call['function']);
         }
-
-        return JSON::encode([
-            "error"=>true,
-            "msg"=>$msg,
-            "traces"=>$trace_text,
-            "dumps"=>$dumps
-        ]);
+        $ret = [
+            "error" => true,
+            "msg" => $msg,
+            "traces" => $trace_text,
+            "dumps" => $dumps
+        ];
+        EventManager::trigger("__json_render_error__", $ret, true);
+        return JSON::encode($ret);
     }
 
     public function renderMsg(bool $err = false, int $code = 404, string $title = "", $msg = "", int $time = 3, string $url = '', string $desc = "立即跳转"): string
