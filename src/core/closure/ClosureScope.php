@@ -1,13 +1,17 @@
 <?php
-
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 namespace core\closure;
+
+use SplObjectStorage;
 
 /**
  * Closure scope class
  * @internal
  */
-class ClosureScope extends \SplObjectStorage
+class ClosureScope extends SplObjectStorage
 {
 
     public int $serializations = 0;

@@ -1,16 +1,17 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. CleanPHP. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 namespace core\config;
 
 
 use core\App;
 use core\base\Variables;
-use core\event\EventListener;
 use core\event\EventManager;
 use core\exception\ExitApp;
+use core\exception\WarningException;
+use core\file\Log;
 
 /**
  * Class Config
@@ -40,10 +41,20 @@ class Config
         $result = Variables::get("__frame_config__");
         if ($result) {
             $result = $result["route"] ?? null;
-            EventManager::trigger("__config_get_route__",$result);
+            EventManager::trigger("__config_get_route__", $result);
             return $result;
         }
         return [];
+    }
+
+    /**
+     * 获取配置文件里面一项
+     * @param string $key
+     * @return mixed
+     */
+    public function get(string $key)
+    {
+        return $this->file_data[$key] ?? "";
     }
 
     /**
@@ -54,11 +65,23 @@ class Config
     {
         $conf = self::getInstance("config")->setLocation(Variables::getConfigPath())->getAll();
         Variables::set("__frame_config__", $conf);
-        date_default_timezone_set(Config::getConfig('frame')['time_zone']??"Asia/Shanghai");
+        date_default_timezone_set(Config::getConfig('frame')['time_zone'] ?? "Asia/Shanghai");
         $frame = self::getConfig("frame");
         if (!in_array("0.0.0.0", $frame['host']) && !App::$cli && !in_array($_SERVER["SERVER_NAME"], $frame['host'])) {
-            App::exit(sprintf("您的域名绑定错误，当前域名为：%s , 请在 %s 中Host选项里添加该域名。", $_SERVER["SERVER_NAME"], Variables::getConfigPath() . "frame.yml"),true);
+            App::exit(sprintf("您的域名绑定错误，当前域名为：%s , 请在 %s 中Host选项里添加该域名。", $_SERVER["SERVER_NAME"], Variables::getConfigPath() . "frame.yml"), true);
         }
+        //跨域
+        $origin = str_replace(["http://", "https://"], "", $_SERVER['HTTP_ORIGIN'] ?? "");
+        $origin = preg_replace("/:\d+/", "", $origin);
+        Log::record("跨域", $origin);
+        if (in_array($origin, $frame['host'])) {
+            try {
+                @header('Access-Control-Allow-Origin:' . $_SERVER['HTTP_ORIGIN'] ?? "");
+            } catch (WarningException $warningException) {
+
+            }
+        }
+
     }
 
     /**
@@ -78,7 +101,7 @@ class Config
     public function setLocation(string $path): Config
     {
         $this->path = $path;
-        if(!is_dir($path))mkdir($path,0777,true);
+        if (!is_dir($path)) mkdir($path, 0777, true);
         return $this->getConfigFile();
     }
 
@@ -100,6 +123,19 @@ class Config
             $this->file_data = [];
         }
         return $this;
+    }
+
+    /**
+     * 设置单个配置
+     * @param string $key 参数名称
+     * @param  $val
+     */
+    public function set(string $key, $val)
+    {
+        $this->file_data[$key] = $val;
+        $file = $this->path . $this->file_name;
+        Variables::set($file, $this->file_data);
+        file_put_contents($file, Spyc::YAMLDump($this->file_data));
     }
 
     /**
@@ -126,21 +162,11 @@ class Config
         $result = Variables::get("__frame_config__");
         if ($result) {
             return $result[$sub] ?? null;
-        }else{
+        } else {
             $config = self::getInstance("config")->setLocation(Variables::getConfigPath())->getAll();
             Variables::set("__frame_config__", $config);
             return $config[$sub] ?? null;
         }
-    }
-
-    /**
-     * 获取配置文件里面一项
-     * @param string $key
-     * @return mixed
-     */
-    public function get(string $key)
-    {
-        return $this->file_data[$key] ?? "";
     }
 
     /**
@@ -150,19 +176,6 @@ class Config
     public function setAll(array $data)
     {
         $this->file_data = $data;
-        $file = $this->path . $this->file_name;
-        Variables::set($file, $this->file_data);
-        file_put_contents($file, Spyc::YAMLDump($this->file_data));
-    }
-
-    /**
-     * 设置单个配置
-     * @param string $key 参数名称
-     * @param  $val
-     */
-    public function set(string $key, $val)
-    {
-        $this->file_data[$key] = $val;
         $file = $this->path . $this->file_name;
         Variables::set($file, $this->file_data);
         file_put_contents($file, Spyc::YAMLDump($this->file_data));

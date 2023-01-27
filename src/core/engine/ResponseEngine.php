@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: core\engine
@@ -15,7 +15,6 @@
 namespace core\engine;
 
 use core\base\Response;
-use core\exception\ExitApp;
 
 abstract class ResponseEngine
 {
@@ -45,7 +44,6 @@ abstract class ResponseEngine
      * @param string $msg 错误信息
      * @param array $traces 堆栈
      * @param string $dumps 错误发生之前的输出信息
-     * @throws ExitApp
      */
     abstract function renderError(string $msg, array $traces, string $dumps, string $tag);
 

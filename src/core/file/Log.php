@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: core\base
@@ -20,21 +20,19 @@ use core\config\Config;
 
 class Log
 {
+    const TYPE_ERROR = 0;
+    const TYPE_INFO = 1;
+    const TYPE_WARNING = 2;
     private static ?Log $instance = null;
     private static int $validate = 30;
     private string $temp = "";
     private string $file = "";
     private string $tag = "";
-
-
-    const TYPE_ERROR = 0;
-    const TYPE_INFO = 1;
-    const TYPE_WARNING = 2;
     private int $type = 1;//写入的数据类型
 
     public function __construct($temp)
     {
-        $this->temp = Variables::getLogPath($temp.'.log');
+        $this->temp = Variables::getLogPath($temp . '.log');
     }
 
     /**
@@ -48,40 +46,12 @@ class Log
         self::getInstance($tag)->addTemp(self::getInstance($tag)->setType($type)->write($msg));
     }
 
-    /**
-     * 输出信息,实时写入文件
-     * @param $tag
-     * @param $msg
-     * @param int $type
-     */
-    public static function recordFile($tag, $msg, int $type = self::TYPE_INFO)
-    {
-        $temp = self::getInstance($tag)->setType($type)->write($msg);
-        $handler = fopen(self::$instance->file, 'a');
-        if (flock($handler, LOCK_EX)) {
-            fwrite($handler, $temp, strlen($temp));
-            flock($handler, LOCK_UN);
-        }
-        fclose($handler);
-    }
 
-    private function addTemp($msg){
+    private function addTemp($msg)
+    {
         $handler = fopen($this->temp, 'a');
         fwrite($handler, $msg, strlen($msg));
         fclose($handler);
-    }
-
-    /**
-     * 写入日志文件
-     * @param $msg
-     */
-    protected function write($msg): string
-    {
-        $m_timestamp = sprintf("%.3f", microtime(true)); // 带毫秒的时间戳
-        $timestamp = floor($m_timestamp); // validate
-        $milliseconds = str_pad(strval(round(($m_timestamp - $timestamp) * 1000)),3,"0"); // 毫秒
-        $type = $this->type === Log::TYPE_INFO?"INFO":($this->type === Log::TYPE_ERROR?"ERROR":"WARNING");
-       return '[ ' . date('Y-m-d H:i:s',$timestamp).'.'.$milliseconds . ' ] [ ' .$type . ' ] [ ' . $this->tag . ' ] ' . $msg . "\n";
     }
 
     /**
@@ -106,21 +76,46 @@ class Log
     }
 
     /**
+     * 写入日志文件
+     * @param $msg
+     * @return string
+     */
+    protected function write($msg): string
+    {
+        $m_timestamp = sprintf("%.3f", microtime(true)); // 带毫秒的时间戳
+        $timestamp = floor($m_timestamp); // validate
+        $milliseconds = str_pad(strval(round(($m_timestamp - $timestamp) * 1000)), 3, "0"); // 毫秒
+        $type = $this->type === Log::TYPE_INFO ? "INFO" : ($this->type === Log::TYPE_ERROR ? "ERROR" : "WARNING");
+        return '[ ' . date('Y-m-d H:i:s', $timestamp) . '.' . $milliseconds . ' ] [ ' . $type . ' ] [ ' . $this->tag . ' ] ' . $msg . "\n";
+    }
+
+    /**
+     * 设置写入的数据类型
+     * @param int $type
+     * @return Log
+     */
+    private function setType(int $type): Log
+    {
+        $this->type = $type;
+        return $this;
+    }
+
+    /**
      * 当日志变量被销毁后，统一写入文件
      */
     public function __destruct()
     {
-        $id = Variables::get("__async_task_id__","");
-        $start= "-----------[session $id start]-----------\n";
-        $end= "-----------[session $id end]-----------\n\n";
+        $id = Variables::get("__async_task_id__", "");
+        $start = "-----------[session $id start]-----------\n";
+        $end = "-----------[session $id end]-----------\n\n";
         $handler = fopen(self::$instance->file, 'a');
         if (flock($handler, LOCK_EX)) {
             fwrite($handler, $start, strlen($start));
-            $file_handle = fopen($this->temp,"r");
-            if ($file_handle){
+            $file_handle = fopen($this->temp, "r");
+            if ($file_handle) {
                 //接着采用 while 循环一行行地读取文件，然后输出每行的文字
                 while (!feof($file_handle)) { //判断是否到最后一行
-                    $line = fgets($file_handle,4096); //读取一行文本
+                    $line = fgets($file_handle, 4096); //读取一行文本
                     fwrite($handler, $line, strlen($line));
                 }
             }
@@ -143,17 +138,6 @@ class Log
         if (is_dir(Variables::getLogPath($date))) {
             File::del(Variables::getLogPath($date));
         }
-    }
-
-    /**
-     * 设置写入的数据类型
-     * @param int $type
-     * @return Log
-     */
-    private function setType(int $type): Log
-    {
-        $this->type = $type;
-        return $this;
     }
 
 }

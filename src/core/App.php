@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: core
@@ -16,7 +16,6 @@ namespace core;
 
 use core\base\Controller;
 use core\base\Error;
-use core\base\Lang;
 use core\base\Loader;
 use core\base\MainApp;
 use core\base\Request;
@@ -28,7 +27,6 @@ use core\engine\JsonEngine;
 use core\engine\ResponseEngine;
 use core\engine\ViewEngine;
 use core\event\EventManager;
-use core\exception\ControllerError;
 use core\exception\ExitApp;
 use core\file\Log;
 use core\process\Async;
@@ -38,8 +36,8 @@ class App
 {
     public static bool $debug = false;//是否调试模式
     public static bool $cli = false;//是否命令行模式
-    protected static $engine = null;//输出引擎
-    public static bool $exit = false;//标记是否退出运行
+    public static bool $exit = false;//输出引擎
+    protected static $engine = null;//标记是否退出运行
     /**
      * @var $app ?MainApp
      */
@@ -48,14 +46,12 @@ class App
 
     /**
      * @param bool $debug
-     * @throws ExitApp
      */
     static function run(bool $debug)
     {
-        date_default_timezone_set("Asia/Shanghai");
         error_reporting(E_ALL & ~(E_STRICT | E_NOTICE));
         ini_set("display_errors", "Off");
-        if(version_compare(PHP_VERSION,'7.4.0','<')){
+        if (version_compare(PHP_VERSION, '7.4.0', '<')) {
             self::exit("请使用PHP 7.4以上版本运行该应用", true);
         }
         //禁用错误提醒
@@ -76,20 +72,19 @@ class App
 
             App::$debug && Log::record("Frame", "框架启动...");
 
-
-            if(!is_dir(Variables::getCachePath()))mkdir(Variables::getCachePath(),0777,true);
+            if (!is_dir(Variables::getCachePath())) mkdir(Variables::getCachePath(), 0777, true);
 
             Config::register();// 加载配置文件
 
             if (self::$debug) {
                 if (self::$cli)
                     Log::record("Request", "命令行启动框架", Log::TYPE_WARNING);
-                else{
+                else {
                     Log::record("Request", $_SERVER["REQUEST_METHOD"] . " " . $_SERVER["REQUEST_URI"]);
-                    foreach (Request::getHeaders() as $key => $v){
+                    foreach (Request::getHeaders() as $key => $v) {
                         Log::record("Headers", " [ $key ] => $v");
                     }
-                    if(Request::isPost()){
+                    if (Request::isPost()) {
                         Log::record("Post", file_get_contents('php://input'));
                     }
                 }
@@ -107,6 +102,7 @@ class App
             if (class_exists($app) && ($imp = class_implements($app)) && in_array(MainApp::class, $imp)) {
                 self::$app = new $app();
                 self::$app->onRequestArrive();
+
             }
 
             EventManager::trigger("__frame_init__");//框架初始化
@@ -134,35 +130,32 @@ class App
             }
 
 
-
             // 控制器检查
             if (strtolower($__controller) === 'basecontroller')
                 Error::err("基类 'BaseController' 不允许被访问！", [], "Controller");
 
             if (!self::isAvailableClassname($__controller))
-                Error::err("控制器 '".htmlspecialchars($__controller)."' 命名不符合规范!", [], "Controller");
+                Error::err("控制器 '" . htmlspecialchars($__controller) . "' 命名不符合规范!", [], "Controller");
 
             $controller_name = ucfirst($__controller);
 
             $controller_class = 'app\\controller\\' . $__module . '\\' . $controller_name;
 
 
-
             if (!class_exists($controller_class, true)) {
-                Error::err("模块 ( $__module )  控制器 ( $controller_name ) 不存在!", [],"Controller");
+                Error::err("模块 ( $__module )  控制器 ( $controller_name ) 不存在!", [], "Controller");
             }
-
 
 
             $method = method_exists($controller_class, $__action);
             if (!$method) {
 
-                Error::err("模块 ( $__module )  控制器 ( $controller_name ) 中的方法 ( $__action ) 不存在!", [],"Action");
+                Error::err("模块 ( $__module )  控制器 ( $controller_name ) 中的方法 ( $__action ) 不存在!", [], "Action");
             }
 
 
-            if (!in_array_case($__action, get_class_methods($controller_class))||$__action === '__init') {
-                Error::err("模块 ( $__module ) 控制器 ( $controller_name ) 中的方法 ( $__action ) 为私有方法，禁止访问!", [],"Action");
+            if (!in_array_case($__action, get_class_methods($controller_class)) || $__action === '__init') {
+                Error::err("模块 ( $__module ) 控制器 ( $controller_name ) 中的方法 ( $__action ) 为私有方法，禁止访问!", [], "Action");
             }
 
             /**
@@ -174,22 +167,34 @@ class App
             $result = $controller_obj->$__action();
             if ($result !== null)
                 (new Response())->render($result, $controller_obj->getCode(), $controller_obj->getContentType())->send();
-        }  catch (ExitApp $exit_app) {//执行退出
+        } catch (ExitApp $exit_app) {//执行退出
             App::$debug && Log::record("Frame", sprintf("框架执行退出: %s", $exit_app->getMessage()));
         } finally {
             self::$app && self::$app->onRequestEnd();
             if (App::$debug) {
                 Log::record("Frame", "框架响应结束...");
                 $t = round((microtime(true) - Variables::get("__frame_start__", 0)) * 1000, 2);
-                Log::record("Frame", sprintf("会话运行时间：%s 毫秒", $t),Log::TYPE_WARNING);
+                Log::record("Frame", sprintf("会话运行时间：%s 毫秒", $t), Log::TYPE_WARNING);
                 if ($t > 100) {
-                    Log::record("Frame", sprintf("优化提醒：您的当前应用会话处理用时（%s毫秒）超过 100 毫秒，建议对代码进行优化以获得更好的使用体验。", $t),Log::TYPE_WARNING);
+                    Log::record("Frame", sprintf("优化提醒：您的当前应用会话处理用时（%s毫秒）超过 100 毫秒，建议对代码进行优化以获得更好的使用体验。", $t), Log::TYPE_WARNING);
                 }
             }
-
         }
     }
 
+    /**
+     * 退出会话
+     * @param $msg
+     * @param bool $output 直接输出
+     * @return void
+     */
+    static function exit($msg, bool $output = false)
+    {
+        if (self::$exit) return; //防止一个会话中重复抛出exit异常
+        self::$exit = true;
+        if ($output) echo $msg;
+        throw new ExitApp($msg);
+    }
 
     /**
      * 清除缓存文件
@@ -235,21 +240,6 @@ class App
         self::$engine = $engine;
         self::$engine->setByDefault();
     }
-
-    /**
-     * 退出会话
-     * @param $msg
-     * @param bool $output 直接输出
-     * @return void
-     */
-    static function exit($msg, bool $output = false)
-    {
-        if (self::$exit) return; //防止一个会话中重复抛出exit异常
-        self::$exit = true;
-        if($output)echo $msg;
-        throw new ExitApp($msg);
-    }
-
 
 
 }

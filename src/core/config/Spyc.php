@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. CleanPHP. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 namespace core\config;
 
@@ -1060,8 +1060,8 @@ class Spyc
             $string = $spaces . '- ' . $value . "\n";
         } else {
             // if ($first_key===0)  throw new Exception('Keys are all screwy.  The first one was zero, now it\'s "'. $key .'"');
-            if($key==='')
-                $key='""';
+            if ($key === '')
+                $key = '""';
             // It's mapped
             if (strpos($key, ":") !== false || strpos($key, "#") !== false) {
                 $key = '"' . $key . '"';

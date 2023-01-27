@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: core\process
  * Class AsyncEvent
@@ -28,12 +29,12 @@ class AsyncEvent implements EventListener
     public function handleEvent(string $event, &$data)
     {
         $array = $data;
-        if($array["m"] === "async" && $array["c"] === "task" && $array["a"] === "start"){
+        if ($array["m"] === "async" && $array["c"] === "task" && $array["a"] === "start") {
             Variables::set("__frame_log_tag__", "async_");
             Async::response();
-        }else{
+        } else {
             ignore_user_abort(false);
-            if(connection_aborted()){
+            if (connection_aborted()) {
                 //如果连接已断开
                 App::exit("客户端断开，脚本中断。");
             }

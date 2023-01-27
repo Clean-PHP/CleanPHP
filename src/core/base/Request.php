@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. CleanPHP. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 namespace core\base;
 
@@ -246,7 +246,7 @@ class Request
         $data = explode('.', $host);
         $n = count($data);
         //判断是否是双后缀
-        $preg = '/[\w].+\.(com|net|org|gov|edu)\.cn$/';
+        $preg = '/\w.+\.(com|net|org|gov|edu)\.cn$/';
         if (($n > 2) && preg_match($preg, $host)) {
             //双后缀取后3位
             $host = $data[$n - 3] . '.' . $data[$n - 2] . '.' . $data[$n - 1];
@@ -302,7 +302,6 @@ class Request
     {
         return !(preg_match('%^127\.|10\.|192\.168|172\.(1[6-9]|2|3[01])%', $ip) === 0);
     }
-
 
 
 }

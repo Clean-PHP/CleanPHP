@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: core\objects
@@ -52,31 +52,35 @@ class StringBuilder
     {
         return substr($this->str, strrpos($this->str, $sub_string)) === $sub_string;
     }
+
     /**
      * @param string $s 被对比的字符串
      * @return bool
      */
     public function equals(string $s): bool
     {
-        return $this->str===$s;
+        return $this->str === $s;
     }
+
     /**
      * @param string $s 被对比的字符串
      * @return bool
      */
     public function contains(string $s): bool
     {
-        return strpos($this->str,$s)!== false;
+        return strpos($this->str, $s) !== false;
     }
+
     /**
      * 正找文本，并从找到的位置向后截取
      * @param string $startString
      * @return false|string
      */
-    public function findAndSubStart(string $startString){
-        $pos = strpos($this->str,$startString);
-        if($pos==false)return "";
-        return substr($this->str,$pos);
+    public function findAndSubStart(string $startString)
+    {
+        $pos = strpos($this->str, $startString);
+        if ($pos == false) return "";
+        return substr($this->str, $pos);
     }
 
     /**
@@ -84,10 +88,11 @@ class StringBuilder
      * @param string $endString 倒找文本，并截取掉
      * @return false|string
      */
-    public function findAndSubEnd(string $endString){
-        $pos = strpos($this->str,$endString);
-        if($pos==false)return "";
-        return substr($this->str,0,$pos);
+    public function findAndSubEnd(string $endString)
+    {
+        $pos = strpos($this->str, $endString);
+        if (!$pos) return "";
+        return substr($this->str, 0, $pos);
     }
 
     /**

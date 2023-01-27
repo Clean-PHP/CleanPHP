@@ -1,4 +1,7 @@
 <?php
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 namespace core\closure;
 

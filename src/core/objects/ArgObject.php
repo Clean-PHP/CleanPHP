@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: core\objects
@@ -22,36 +22,18 @@ class ArgObject
      */
     public function __construct(array $item = [])
     {
-        if(empty($item))return;
+        if (empty($item)) return;
         foreach (get_object_vars($this) as $key => $val) {
             $data = $val;
             if (isset($item[$key])) {
                 $data = $item[$key];
             }
-            if(!$this->onParseType($key,$data,$val)){
+            if (!$this->onParseType($key, $data, $val)) {
                 $this->$key = parse_type($val, $data);
-            }else{
+            } else {
                 $this->$key = $data;
             }
         }
-    }
-
-
-    /**
-     * 转化为数组
-     * @return array
-     */
-    public function toArray(): array
-    {
-        $ret = get_object_vars($this);
-        foreach ($ret as $key => &$value){
-            $this->onToArray($key,$value);
-        }
-        return $ret;
-    }
-
-    public function onToArray($key,&$value){
-
     }
 
     /**
@@ -67,10 +49,29 @@ class ArgObject
     }
 
     /**
+     * 转化为数组
+     * @return array
+     */
+    public function toArray(): array
+    {
+        $ret = get_object_vars($this);
+        foreach ($ret as $key => &$value) {
+            $this->onToArray($key, $value);
+        }
+        return $ret;
+    }
+
+    public function onToArray($key, &$value)
+    {
+
+    }
+
+    /**
      * 获取对象hash值
      * @return string
      */
-    public function hash():string{
-        return md5(implode(",",get_object_vars($this)));
+    public function hash(): string
+    {
+        return md5(implode(",", get_object_vars($this)));
     }
 }

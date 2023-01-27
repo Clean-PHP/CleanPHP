@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. CleanPHP. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 namespace core\base;
 
@@ -28,17 +28,35 @@ class Controller
 
     public function __construct(?string $m, ?string $c, ?string $a)
     {
-        $this->module = $m??'';
-        $this->controller = $c??'';
-        $this->action = $a??'';
+        $this->module = $m ?? '';
+        $this->controller = $c ?? '';
+        $this->action = $a ?? '';
         $this->setCode($this->eng()->getCode());
         $this->setContentType($this->eng()->getContentType());
 
         $result = $this->__init();
-        if (!empty($result)){
+        if (!empty($result)) {
             (new Response())->render($result)->code(200)->contentType($this->eng()->getContentType())->send();
         }
         EventManager::trigger("__on_controller_create__", $this);
+    }
+
+    /**
+     * 获取响应代码
+     * @return int
+     */
+    public function getCode(): int
+    {
+        return $this->code;
+    }
+
+    /**
+     * 设置响应代码
+     * @return void
+     */
+    public function setCode($code)
+    {
+        $this->code = $code;
     }
 
     /**
@@ -49,26 +67,6 @@ class Controller
     {
         if (!$this->engine) return App::getEngine();
         return $this->engine;
-    }
-
-    /**
-     * 初始化函数
-     */
-    public function __init()
-    {
-        return null;
-    }
-
-
-
-    /**
-     * 设置引擎
-     * @param $engine ViewEngine|JsonEngine|ResponseEngine 引擎
-     * @return void
-     */
-    public function setEngine($engine)
-    {
-        $this->engine = $engine;
     }
 
     /**
@@ -91,21 +89,30 @@ class Controller
     }
 
     /**
-     * 获取响应代码
-     * @return int
+     * 初始化函数
      */
-    public function getCode(): int
+    public function __init()
     {
-        return $this->code;
+        return null;
     }
 
     /**
-     * 设置响应代码
+     * 数据渲染
+     * @param ...$data
+     */
+    public function render(...$data): string
+    {
+        return $this->eng()->render(...$data);
+    }
+
+    /**
+     * 设置引擎
+     * @param $engine ViewEngine|JsonEngine|ResponseEngine 引擎
      * @return void
      */
-    public function setCode($code)
+    public function setEngine($engine)
     {
-        $this->code = $code;
+        $this->engine = $engine;
     }
 
     /**
@@ -133,16 +140,6 @@ class Controller
     public function getAction(): string
     {
         return $this->action;
-    }
-
-
-    /**
-     * 数据渲染
-     * @param ...$data
-     */
-    public function render(...$data): string
-    {
-        return $this->eng()->render(...$data);
     }
 
 

@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. CleanPHP. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 namespace core\base;
 
@@ -32,7 +32,7 @@ class Route
      */
     public static function url(string $m, string $c, string $a, array $params = []): string
     {
-        $is_rewrite = Config::getConfig("frame")["rewrite"]??false;
+        $is_rewrite = Config::getConfig("frame")["rewrite"] ?? false;
 
         $route = "$m/$c/$a";
 
@@ -69,7 +69,7 @@ class Route
             }
         }
 
-        if(!$is_rewrite){
+        if (!$is_rewrite) {
             $params['s'] = $route_find;
             $route_find = "";
         }
@@ -105,7 +105,7 @@ class Route
         $array = self::parseUrl($url);
 
         if (!isset($array['m']) || !isset($array['a']) || !isset($array['c'])) {
-            Error::err("路由不完整，缺少模块或控制器或执行方法！",[],"Route");
+            Error::err("路由不完整，缺少模块或控制器或执行方法！", [], "Route");
         }
 
 
@@ -116,7 +116,7 @@ class Route
         $__action = ($array['a']);
 
 
-        App::$debug && Log::record("Route", sprintf("路由结果：%s/%s/%s", $__module,$__controller,$__action));
+        App::$debug && Log::record("Route", sprintf("路由结果：%s/%s/%s", $__module, $__controller, $__action));
 
         unset($array['m']);
         unset($array['c']);
@@ -124,7 +124,7 @@ class Route
 
         $_GET = array_merge($_GET, $array);
 
-        App::$debug && Log::record("Route", sprintf("路由总耗时：%s 毫秒", round((microtime(true) - Variables::get("__route_start__", 0)) * 1000, 2)),Log::TYPE_WARNING);
+        App::$debug && Log::record("Route", sprintf("路由总耗时：%s 毫秒", round((microtime(true) - Variables::get("__route_start__", 0)) * 1000, 2)), Log::TYPE_WARNING);
 
         return [$__module, $__controller, $__action];
     }
@@ -165,8 +165,8 @@ class Route
     {
         if ((new StringBuilder($data))->startsWith('clean_static')) {
             $uri = str_replace('clean_static', "", $data);
-            $path = Variables::setPath(APP_DIR,'app', "public", str_replace("..", ".", $uri));
-           self::renderStatic($path);
+            $path = Variables::setPath(APP_DIR, 'app', "public", str_replace("..", ".", $uri));
+            self::renderStatic($path);
         }
     }
 
@@ -175,13 +175,14 @@ class Route
      * @param $path
      * @return void
      */
-    public static function renderStatic($path){
+    public static function renderStatic($path)
+    {
         if (file_exists($path)) {
             $type = file_type($path);
             //\dump($type,true);
-            (new Response())->render(self::replaceStatic(file_get_contents($path)), 200,$type)->send();
+            (new Response())->render(self::replaceStatic(file_get_contents($path)), 200, $type)->send();
         } else {
-            Error::err(sprintf("找不到指定的静态资源：%s",$path),[],"Route");
+            Error::err(sprintf("找不到指定的静态资源：%s", $path), [], "Route");
         }
     }
 
@@ -190,13 +191,14 @@ class Route
      * @param string $content
      * @return string|string[]
      */
-    public static function replaceStatic(string $content){
+    public static function replaceStatic(string $content)
+    {
         $is_rewrite = Config::getConfig("frame")["rewrite"];
-        $replaces = Variables::get("__static_replace__","../../public");
-        if($is_rewrite)
-            $template_data = str_replace($replaces,"/clean_static",$content);
-        else{
-            $template_data = str_replace($replaces,"/?s=clean_static",$content);
+        $replaces = Variables::get("__static_replace__", "../../public");
+        if ($is_rewrite)
+            $template_data = str_replace($replaces, "/clean_static", $content);
+        else {
+            $template_data = str_replace($replaces, "/?s=clean_static", $content);
         }
 
         return $template_data;
@@ -240,7 +242,6 @@ class Route
 
         return $array;
     }
-
 
 
 }

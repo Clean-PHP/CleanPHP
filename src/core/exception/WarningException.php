@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: core\exception
  * Class WarningException
@@ -13,7 +14,9 @@
 
 namespace core\exception;
 
-class WarningException extends \Exception
+use Exception;
+
+class WarningException extends Exception
 {
 
 }

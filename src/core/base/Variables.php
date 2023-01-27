@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: core\base
@@ -28,7 +28,7 @@ class Variables
         "path_extend" => APP_DIR . DS . 'extend' . DS,
         "path_config" => APP_DIR . DS . 'config' . DS,
         "path_db" => APP_DIR . DS . 'app' . DS . 'database' . DS,
-        "path_app" => APP_DIR . DS . 'app' . DS ,
+        "path_app" => APP_DIR . DS . 'app' . DS,
         "path_lib" => APP_DIR . DS . 'library' . DS,
         "path_view" => APP_DIR . DS . 'app' . DS . 'view' . DS,
         "path_public" => APP_DIR . DS . 'public' . DS,

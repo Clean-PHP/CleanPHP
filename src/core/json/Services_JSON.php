@@ -1,4 +1,7 @@
 <?php
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 namespace core\json;
 /* vim: set expandtab tabstop=4 shiftwidth=4 softtabstop=4: */
@@ -440,6 +443,19 @@ class Services_JSON
     }
 
     /**
+     * Calculates length of string in bytes
+     * @param string
+     * @return integer length
+     */
+    function strlen8($str)
+    {
+        if ($this->_mb_strlen) {
+            return mb_strlen($str, "8bit");
+        }
+        return strlen($str);
+    }
+
+    /**
      * convert a string from one UTF-8 char to one UTF-16 char
      *
      * Normally should be handled by mb_convert_encoding, but
@@ -477,19 +493,6 @@ class Services_JSON
         }
         // ignoring UTF-32 for now, sorry
         return '';
-    }
-
-    /**
-     * Calculates length of string in bytes
-     * @param string
-     * @return integer length
-     */
-    function strlen8($str)
-    {
-        if ($this->_mb_strlen) {
-            return mb_strlen($str, "8bit");
-        }
-        return strlen($str);
     }
 
     /**
@@ -602,7 +605,7 @@ class Services_JSON
                     return ((float)$str == (integer)$str)
                         ? (integer)$str
                         : (float)$str;
-                } elseif (preg_match('/^("|\').*(\1)$/s', $str, $m) && $m[1] == $m[2]) {
+                } elseif (preg_match('/^(["\']).*(\1)$/s', $str, $m) && $m[1] == $m[2]) {
                     // STRINGS RETURNED IN UTF-8 FORMAT
                     $delim = $this->substr8($str, 0, 1);
                     $chrs = $this->substr8($str, 1, -1);
@@ -684,7 +687,7 @@ class Services_JSON
                         }
                     }
                     return $utf8;
-                } elseif (preg_match('/^\[.*\]$/s', $str) || preg_match('/^\{.*\}$/s', $str)) {
+                } elseif (preg_match('/^\[.*]$/s', $str) || preg_match('/^{.*}$/s', $str)) {
                     // array, or object notation
                     if ($str[0] == '[') {
                         $stk = array(SERVICES_JSON_IN_ARR);

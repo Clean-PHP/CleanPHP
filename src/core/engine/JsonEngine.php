@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: core\engine
@@ -63,8 +63,7 @@ class JsonEngine extends ResponseEngine
     }
 
 
-
-    function renderError(string $msg, array $traces, string $dumps,string $tag): string
+    function renderError(string $msg, array $traces, string $dumps, string $tag): string
     {
 
         $trace_text = [];
@@ -84,7 +83,7 @@ class JsonEngine extends ResponseEngine
     public function renderMsg(bool $err = false, int $code = 404, string $title = "", $msg = "", int $time = 3, string $url = '', string $desc = "立即跳转"): string
     {
         $array = [
-            "code"=>$code,"msg"=>$title,"data"=>$msg,'url'=>$url
+            "code" => $code, "msg" => $title, "data" => $msg, 'url' => $url
         ];
         EventManager::trigger("__json_render_msg__", $array, true);
         return Json::encode($array);

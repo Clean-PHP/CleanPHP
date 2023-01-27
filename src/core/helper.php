@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * File helper.php
@@ -14,21 +14,10 @@
 use core\App;
 use core\base\Argument;
 use core\base\Dump;
-use core\base\Lang;
 use core\base\Route;
 use core\closure\SerializableClosure;
-use core\exception\ExitApp;
+use core\process\Async;
 
-/**
- * 输出语言
- * @param string $str 语言名称
- * @param ...$args
- * @return string
- */
-function lang(string $str, ...$args): string
-{
-    return Lang::get($str, ...$args);
-}
 
 function file_type(string $filename): string
 {
@@ -89,10 +78,10 @@ function file_type(string $filename): string
     $array = explode('.', $filename);
     $ext = strtolower(array_pop($array));
     if (array_key_exists($ext, $mime_types)) {
-        if ($result === 'text/plain'||$result === '') return $mime_types[$ext];
+        if ($result === 'text/plain' || $result === '') return $mime_types[$ext];
     }
-    if($result === '')
-    return 'application/octet-stream';
+    if ($result === '')
+        return 'application/octet-stream';
     return $result;
 }
 
@@ -100,7 +89,6 @@ function file_type(string $filename): string
  * 输出所有变量
  * @param ...$args
  * @return void
- * @throws ExitApp
  */
 function dumps(...$args)
 {
@@ -132,12 +120,12 @@ function dump($var, bool $exit = false, string $line = null)
     if ($line !== "") {
 
         echo <<<EOF
-<style>pre {display: block;padding: 9.5px;margin: 0 0 10px;font-size: 13px;line-height: 1.42857143;color: #333;word-break: break-all;word-wrap: break-word;background-color:#f5f5f5;border: 1px solid #ccc;border-radius: 4px;}</style><div style="text-align: left">
+<style>pre {display: block;padding: 10px;margin: 0 0 10px;font-size: 13px;line-height: 1.42857143;color: #333;word-break: break-all;word-wrap: break-word;background-color:#f5f5f5;border: 1px solid #ccc;border-radius: 4px;}</style><div style="text-align: left">
 <pre class="xdebug-var-dump" dir="ltr"><small>{$line}</small>\r\n
 EOF;
     } else {
         echo <<<EOF
-<style>pre {display: block;padding: 9.5px;margin: 0 0 10px;font-size: 13px;line-height: 1.42857143;color: #333;word-break: break-all;word-wrap: break-word;background-color:#f5f5f5;border: 1px solid #ccc;border-radius: 4px;}</style><div style="text-align: left"><pre class="xdebug-var-dump" dir="ltr">
+<style>pre {display: block;padding: 10px;margin: 0 0 10px;font-size: 13px;line-height: 1.42857143;color: #333;word-break: break-all;word-wrap: break-word;background-color:#f5f5f5;border: 1px solid #ccc;border-radius: 4px;}</style><div style="text-align: left"><pre class="xdebug-var-dump" dir="ltr">
 EOF;
     }
     $dump = new Dump();
@@ -222,7 +210,7 @@ function __serialize($data): string
 {
     SerializableClosure::enterContext();
     SerializableClosure::wrapClosures($data);
-    $data = \serialize($data);
+    $data = serialize($data);
     SerializableClosure::exitContext();
     return $data;
 }
@@ -237,9 +225,9 @@ function __serialize($data): string
 function __unserialize(string $data, array $options = null)
 {
     SerializableClosure::enterContext();
-    $data = ($options === null || \PHP_MAJOR_VERSION < 7)
-        ? \unserialize($data)
-        : \unserialize($data, $options);
+    $data = ($options === null || PHP_MAJOR_VERSION < 7)
+        ? unserialize($data)
+        : unserialize($data, $options);
     SerializableClosure::unwrapClosures($data);
     SerializableClosure::exitContext();
     return $data;
@@ -253,7 +241,7 @@ function __unserialize(string $data, array $options = null)
  */
 function go(Closure $function, int $timeout = 300): string
 {
-    return \core\process\Async::start($function, $timeout);
+    return Async::start($function, $timeout);
 }
 
 /**

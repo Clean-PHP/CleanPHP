@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Class Async
  * Created By ankio.
@@ -27,34 +28,36 @@ use core\file\Log;
 
 class Async
 {
-    public static function register(){
-        EventManager::addListener("__route_end__",AsyncEvent::class);
-    }
     private static bool $in_task = false;
+
+    public static function register()
+    {
+        EventManager::addListener("__route_end__", AsyncEvent::class);
+    }
+
     /**
      * 启动一个异步任务
      * @param Closure $function 任务函数
      * @param int $timeout 异步任务的最长运行时间,单位为秒
      * @return ?string
-     * @throws ExitApp
      */
-    static function  start(Closure $function,int $timeout = 300): ?string
+    static function start(Closure $function, int $timeout = 300): ?string
     {
 
         $key = uniqid("async_");
 
-        Log::recordFile("Async","异步任务启动：$key");
+        Log::record("Async", "异步任务启动：$key");
 
-        $cache = Cache::init(300,Variables::getCachePath("async",DS));
-        $cache->set($key."_function",$function);
-        $cache->set($key."_timeout",$timeout);
-        $url = url("async","task","start",["key"=>$key]);
+        $cache = Cache::init(300, Variables::getCachePath("async", DS));
+        $cache->set($key . "_function", $function);
+        $cache->set($key . "_timeout", $timeout);
+        $url = url("async", "task", "start", ["key" => $key]);
         $url_array = parse_url($url);
         $query = [];
         if (isset($url_array["query"]))
             parse_str($url_array["query"], $query);
         $port = intval($_SERVER["SERVER_PORT"]);
-        $scheme = Response::getHttpScheme()==="https://"?"ssl://":"";
+        $scheme = Response::getHttpScheme() === "https://" ? "ssl://" : "";
         $contextOptions = [
             'ssl' => [
                 'verify_peer' => false,
@@ -65,7 +68,7 @@ class Async
 
         $fp = stream_socket_client($scheme . $url_array['host'] . ":" . $port, $errno, $err_str, 5, STREAM_CLIENT_CONNECT, $context);
         if ($fp === false) {
-            Error::err('异步任务处理失败，可能超出服务器处理上限: ' . $err_str,[],"Async");
+            Error::err('异步任务处理失败，可能超出服务器处理上限: ' . $err_str, [], "Async");
             return null;
         }
 
@@ -78,19 +81,49 @@ class Async
         $header .= " HTTP/1.1" . PHP_EOL;
         $header .= "Host: " . $url_array['host'] . PHP_EOL;
         $token = md5($key);
-        $cache->set($token."_token",$key);
+        $cache->set($token . "_token", $key);
         $header .= "Token: " . $token . PHP_EOL;
         $header .= "User-Agent: Async/1.0.0.1 " . PHP_EOL;
         $header .= "Connection: Close" . PHP_EOL;
-        $header .=  PHP_EOL;
+        $header .= PHP_EOL;
         fwrite($fp, $header);
-        usleep(5*1000);
+        usleep(5 * 1000);
         fclose($fp);
-        if(App::$debug) {
-            Log::record("Async","异步任务已下发：$key");
-            Log::record("Async","异步请求包：\n$header");
+        if (App::$debug) {
+            Log::record("Async", "异步任务已下发：$key");
+            Log::record("Async", "异步请求包：\n$header");
         }
         return $key;
+    }
+
+    /**
+     *  响应后台异步请求
+     * @return void
+     * @throws ExitApp
+     */
+    public static function response()
+    {
+        try {
+            self::noWait();
+        } catch (NoticeException $exception) {
+
+        }
+        self::$in_task = true;
+        if (!self::checkToken($key)) {
+            Log::record("Async", "Token检查失败！");
+            App::exit("您无权访问该资源。");
+        }
+        $cache = Cache::init(300, Variables::getCachePath("async", DS));
+        $function = $cache->get($key . "_function");
+        $timeout = $cache->get($key . "_timeout");
+        $cache->del($key . "_function");
+        $cache->del($key . "_timeout");
+        set_time_limit($timeout);
+        Variables::set("__async_task_id__", $key);
+
+        App::$debug && Log::record("Async", "异步任务开始执行");
+        $function();
+        App::exit("异步任务执行完毕");
     }
 
     /**
@@ -120,33 +153,25 @@ class Async
     }
 
     /**
-     *  响应后台异步请求
-     * @return void
-     * @throws ExitApp
+     * 进行Token检查
+     * @param $task_key
+     * @return bool
      */
-    public static function response()
+    private static function checkToken(&$task_key): bool
     {
-        try{
-            self::noWait();
-        }catch (NoticeException $exception){
 
-        }
-        self::$in_task = true;
-        if (!self::checkToken($key)) {
-            Log::record("Async","Token检查失败！");
-            App::exit("您无权访问该资源。");
-        }
-        $cache = Cache::init(300,Variables::getCachePath("async",DS));
-        $function = $cache->get($key."_function");
-        $timeout =  $cache->get($key."_timeout");
-        $cache->del($key."_function");
-        $cache->del($key."_timeout");
-        set_time_limit($timeout);
-        Variables::set("__async_task_id__",$key);
+        if (Request::getClientIP() !== Request::getServerIp()) return false;
 
-        App::$debug && Log::record("Async","异步任务开始执行");
-        $function();
-        App::exit("异步任务执行完毕");
+        $token = Request::getHeaderValue("Token") ?? "";
+
+        $key = Cache::init(300, Variables::getCachePath("async", DS))->get($token . "_token");
+        Cache::init(300, Variables::getCachePath("async", DS))->del($token . "_token");
+
+        if ($key === null || $key !== get("key", "")) return false;
+
+        $task_key = $key;
+
+        return true;
     }
 
     /**
@@ -157,29 +182,6 @@ class Async
     {
         return self::$in_task;
     }
-    /**
-     * 进行Token检查
-     * @param $task_key
-     * @return bool
-     */
-    private static function checkToken(&$task_key): bool
-    {
-
-        if(Request::getClientIP() !== Request::getServerIp()) return false;
-
-        $token = Request::getHeaderValue("Token")??"";
-
-        $key = Cache::init(300,Variables::getCachePath("async",DS))->get($token."_token");
-        Cache::init(300,Variables::getCachePath("async",DS))->del($token."_token");
-
-        if($key === null||$key!==get("key",""))return false;
-
-        $task_key = $key;
-
-        return true;
-    }
-
-
 
 
 }

@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: core\cache
@@ -15,9 +15,9 @@
 namespace core\cache;
 
 use core\App;
+use core\base\Variables;
 use core\file\File;
 use core\file\Log;
-use core\base\Variables;
 
 class Cache implements CacheInterface
 {
@@ -36,7 +36,28 @@ class Cache implements CacheInterface
         Variables::del("__cache__");//以前的对象需要释放
         App::$debug && Log::record("Cache", sprintf("设置缓存器：%s", get_class($drive)));
         self::$drive = $drive;
+    }
 
+    /**
+     * @inheritDoc
+     */
+    public function del(string $key)
+    {
+        App::$debug && Log::record("Cache", sprintf("删除缓存：%s", $key));
+        $filename = self::fileName($key);
+        if (file_exists($filename))
+            unlink($filename);
+
+    }
+
+    /**
+     * 获取缓存文件名
+     * @param string $key
+     * @return string
+     */
+    private function fileName(string $key): string
+    {
+        return $this->cache_path . md5($key);
     }
 
     /**
@@ -50,35 +71,6 @@ class Cache implements CacheInterface
         $cache->setData($exp_time, $path);
         Variables::set("__cache__", $cache);
         return $cache;
-    }
-
-    function setData(int $exp_time, string $path)
-    {
-        if ($path === "") $path = Variables::getCachePath();
-        $this->cache_expire = $exp_time;
-        $this->cache_path = $path;
-        if (!is_dir($path))
-            mkdir($path, 0777, true);
-        return $this;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function set(string $key, $data)
-    {
-        App::$debug && Log::record("Cache", sprintf("设置缓存：%s", $key));
-        file_put_contents($this->fileName($key), __serialize($data));
-    }
-
-    /**
-     * 获取缓存文件名
-     * @param string $key
-     * @return string
-     */
-    private function fileName(string $key): string
-    {
-        return $this->cache_path . md5($key);
     }
 
     /**
@@ -102,16 +94,23 @@ class Cache implements CacheInterface
         }
     }
 
+    function setData(int $exp_time, string $path)
+    {
+        if ($path === "") $path = Variables::getCachePath();
+        $this->cache_expire = $exp_time;
+        $this->cache_path = $path;
+        if (!is_dir($path))
+            mkdir($path, 0777, true);
+        return $this;
+    }
+
     /**
      * @inheritDoc
      */
-    public function del(string $key)
+    public function set(string $key, $data)
     {
-        App::$debug && Log::record("Cache", sprintf("删除缓存：%s", $key));
-        $filename = self::fileName($key);
-        if (file_exists($filename))
-            unlink($filename);
-
+        App::$debug && Log::record("Cache", sprintf("设置缓存：%s", $key));
+        file_put_contents($this->fileName($key), __serialize($data));
     }
 
     /**

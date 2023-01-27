@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: core\base
@@ -25,6 +25,8 @@ use core\exception\NoticeException;
 use core\exception\StrictException;
 use core\exception\WarningException;
 use core\file\Log;
+use core\objects\ErrorEventDataObject;
+use Exception;
 use Throwable;
 
 class Error
@@ -41,7 +43,6 @@ class Error
      *
      * App异常退出
      * @param $e Throwable
-     * @throws ExitApp
      */
     public static function appException(Throwable $e)
     {
@@ -50,7 +51,7 @@ class Error
             App::$debug && Log::record("Frame", sprintf("框架执行退出: %s", $e->getMessage()));
             return;//Exit异常不进行处理
         }
-        self::err($e->getMessage(),$e->getTrace(),get_class($e));
+        self::err($e->getMessage(), $e->getTrace(), get_class($e));
     }
 
     /**
@@ -59,7 +60,7 @@ class Error
      * @param array $errInfo 堆栈
      * @param string $log_tag 记录日志的tag
      */
-    public static function err(string $msg, array $errInfo = [],string $log_tag = "ErrorInfo")
+    public static function err(string $msg, array $errInfo = [], string $log_tag = "ErrorInfo")
     {
         if (Variables::get('__frame_error__', false)) return;
         //捕获异常后清除数据
@@ -80,12 +81,13 @@ class Error
 
         $engine = self::getEngine($result);
 
+
         if ($result !== null) {
             (new Response())->render($result, 200, $engine->getContentType())->send();
         } else if (App::$debug) {
             (new Response())->render($engine->renderError($msg, $traces, $dump, $log_tag), 200, $engine->getContentType())->send();
         } else {
-            (new Response())->render($engine->renderMsg(true, 404, lang("404 Not Found"), lang("您访问的资源不存在。"), 5, "/", lang("立即跳转")), 404, $engine->getContentType())->send();
+            (new Response())->render($engine->renderMsg(true, 404, "404 Not Found", "您访问的资源不存在。", 5, "/", "立即跳转"), 404, $engine->getContentType())->send();
         }
 
     }
@@ -94,27 +96,28 @@ class Error
      * 获取渲染器
      * @return JsonEngine|ResponseEngine|ViewEngine|null
      */
-    private static function getEngine(&$result){
-        $__module = Variables::get("__request_module__",'');
-        $__controller = Variables::get("__request_controller__",'');
-        $__action = Variables::get("__request_action__",'');
-        if($__module==='') return App::getEngine();
+    private static function getEngine(&$result)
+    {
+        $__module = Variables::get("__request_module__", '');
+        $__controller = Variables::get("__request_controller__", '');
+        $__action = Variables::get("__request_action__", '');
+        if ($__module === '') return App::getEngine();
         $controller = 'app\\controller\\' . $__module . '\\' . ucfirst($__controller);
         $base = 'app\\controller\\' . $__module . '\\BaseController';
         $_controller_exist = class_exists($controller);
-        if(!$_controller_exist && class_exists($base)){
+        if (!$_controller_exist && class_exists($base)) {
             $controller = $base;
             $_controller_exist = true;
         }
-        if($_controller_exist){
+        if ($_controller_exist) {
             /**
              * @var $obj Controller
              */
-            try{
+            try {
                 $obj = new $controller($__module, $__controller, $__action);
                 $result = $obj->eng()->onControllerError();
-            }catch (\Exception $exception){
-                Log::record('Controller','控制器初始化函数存在严重的错误',Log::TYPE_ERROR);
+            } catch (Exception $exception) {
+                Log::record('Controller', '控制器初始化函数存在严重的错误', Log::TYPE_ERROR);
                 return App::getEngine();
             }
 
@@ -140,17 +143,13 @@ class Error
     {
         if ($errno == E_WARNING) {
             throw new WarningException("WARNING: $err_str in $err_file on line $err_line");
-        }
-        elseif ($errno == E_NOTICE) {
+        } elseif ($errno == E_NOTICE) {
             throw new NoticeException("NOTICE: $err_str in $err_file on line $err_line");
-        }
-        elseif ($errno == E_STRICT) {
+        } elseif ($errno == E_STRICT) {
             throw new StrictException("STRICT: $err_str in $err_file on line $err_line");
-        }
-        elseif ($errno == 8192) {
+        } elseif ($errno == 8192) {
             throw new DeprecatedException("DEPRECATED: $err_str in $err_file on line $err_line");
-        }
-        else throw new ErrorException("ERROR: $err_str in $err_file on line $err_line");
+        } else throw new ErrorException("ERROR: $err_str in $err_file on line $err_line");
     }
 
 }

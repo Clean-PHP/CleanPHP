@@ -1,11 +1,11 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. CleanPHP. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * File Response.php
- * Author : Dreamn
+ * Author : Ankio
  * Date : 7/30/2020 12:49 AM
  * Description:响应类
  */
@@ -16,7 +16,6 @@ namespace core\base;
 use core\App;
 use core\config\Config;
 use core\event\EventManager;
-use core\exception\ExitApp;
 use core\objects\StringBuilder;
 
 /**
@@ -55,6 +54,24 @@ class Response
             header("Location:{$url}");
         }
         App::exit(sprintf("发生强制跳转：%s", $url));
+    }
+
+    /**
+     * 获取浏览器的http协议
+     * @return mixed|string|null
+     */
+    static function getHttpScheme()
+    {
+        if (($http = Variables::get("__http_scheme__")) !== null) {
+            return $http;
+        }
+        if ((!empty($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == "https") || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") || (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)) {
+            $http = 'https://';
+        } else {
+            $http = 'http://';
+        }
+        Variables::set('__http_scheme__', $http);
+        return $http;
     }
 
     /**
@@ -99,9 +116,6 @@ class Response
         return $this;
     }
 
-    /**
-     * @throws ExitApp
-     */
     public function send()
     {
         //允许跨域
@@ -135,24 +149,6 @@ class Response
         EventManager::trigger('__response_end__', $this);
 
         App::exit("后端数据发送结束");
-    }
-
-    /**
-     * 获取浏览器的http协议
-     * @return mixed|string|null
-     */
-    static function getHttpScheme()
-    {
-        if (($http = Variables::get("__http_scheme__")) !== null) {
-            return $http;
-        }
-        if ((!empty($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == "https") || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") || (!empty($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443)) {
-            $http = 'https://';
-        } else {
-            $http = 'http://';
-        }
-        Variables::set('__http_scheme__', $http);
-        return $http;
     }
 
     /**

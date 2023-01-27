@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: core\exception
  * Class ExtendError
@@ -14,12 +15,13 @@
 namespace core\exception;
 
 use core\file\Log;
+use Exception;
 
-class ExtendError extends \Exception
+class ExtendError extends Exception
 {
     public function __construct($message, $extend_name)
     {
-        Log::record("PHP Extensions",sprintf("缺少[%s]拓展",$extend_name),Log::TYPE_ERROR);
+        Log::record("PHP Extensions", sprintf("缺少[%s]拓展", $extend_name), Log::TYPE_ERROR);
         parent::__construct($message);
     }
 }

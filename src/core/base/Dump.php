@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: core\base
@@ -126,7 +126,7 @@ class Dump
      */
     public function dumpProp($obj, $className, $num)
     {
-       // if ($className == get_class($obj) && $num > 2) return;
+        // if ($className == get_class($obj) && $num > 2) return;
         static $pads = [];
         try {
             $reflect = new ReflectionClass($obj);
@@ -138,7 +138,7 @@ class Dump
         $prop = $reflect->getProperties();
         $len = count($prop);
         $this->output .= "<i style='color: #333;'> (size=$len)</i>";
-        array_push($pads, "    ");
+        $pads[] = "    ";
         for ($i = 0; $i < $len; $i++) {
             $index = $i;
             $prop[$index]->setAccessible(true);

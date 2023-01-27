@@ -1,10 +1,11 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: core\exception
- * Class DepercatedException
+ * Class DeprecatedException
  * Created By ankio.
  * Date : 2022/12/16
  * Time : 16:35
@@ -13,7 +14,9 @@
 
 namespace core\exception;
 
-class DeprecatedException extends \Exception
+use Exception;
+
+class DeprecatedException extends Exception
 {
 
 }
