@@ -44,7 +44,7 @@ class Client extends Base {
      * @throws WebsocketException
      */
     public function __construct(string $uri) {
-        Log::recordFile("ws_client",$uri);
+        Log::record("ws_client", $uri);
         $this->parseUri($uri);
         $this->connect();
         $this->handshake();
@@ -153,7 +153,7 @@ class Client extends Base {
             'Sec-WebSocket-Key: ' . $upgrade_key,
             'Sec-WebSocket-Version: 13',
         ];
-        Log::recordFile("ws_client","握手准备");
+        Log::record("ws_client", "握手准备");
         $this->write(implode(self::HTTP_HEADER_SEPARATION_MARK, $headers) . self::HTTP_HEADER_END_MARK);
         $response = '';
         $end = false;

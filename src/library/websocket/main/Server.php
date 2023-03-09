@@ -78,7 +78,7 @@ class Server extends Base
     private function log(string $t)
     {//控制台输出
         if ($this->log) {
-            Log::recordFile("WebSocket", $t);
+            Log::record("WebSocket", $t);
         }
     }
 
@@ -92,7 +92,7 @@ class Server extends Base
         file_put_contents(Variables::getCachePath('websocket.lock'), getmypid());
         while (true) {
             if (!file_exists(Variables::getCachePath('websocket.lock'))) {
-                App::$debug && Log::recordFile("Tasker", "定时任务进程发生变化，当前进程结束");
+                App::$debug && Log::record("Tasker", "定时任务进程发生变化，当前进程结束");
                 break;
             }
             $write = $except = null;
@@ -134,14 +134,14 @@ class Server extends Base
                             break;
                         case self::OPCODE_TEXT_FRAME:
                         case self::OPCODE_BINARY_FRAME:
-                            /**
-                             * Log::recordFile("data",print_r($data_frame,true));
-                             * if ($data_frame->fin == 0) {
-                             * do {
-                             * $continueFrame = $this->readFrame($socket);
-                             * $data_frame->payload .= $continueFrame->payload;
-                             * } while ($continueFrame->fin == 0);
-                             * }**/
+                        /**
+                         * Log::record("data",print_r($data_frame,true));
+                         * if ($data_frame->fin == 0) {
+                         * do {
+                         * $continueFrame = $this->readFrame($socket);
+                         * $data_frame->payload .= $continueFrame->payload;
+                         * } while ($continueFrame->fin == 0);
+                         * }**/
                             $this->event_handler && $this->event_handler->onMsg($this, $data_frame->payload, $this->sockets[(int)$socket]);
                             break;
                         case self::OPCODE_CLOSE:
@@ -258,13 +258,13 @@ class Server extends Base
             return;
         }
         try {
-            App::$debug && Log::recordFile('Websocket', '消息推送：' . $msg);
+            App::$debug && Log::record('Websocket', '消息推送：' . $msg);
             $t = $this->packFrame($opcode, $msg, $is_mask, $state);
             socket_write($socket, $t, strlen($t));
         } catch (WarningException $exception) {
             if (isset($this->sockets[$id]))
                 unset($this->sockets[$id]);
-            Log::recordFile("Exception", $exception->getMessage());
+            Log::record("Exception", $exception->getMessage());
         }
     }
 

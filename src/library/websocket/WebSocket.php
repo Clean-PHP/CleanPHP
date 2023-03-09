@@ -96,7 +96,7 @@ class WebSocket implements EventListener
         try {
             WebSocket::start();
         } catch (WebsocketException $e) {
-            Log::recordFile("Websocket",$e->getMessage());
+            Log::record("Websocket", $e->getMessage(), Log::TYPE_ERROR);
         }
     }
 }
