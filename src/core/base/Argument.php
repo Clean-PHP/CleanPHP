@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 /**
@@ -13,8 +13,6 @@
  */
 
 namespace core\base;
-
-use core\json\Json;
 
 class Argument
 {
@@ -56,11 +54,8 @@ class Argument
      */
     static function arg(string $key = null, $default = null)
     {
-        if ($key === null) return $_REQUEST;
-        if (isset($_REQUEST[$key])) {
-            return parse_type($default, $_REQUEST[$key]);
-        }
-        return $default;
+        if ($key === null) return array_merge(self::get(), self::post());
+        return self::get($key) ?? self::post($key) ?? $default;
     }
 
     /**

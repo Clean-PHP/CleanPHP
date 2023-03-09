@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * File autoload.php
  * Created By ankio.
@@ -9,4 +10,8 @@
  * Time : 21:13
  * Description :
  */
-\core\event\EventManager::addListener("__on_controller_create__",\library\rbac\RBACEvent::class);
+
+use core\event\EventManager;
+use library\rbac\RBACEvent;
+
+EventManager::addListener("__on_controller_create__", RBACEvent::class);

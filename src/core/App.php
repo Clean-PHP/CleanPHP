@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 /**
@@ -49,6 +49,7 @@ class App
      */
     static function run(bool $debug)
     {
+        mb_internal_encoding("UTF-8");
         error_reporting(E_ALL & ~(E_STRICT | E_NOTICE));
         ini_set("display_errors", "Off");
         if (version_compare(PHP_VERSION, '7.4.0', '<')) {
@@ -102,7 +103,6 @@ class App
             if (class_exists($app) && ($imp = class_implements($app)) && in_array(MainApp::class, $imp)) {
                 self::$app = new $app();
                 self::$app->onRequestArrive();
-
             }
 
             EventManager::trigger("__frame_init__");//框架初始化
@@ -141,21 +141,23 @@ class App
 
             $controller_class = 'app\\controller\\' . $__module . '\\' . $controller_name;
 
-
             if (!class_exists($controller_class, true)) {
-                Error::err("模块 ( $__module )  控制器 ( $controller_name ) 不存在!", [], "Controller");
+                $data = [$__module, $__controller, $__action, $controller_class];
+                EventManager::trigger("__not_render__", $data);
+                Error::err("模块 ( $__module ) => 控制器 ( $controller_name ) 不存在!", [], "Controller");
             }
 
 
             $method = method_exists($controller_class, $__action);
             if (!$method) {
-
-                Error::err("模块 ( $__module )  控制器 ( $controller_name ) 中的方法 ( $__action ) 不存在!", [], "Action");
+                $data = [$__module, $__controller, $__action, $controller_class];
+                EventManager::trigger("__not_render__", $data);
+                Error::err("模块 ( $__module ) => 控制器 ( $controller_name ) 中的方法 ( $__action ) 不存在!", [], "Action");
             }
 
 
             if (!in_array_case($__action, get_class_methods($controller_class)) || $__action === '__init') {
-                Error::err("模块 ( $__module ) 控制器 ( $controller_name ) 中的方法 ( $__action ) 为私有方法，禁止访问!", [], "Action");
+                Error::err("模块 ( $__module ) => 控制器 ( $controller_name ) 中的方法 ( $__action ) 为私有方法，禁止访问!", [], "Action");
             }
 
             /**
@@ -167,6 +169,11 @@ class App
             $result = $controller_obj->$__action();
             if ($result !== null)
                 (new Response())->render($result, $controller_obj->getCode(), $controller_obj->getContentType())->send();
+            else {
+                $data = [$__module, $__controller, $__action, $controller_class];
+                EventManager::trigger("__not_render__", $data);
+            }
+
         } catch (ExitApp $exit_app) {//执行退出
             App::$debug && Log::record("Frame", sprintf("框架执行退出: %s", $exit_app->getMessage()));
         } finally {

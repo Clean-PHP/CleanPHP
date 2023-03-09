@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: library\database\operation
@@ -36,7 +36,7 @@ abstract class BaseOperation
      * @param $db DB 数据库对象
      * @param $model ?string 数据模型
      */
-    public function __construct(Db &$db,Dao &$dao, string $model = null)
+    public function __construct(Db &$db, Dao &$dao, string $model = null)
     {
         $this->db = $db;
         $this->model = $model;
@@ -61,18 +61,20 @@ abstract class BaseOperation
      */
     protected function __commit($readonly = false)
     {
-        $this->translateSql();
-        $table = $this->opt['table_name']??null;
-        if($table!==null){
+        if ($this->tra_sql == null) $this->translateSql();
+        $table = $this->opt['table_name'] ?? null;
+        if ($table !== null) {
             $result = $this->db->getDriver()->getDbConnect()->query(/** @lang text */ "SELECT count(*) FROM `{$this->opt['table_name']}` LIMIT 1");
-            $table_exist =  $result instanceof PDOStatement && ($result->rowCount() === 1);
-            if(!$table_exist){
-                if($this->model!==null){
-                    $this->db->initTable($this->dao,$this->model,$table);
+            $table_exist = $result instanceof PDOStatement && ($result->rowCount() === 1);
+            if (!$table_exist) {
+                if ($this->model !== null) {
+                    $this->db->initTable($this->dao, $this->model, $table);
                 }
             }
         }
-        return $this->db->execute($this->tra_sql, $this->bind_param, $readonly);
+        $sql = $this->tra_sql;
+        $this->tra_sql = null;
+        return $this->db->execute($sql, $this->bind_param, $readonly);
     }
 
     /**
@@ -107,7 +109,7 @@ abstract class BaseOperation
             reset($conditions);
 
             foreach ($conditions as $key => &$condition) {
-                if(is_array($condition))throw new DbFieldError("数组元素不允许出现在查询语句中：".json_encode($condition),$condition);
+                if (is_array($condition)) throw new DbFieldError("数组元素不允许出现在查询语句中：" . json_encode($condition), $condition);
                 if (is_int($key)) {
                     $isMatched = preg_match_all('/in(\s+)?\((\s+)?(:\w+)\)/', strval($condition), $matches);
 
@@ -182,10 +184,10 @@ abstract class BaseOperation
      */
     protected function translate2Model(string $model, array $data): ?array
     {
-        if (!class_exists($model)) Error::err(sprintf("指定转换的模型类 %s 不存在", $model),[],"Database Sql");
+        if (!class_exists($model)) Error::err(sprintf("指定转换的模型类 %s 不存在", $model), [], "Database Sql");
         $ret = [];
         foreach ($data as $val) {
-            $ret[] = new $model($val);
+            $ret[] = new $model($val, true);
         }
         return $ret;
     }

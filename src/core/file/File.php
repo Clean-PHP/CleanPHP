@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 namespace core\file;
@@ -78,12 +78,13 @@ class File
      */
     public static function copy(string $src = '', string $dst = ''): bool
     {
-        if (@is_file($src)) {
-            return copy($src, $dst);
-        }
+
 
         if (empty($src) || empty($dst)) {
             return false;
+        }
+        if (is_file($src)) {
+            return copy($src, $dst);
         }
 
         $dir = opendir($src);

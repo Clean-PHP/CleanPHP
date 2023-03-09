@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 namespace core\closure;
@@ -17,7 +17,7 @@ interface ISecurityProvider
     /**
      * Verify signature
      * @param array $data
-     * @return bool
+     * @return ?bool
      */
-    public function verify(array $data): bool;
+    public function verify(array $data): ?bool;
 }

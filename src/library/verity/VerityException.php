@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: library\verity
  * Class VerityException
@@ -13,14 +14,17 @@
 
 namespace library\verity;
 
-use Throwable;
+use Exception;
 
-class VerityException extends \Exception
+class VerityException extends Exception
 {
     public string $key = "";
-    public function __construct($message = "",$key = "")
+    public $val = null;
+
+    public function __construct($message = "", $key = "", $val = null)
     {
         $this->key = $key;
+        $this->val = $val;
         parent::__construct($message);
     }
 }

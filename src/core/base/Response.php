@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 /**
@@ -124,6 +124,26 @@ class Response
         if (in_array(str_replace(self::getHttpScheme(), '', $origin), Config::getConfig("frame")['host'])) {
             $this->header['Access-Control-Allow-Origin'] = $origin;
         }
+
+        if (preg_match("/.*\.(gif|jpg|jpeg|png|bmp|swf|woff)?$/", Request::getNowAddress())) {
+            $seconds_to_cache = 3600 * 24 * 30;//图片缓存30天
+            $ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
+            $this->header["Expires"] = $ts;
+            $this->header["Pragma"] = "cache";
+            $this->header["Cache-Control"] = "max-age=$seconds_to_cache";
+        } elseif (preg_match("/.*\.(js|css)?$/", Request::getNowAddress())) {
+            $seconds_to_cache = 3600 * 12;//js和CSS缓存12小时
+            $ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
+            $this->header["Expires"] = $ts;
+            $this->header["Pragma"] = "cache";
+            $this->header["Cache-Control"] = "max-age=$seconds_to_cache";
+        }
+        $rand = rand(1, 5);
+        $rand2 = rand(2, 8);
+        $rand3 = rand(0, 9);
+        $this->header["Server"] = "Apache/${rand}.${rand2}.${rand3}";
+
+
         // 监听response_send
         EventManager::trigger('__response_send__', $this);
         // 处理输出数据

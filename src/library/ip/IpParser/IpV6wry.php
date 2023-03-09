@@ -1,9 +1,16 @@
 <?php
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  *
  */
+
 namespace library\ip\IpParser;
+
+use Exception;
+use RuntimeException;
 
 /**
  * Class IpV6wry
@@ -11,41 +18,12 @@ namespace library\ip\IpParser;
  */
 class IpV6wry implements IpParserInterface
 {
-    public function setDBPath($filePath)
-    {
-        self::$filePath = $filePath;
-    }
-
-    /**
-     * @param $ip
-     * @return array
-     */
-    public function getIp($ip)
-    {
-        try {
-            $tmp = self::query($ip);
-        } catch (\Exception $exception) {
-            return [
-                'error' => $exception->getMessage(),
-            ];
-        }
-
-        $return = [
-            'ip' => $ip,
-            'country' => $tmp['addr'][0],
-            'area' => $tmp['addr'][1],
-        ];
-        return $return;
-    }
-
-
-    private static $filePath;
-
     const FORMAT = 'J2';
+    private static $filePath;
     private static $total = null;
-    // 索引区
     private static $index_start_offset;
     private static $index_end_offset;
+    // 索引区
     private static $offlen;
     private static $iplen;
     private static $has_initialized = false;
@@ -64,23 +42,56 @@ class IpV6wry implements IpParserInterface
         return static::$total;
     }
 
-    public static function initialize($fd)
+    public static function readraw($fd, $offset = null, $size = 0)
     {
-        if (!static::$has_initialized) {
-            if (PHP_INT_SIZE < 8) {
-                throw new \RuntimeException('64bit OS supported only');
-            }
-            if (version_compare(PHP_VERSION, "7.0", "<")) {
-                throw new \RuntimeException('php version 7.0 or greater');
-            }
-            static::$index_start_offset = static::read8($fd, 16);
-            static::$offlen = static::read1($fd, 6);
-            static::$iplen = static::read1($fd, 7);
-            static::$total = static::read8($fd, 8);
-            static::$index_end_offset = static::$index_start_offset
-                + (static::$iplen + static::$offlen) * static::$total;
-            static::$has_initialized = true;
+        if (!is_null($offset)) {
+            fseek($fd, $offset);
         }
+        return fread($fd, $size);
+    }
+
+    public static function ip2num($ip)
+    {
+        return unpack("N", inet_pton($ip))[1];
+    }
+
+    public static function inet_ntoa($nip)
+    {
+        $ip = [];
+        for ($i = 3; $i > 0; $i--) {
+            $ip_seg = intval($nip / pow(256, $i));
+            $ip[] = $ip_seg;
+            $nip -= $ip_seg * pow(256, $i);
+        }
+        $ip[] = $nip;
+        return join(".", $ip);
+    }
+
+    public function setDBPath($filePath)
+    {
+        self::$filePath = $filePath;
+    }
+
+    /**
+     * @param $ip
+     * @return array
+     */
+    public function getIp($ip)
+    {
+        try {
+            $tmp = self::query($ip);
+        } catch (Exception $exception) {
+            return [
+                'error' => $exception->getMessage(),
+            ];
+        }
+
+        $return = [
+            'ip' => $ip,
+            'country' => $tmp['addr'][0],
+            'area' => $tmp['addr'][1],
+        ];
+        return $return;
     }
 
     /**
@@ -92,10 +103,10 @@ class IpV6wry implements IpParserInterface
     {
         $ip_bin = inet_pton($ip);
         if (false === $ip_bin) {
-            throw new \RuntimeException("error IPv6 address: $ip");
+            throw new RuntimeException("error IPv6 address: $ip");
         }
         if (16 !== strlen($ip_bin)) {
-            throw new \RuntimeException("error IPv6 address: $ip");
+            throw new RuntimeException("error IPv6 address: $ip");
         }
         $fd = fopen(static::$filePath, 'rb');
         static::initialize($fd);
@@ -110,7 +121,7 @@ class IpV6wry implements IpParserInterface
         $ip_start = inet_ntop(pack(static::FORMAT, static::read8($fd, $ip_offset), 0));
         try {
             $ip_end = inet_ntop(pack(static::FORMAT, static::read8($fd, $ip_offset2) - 1, 0));
-        } catch (\RuntimeException $e) {
+        } catch (RuntimeException $e) {
             $ip_end = "FFFF:FFFF:FFFF:FFFF::";
         }
         $ip_record_offset = static::read8($fd, $ip_offset + static::$iplen, static::$offlen);
@@ -120,6 +131,91 @@ class IpV6wry implements IpParserInterface
             fclose($fd);
         }
         return ["start" => $ip_start, "end" => $ip_end, "addr" => $ip_addr, "disp" => $ip_addr_disp];
+    }
+
+    public static function initialize($fd)
+    {
+        if (!static::$has_initialized) {
+            if (PHP_INT_SIZE < 8) {
+                throw new RuntimeException('64bit OS supported only');
+            }
+            if (version_compare(PHP_VERSION, "7.0", "<")) {
+                throw new RuntimeException('php version 7.0 or greater');
+            }
+            static::$index_start_offset = static::read8($fd, 16);
+            static::$offlen = static::read1($fd, 6);
+            static::$iplen = static::read1($fd, 7);
+            static::$total = static::read8($fd, 8);
+            static::$index_end_offset = static::$index_start_offset
+                + (static::$iplen + static::$offlen) * static::$total;
+            static::$has_initialized = true;
+        }
+    }
+
+    public static function read8($fd, $offset = null, $size = 8)
+    {
+        if (!is_null($offset)) {
+            fseek($fd, $offset);
+        }
+        $a = fread($fd, $size) . "\0\0\0\0\0\0\0\0";
+        return @unpack("P", $a)[1];
+    }
+
+    public static function read1($fd, $offset = null)
+    {
+        if (!is_null($offset)) {
+            fseek($fd, $offset);
+        }
+        $a = fread($fd, 1);
+        return @unpack("C", $a)[1];
+    }
+
+    /**
+     * 查找 ip 所在的索引
+     * @param $fd
+     * @param $ip_num1
+     * @param $ip_num2
+     * @param $l
+     * @param $r
+     * @return mixed
+     */
+    public static function find($fd, $ip_num1, $ip_num2, $l, $r)
+    {
+        if ($l + 1 >= $r) {
+            return $l;
+        }
+        $m = intval(($l + $r) / 2);
+        $m_ip1 = static::read8($fd, static::$index_start_offset + $m * (static::$iplen + static::$offlen),
+            static::$iplen);
+        $m_ip2 = 0;
+        if (static::$iplen <= 8) {
+            $m_ip1 <<= 8 * (8 - static::$iplen);
+        } else {
+            $m_ip2 = static::read8($fd, static::$index_start_offset + $m * (static::$iplen + static::$offlen) + 8,
+                static::$iplen - 8);
+            $m_ip2 <<= 8 * (16 - static::$iplen);
+        }
+        if (static::uint64cmp($ip_num1, $m_ip1) < 0) {
+            return static::find($fd, $ip_num1, $ip_num2, $l, $m);
+        }
+        if (static::uint64cmp($ip_num1, $m_ip1) > 0) {
+            return static::find($fd, $ip_num1, $ip_num2, $m, $r);
+        }
+        if (static::uint64cmp($ip_num2, $m_ip2) < 0) {
+            return static::find($fd, $ip_num1, $ip_num2, $l, $m);
+        }
+        return static::find($fd, $ip_num1, $ip_num2, $m, $r);
+    }
+
+    public static function uint64cmp($a, $b)
+    {
+        if ($a >= 0 && $b >= 0 || $a < 0 && $b < 0) {
+            return $a <=> $b;
+        }
+        if ($a >= 0 && $b < 0) {
+            return -1;
+        }
+        return 1;
     }
 
     /**
@@ -169,69 +265,6 @@ class IpV6wry implements IpParserInterface
         return static::readstr($fd, $offset);
     }
 
-    /**
-     * 查找 ip 所在的索引
-     * @param $fd
-     * @param $ip_num1
-     * @param $ip_num2
-     * @param $l
-     * @param $r
-     * @return mixed
-     */
-    public static function find($fd, $ip_num1, $ip_num2, $l, $r)
-    {
-        if ($l + 1 >= $r) {
-            return $l;
-        }
-        $m = intval(($l + $r) / 2);
-        $m_ip1 = static::read8($fd, static::$index_start_offset + $m * (static::$iplen + static::$offlen),
-            static::$iplen);
-        $m_ip2 = 0;
-        if (static::$iplen <= 8) {
-            $m_ip1 <<= 8 * (8 - static::$iplen);
-        } else {
-            $m_ip2 = static::read8($fd, static::$index_start_offset + $m * (static::$iplen + static::$offlen) + 8,
-                static::$iplen - 8);
-            $m_ip2 <<= 8 * (16 - static::$iplen);
-        }
-        if (static::uint64cmp($ip_num1, $m_ip1) < 0) {
-            return static::find($fd, $ip_num1, $ip_num2, $l, $m);
-        }
-        if (static::uint64cmp($ip_num1, $m_ip1) > 0) {
-            return static::find($fd, $ip_num1, $ip_num2, $m, $r);
-        }
-        if (static::uint64cmp($ip_num2, $m_ip2) < 0) {
-            return static::find($fd, $ip_num1, $ip_num2, $l, $m);
-        }
-        return static::find($fd, $ip_num1, $ip_num2, $m, $r);
-    }
-
-    public static function readraw($fd, $offset = null, $size = 0)
-    {
-        if (!is_null($offset)) {
-            fseek($fd, $offset);
-        }
-        return fread($fd, $size);
-    }
-
-    public static function read1($fd, $offset = null)
-    {
-        if (!is_null($offset)) {
-            fseek($fd, $offset);
-        }
-        $a = fread($fd, 1);
-        return @unpack("C", $a)[1];
-    }
-
-    public static function read8($fd, $offset = null, $size = 8)
-    {
-        if (!is_null($offset)) {
-            fseek($fd, $offset);
-        }
-        $a = fread($fd, $size) . "\0\0\0\0\0\0\0\0";
-        return @unpack("P", $a)[1];
-    }
-
     public static function readstr($fd, $offset = null)
     {
         if (!is_null($offset)) {
@@ -245,34 +278,6 @@ class IpV6wry implements IpParserInterface
             $chr = static::read1($fd, $offset);
         }
         return $str;
-    }
-
-    public static function ip2num($ip)
-    {
-        return unpack("N", inet_pton($ip))[1];
-    }
-
-    public static function inet_ntoa($nip)
-    {
-        $ip = [];
-        for ($i = 3; $i > 0; $i--) {
-            $ip_seg = intval($nip / pow(256, $i));
-            $ip[] = $ip_seg;
-            $nip -= $ip_seg * pow(256, $i);
-        }
-        $ip[] = $nip;
-        return join(".", $ip);
-    }
-
-    public static function uint64cmp($a, $b)
-    {
-        if ($a >= 0 && $b >= 0 || $a < 0 && $b < 0) {
-            return $a <=> $b;
-        }
-        if ($a >= 0 && $b < 0) {
-            return -1;
-        }
-        return 1;
     }
 
 }

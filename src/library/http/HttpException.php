@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: library\http
  * Class HttpException
@@ -13,9 +14,9 @@
 
 namespace library\http;
 
-use Throwable;
+use Exception;
 
-class HttpException extends \Exception
+class HttpException extends Exception
 {
     public function __construct($message = "")
     {

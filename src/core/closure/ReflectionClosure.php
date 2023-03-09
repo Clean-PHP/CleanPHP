@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 namespace core\closure;
@@ -789,12 +789,12 @@ class ReflectionClosure extends ReflectionFunction
                         case T_CLASS:
                         case T_INTERFACE:
                         case T_TRAIT:
-                            $state = 'before_structure';
+                        $state = 'before_structure';
                         $startLine = $token[2];
                         $structType = $token[0] == T_CLASS
                             ? 'class'
                             : ($token[0] == T_INTERFACE ? 'interface' : 'trait');
-                            break;
+                        break;
                         case T_USE:
                             $state = 'use';
                             $prefix = $name = $alias = '';

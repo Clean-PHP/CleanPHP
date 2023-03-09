@@ -1,5 +1,7 @@
 <?php
-
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 namespace library\ip;
 
@@ -15,7 +17,8 @@ define("IP_DATABASE_ROOT_DIR", __DIR__);
  * Class IpLocation
  * @package itbdw\Ip
  */
-class IpLocation {
+class IpLocation
+{
     /**
      * @var
      */
@@ -31,7 +34,22 @@ class IpLocation {
      * @param string $ipV6Path
      * @return array
      */
-    public static function getLocationWithoutParse($ip, string $ipV4Path='', string $ipV6Path=''): array
+    public static function getLocation($ip, string $ipV4Path = '', string $ipV6Path = ''): array
+    {
+        $location = self::getLocationWithoutParse($ip, $ipV4Path, $ipV6Path);
+        if (isset($location['error'])) {
+            return $location;
+        }
+        return StringParser::parse($location);
+    }
+
+    /**
+     * @param $ip
+     * @param string $ipV4Path
+     * @param string $ipV6Path
+     * @return array
+     */
+    public static function getLocationWithoutParse($ip, string $ipV4Path = '', string $ipV6Path = ''): array
     {
 
         //if  ipV4Path 记录位置
@@ -63,21 +81,6 @@ class IpLocation {
     }
 
     /**
-     * @param $ip
-     * @param string $ipV4Path
-     * @param string $ipV6Path
-     * @return array
-     */
-    public static function getLocation($ip, string $ipV4Path='', string $ipV6Path=''): array
-    {
-        $location = self::getLocationWithoutParse($ip, $ipV4Path, $ipV6Path);
-        if (isset($location['error'])) {
-            return $location;
-        }
-        return StringParser::parse($location);
-    }
-
-    /**
      * @param $path
      */
     public static function setIpV4Path($path)
@@ -94,28 +97,29 @@ class IpLocation {
     }
 
     /**
-     * @return string
-     */
-    private static function getIpV4Path(): string
-    {
-        return self::$ipV4Path ? : self::root('/db/qqwry.dat');
-    }
-
-    /**
-     * @return string
-     */
-    private static function getIpV6Path(): string
-    {
-        return self::$ipV6Path ? : self::root('/db/ipv6wry.db');
-    }
-
-    /**
      * @param $ip
      * @return bool
      */
     private static function isIpV4($ip): bool
     {
         return false !== filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4);
+    }
+
+    /**
+     * @return string
+     */
+    private static function getIpV4Path(): string
+    {
+        return self::$ipV4Path ?: self::root('/db/qqwry.dat');
+    }
+
+    /**
+     * @param $filename
+     * @return string
+     */
+    public static function root($filename): string
+    {
+        return IP_DATABASE_ROOT_DIR . $filename;
     }
 
     /**
@@ -128,11 +132,10 @@ class IpLocation {
     }
 
     /**
-     * @param $filename
      * @return string
      */
-    public static function root($filename): string
+    private static function getIpV6Path(): string
     {
-        return IP_DATABASE_ROOT_DIR . $filename;
+        return self::$ipV6Path ?: self::root('/db/ipv6wry.db');
     }
 }

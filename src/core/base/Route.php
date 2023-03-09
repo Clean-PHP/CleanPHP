@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 namespace core\base;
@@ -90,7 +90,6 @@ class Route
 
     /**
      * 路由重写
-     * @throws ExitApp
      */
     public static function rewrite(): array
     {
@@ -105,7 +104,7 @@ class Route
         $array = self::parseUrl($url);
 
         if (!isset($array['m']) || !isset($array['a']) || !isset($array['c'])) {
-            Error::err("路由不完整，缺少模块或控制器或执行方法！", [], "Route");
+            Error::err("路由不完整，缺少模块或控制器或执行方法！数据:" . json_encode($array), [], "Route");
         }
 
 
@@ -150,7 +149,7 @@ class Route
             if (($index = strpos($query, '?')) !== false) {
                 $query = substr($query, 0, $index);
             }
-            $query = strtolower(trim($query, "/"));
+            $query = trim($query, "/");
             if ($query === "") $query = "/";
             Variables::set("__route_query__", $query);
         }
@@ -221,13 +220,14 @@ class Route
         ini_set('pcre.recursion_limit', 200);
 
         foreach (Config::getRouteTable() as $_rule => $mapper) {
+            App::$debug && Log::record("Route", sprintf("路由匹配：%s => %s", $_rule, $mapper));
             empty($_rule) && $_rule = "/";
             $rule = strtolower($_rule);
             $rule = '@^' . str_ireplace(
                     ['\\\\', '/', '<', '>', '.'],
                     ['', '\/', '(?P<', '>[\x{4e00}-\x{9fa5}a-zA-Z0-9_\.-\/]+)', '\.'],
                     $rule)
-                . '$@u';
+                . '$@ui';
             if (preg_match($rule, $query, $matches)) {
                 $route = explode("/", trim($mapper));
                 if (isset($route[2])) {

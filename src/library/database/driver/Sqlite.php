@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: library\database\driver
@@ -35,7 +35,7 @@ class Sqlite extends Driver
         $this->dbFile = $dbFile;
         //pdo初始化
         try {
-            $this->pdo = new PDO("sqlite:".Variables::getAppPath($this->dbFile->host),
+            $this->pdo = new PDO("sqlite:" . Variables::getAppPath($this->dbFile->host),
                 '',
                 '',
                 [
@@ -65,11 +65,11 @@ class Sqlite extends Driver
             if ($value instanceof SqlKey) {
                 $name = $value->name;
                 $primary[] = $name;
-                $sql .= $this->renderKey($value) ;
+                $sql .= $this->renderKey($value);
                 //AUTOINCREMENT
-                if($value->type === SqlKey::TYPE_INT && $value->auto){
+                if ($value->type === SqlKey::TYPE_INT && $value->auto) {
                     $sql .= " PRIMARY KEY AUTOINCREMENT,";
-                }else{
+                } else {
                     $sql .= ",";
                 }
 
@@ -81,8 +81,8 @@ class Sqlite extends Driver
             if (in_array($key, $primary)) continue;
             $sql .= $this->renderKey(new SqlKey($key, $value)) . ",";
         }
-        if(substr($sql,strlen($sql)-1,1)===','){
-            $sql = substr($sql,0,strlen($sql)-1);
+        if (substr($sql, strlen($sql) - 1, 1) === ',') {
+            $sql = substr($sql, 0, strlen($sql) - 1);
         }
         $sql .= ');';
 
@@ -97,11 +97,11 @@ class Sqlite extends Driver
         if ($sqlKey->type === SqlKey::TYPE_TEXT && $sqlKey->value !== null)
             $sqlKey->value = str_replace("'", "\'", $sqlKey->value);
 
-        if ($sqlKey->type === SqlKey::TYPE_INT ) return "`$sqlKey->name` INTEGER";
+        if ($sqlKey->type === SqlKey::TYPE_INT) return "`$sqlKey->name` INTEGER";
 
         elseif ($sqlKey->type === SqlKey::TYPE_BOOLEAN) return "`$sqlKey->name` INTEGER";
 
-        elseif ($sqlKey->type === SqlKey::TYPE_TEXT ) return "`$sqlKey->name` TEXT DEFAULT '$sqlKey->value'";
+        elseif ($sqlKey->type === SqlKey::TYPE_TEXT) return "`$sqlKey->name` TEXT DEFAULT '$sqlKey->value'";
 
         elseif ($sqlKey->type === SqlKey::TYPE_FLOAT) return "`$sqlKey->name` REAL DEFAULT '$sqlKey->value'";
 

@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 /**
@@ -51,7 +51,8 @@ class Error
             App::$debug && Log::record("Frame", sprintf("框架执行退出: %s", $e->getMessage()));
             return;//Exit异常不进行处理
         }
-        self::err($e->getMessage(), $e->getTrace(), get_class($e));
+
+        self::err($e->getMessage(), array_merge([["file" => $e->getFile(), "line" => $e->getLine(), "function" => "", "class" => '', "type" => ""]], $e->getTrace()), get_class($e));
     }
 
     /**

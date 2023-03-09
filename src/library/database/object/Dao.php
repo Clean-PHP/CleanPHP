@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: library\database\object
@@ -67,24 +67,52 @@ abstract class Dao
      * @param $set_value
      * @return void
      */
-    public function setOption($key_name,$key_value,$set_key,$set_value){
-        $this->update()->set([$set_key=>$set_value])->where([$key_name=>$key_value])->commit();
+    public function setOption($key_name, $key_value, $set_key, $set_value)
+    {
+        $this->update()->set([$set_key => $set_value])->where([$key_name => $key_value])->commit();
     }
+
+    /**
+     * 更新
+     * @return UpdateOperation
+     */
+    protected function update(): UpdateOperation
+    {
+        return (new UpdateOperation($this->db, $this, $this->model))->table($this->getTable());
+    }
+
+    /**
+     * 当前操作的表
+     * @return string
+     */
+    abstract protected function getTable(): string;
 
     /**
      * 获取指定条件下的数据量
      * @return int|mixed
      */
-    function getCount($condition = []){
+    function getCount($condition = [])
+    {
         return $this->select()->count($condition);
+    }
+
+    /**
+     * 查找
+     * @param ...$field string|Field 需要查询的字段
+     * @return SelectOperation
+     */
+    protected function select(...$field): SelectOperation
+    {
+        return (new SelectOperation($this->db, $this, $this->model, ...$field))->table($this->getTable());
     }
 
     /**
      * 获取指定参数的求和
      * @return int|mixed
      */
-    function getSum($condition = [],$field = "id"){
-        return $this->select()->sum($condition,$field);
+    function getSum($condition = [], $field = "id")
+    {
+        return $this->select()->sum($condition, $field);
     }
 
     /**
@@ -94,6 +122,18 @@ abstract class Dao
     public function dropTable()
     {
         return $this->db->execute("DROP TABLE IF EXISTS `{$this->getTable()}`");
+    }
+
+    /**
+     * 数据库执行
+     * @param string $sql 需要执行的sql语句
+     * @param array $params 绑定的sql参数
+     * @param false $readonly 是否为查询
+     * @return array|int
+     */
+    protected function execute(string $sql, array $params = [], bool $readonly = false)
+    {
+        return $this->db->execute($sql, $params, $readonly);
     }
 
     /**
@@ -107,9 +147,11 @@ abstract class Dao
 
     /**
      * 当表被创建的时候
-     * @return mixed
+     * @return void
      */
-    public abstract function onCreateTable();
+    public function onCreateTable()
+    {
+    }
 
     /**
      * 插入模型
@@ -150,26 +192,26 @@ abstract class Dao
      */
     protected function insert(int $model = InsertOperation::INSERT_NORMAL): InsertOperation
     {
-        return (new InsertOperation($this->db, $this,$this->model, $model))->table($this->getTable());
+        return (new InsertOperation($this->db, $this, $this->model, $model))->table($this->getTable());
     }
 
     /**
-     * 当前操作的表
-     * @return string
-     */
-    abstract protected function getTable(): string;
-
-    /**
      * 更新模型
-     * @param Model $old_model 旧的模型
      * @param Model $new_model 新的模型
-     * @return void
+     * @param Model|null $old_model 旧的模型
+     * @return bool
      */
-    public function updateModel(Model $old_model, Model $new_model)
+    public function updateModel(Model $new_model, Model $old_model = null): bool
     {
-        $condition = $this->getPrimaryCondition($old_model);
+        if ($old_model == null) {
+            $condition = $this->getPrimaryCondition($new_model);
+        } else {
+            $condition = $this->getPrimaryCondition($old_model);
+        }
+        if ($this->find(new Field("id"), $condition) == null) return false;
         //获取到更新数据的条件
         $this->update()->where($condition)->set($new_model->toArray())->commit();
+        return true;
     }
 
     /**
@@ -194,16 +236,6 @@ abstract class Dao
     }
 
     /**
-     * 更新
-     * @return UpdateOperation
-     */
-    protected function update(): UpdateOperation
-    {
-        return (new UpdateOperation($this->db,$this, $this->model))->table($this->getTable());
-    }
-
-
-    /**
      * 删除模型
      * @param Model $model
      * @return void
@@ -220,7 +252,7 @@ abstract class Dao
      */
     protected function delete(): DeleteOperation
     {
-        return (new DeleteOperation($this->db, $this,$this->model))->table($this->getTable());
+        return (new DeleteOperation($this->db, $this, $this->model))->table($this->getTable());
     }
 
     /**
@@ -237,29 +269,6 @@ abstract class Dao
             return $result[0];
         }
         return null;
-    }
-
-    /**
-     * 查找
-     * @param ...$field string|Field 需要查询的字段
-     * @return SelectOperation
-     */
-    protected function select(...$field): SelectOperation
-    {
-        return (new SelectOperation($this->db, $this,$this->model, ...$field))->table($this->getTable());
-    }
-
-
-    /**
-     * 数据库执行
-     * @param string $sql 需要执行的sql语句
-     * @param array $params 绑定的sql参数
-     * @param false $readonly 是否为查询
-     * @return array|int
-     */
-    protected function execute(string $sql, array $params = [], bool $readonly = false)
-    {
-        return $this->db->execute($sql, $params, $readonly);
     }
 
     /**
@@ -285,4 +294,18 @@ abstract class Dao
     {
         $this->db->execute("COMMIT");
     }
+
+    /**
+     * @param $start
+     * @param $size
+     * @param $page
+     * @return array|int
+     */
+    function getAll($fields = [], $start = null, $size = null, &$page = null, $where = [])
+    {
+        if ($start === null) return $this->select(...$fields)->where($where)->commit();
+        return $this->select(...$fields)->page($start, $size, 10, $page)->where($where)->commit();
+    }
+
+
 }

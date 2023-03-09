@@ -1,10 +1,12 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 namespace core\base;
 
+
+use core\config\Config;
 
 /**
  * Class Session
@@ -39,6 +41,7 @@ class Session
     public function start(int $cacheTime = 0, string $sessionName = 'PHPSESSID')
     {
         if (session_status() !== PHP_SESSION_ACTIVE) {
+            $sessionName = Config::getConfig("frame")["session"] ?? $sessionName;
             ini_set("session.name", $sessionName);
             if ($cacheTime !== 0) {
                 ini_set('session.gc_maxlifetime', $cacheTime);

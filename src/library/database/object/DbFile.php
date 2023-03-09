@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 namespace library\database\object;
 
@@ -15,7 +15,6 @@ use core\objects\ArgObject;
  * Time : 15:24
  * Description : 数据库配置文件模板
  */
-
 class DbFile extends ArgObject
 {
     public string $host = "";

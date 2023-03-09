@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: library\database\operation
  * Class DeleteOperation
@@ -13,14 +14,12 @@
 
 namespace library\database\operation;
 
-use core\exception\ExitApp;
-
 class DeleteOperation extends BaseOperation
 {
 
-    public function __construct(&$db,&$dao,$model)
+    public function __construct(&$db, &$dao, $model)
     {
-        parent::__construct($db,$dao,$model);
+        parent::__construct($db, $dao, $model);
         $this->opt = [];
         $this->opt['type'] = 'delete';
         $this->bind_param = [];
@@ -37,17 +36,18 @@ class DeleteOperation extends BaseOperation
         return parent::where($conditions);
     }
 
+    /**
+     * 提交查询语句
+     */
+    public function commit()
+    {
+        return parent::__commit();
+    }
+
     protected function translateSql()
     {
         $sql = $this->getOpt('DELETE FROM', 'table_name');
         $sql .= $this->getOpt('WHERE', 'where');
         $this->tra_sql = $sql . ";";
-    }
-
-    /**
-     * 提交查询语句
-     */
-    public function commit(){
-        return parent::__commit();
     }
 }

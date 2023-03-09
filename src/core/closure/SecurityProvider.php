@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 namespace core\closure;
@@ -22,7 +22,7 @@ class SecurityProvider implements ISecurityProvider
     /**
      * @inheritdoc
      */
-    public function sign(string $closure)
+    public function sign(string $closure): array
     {
         return array(
             'closure' => $closure,

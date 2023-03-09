@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 /**
@@ -28,7 +28,7 @@ class ArgObject
             if (isset($item[$key])) {
                 $data = $item[$key];
             }
-            if (!$this->onParseType($key, $data, $val)) {
+            if ($this->onParseType($key, $data, $val)) {
                 $this->$key = parse_type($val, $data);
             } else {
                 $this->$key = $data;

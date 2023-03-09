@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: library\database\exception
  * Class DataBaseDriverNotFound
@@ -14,14 +15,16 @@
 namespace library\database\exception;
 
 use core\file\Log;
+use Exception;
 
-class DbFieldError extends \Exception
+class DbFieldError extends Exception
 {
     public string $field;
-    public function __construct($message = "",$field = "")
+
+    public function __construct($message = "", $field = "")
     {
         $this->field = $field;
-        Log::record("Database Field",$message,Log::TYPE_ERROR);
+        Log::record("Database Field", $message, Log::TYPE_ERROR);
         parent::__construct($message);
     }
 }

@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: library\database\object
  * Class PrimaryKey
@@ -32,24 +33,21 @@ class SqlKey
      * @param int $length 字符长度，仅默认参数类型为{@link string}生效
      * @param bool $auto 是否自增，仅默认参数类型为{@link int}生效
      */
-    public function __construct(string $name, $default_value = null,  bool $auto = false,int $length = 0)
+    public function __construct(string $name, $default_value = null, bool $auto = false, int $length = 0)
     {
         $this->name = $name;
         $this->auto = false;
         $this->length = 0;
         $this->value = $default_value;
-        if (is_int($default_value)){
+        if (is_int($default_value)) {
             $this->type = self::TYPE_INT;
             $this->auto = $auto;
-        }
-        elseif (is_string($default_value)) {
+        } elseif (is_string($default_value)) {
             $this->type = self::TYPE_TEXT;
             $this->length = $length;
-        }
-        elseif (is_bool($default_value)) {
+        } elseif (is_bool($default_value)) {
             $this->type = self::TYPE_BOOLEAN;
-        }
-        elseif (is_float($default_value)) $this->type = self::TYPE_FLOAT;
+        } elseif (is_float($default_value)) $this->type = self::TYPE_FLOAT;
         elseif (is_double($default_value)) $this->type = self::TYPE_FLOAT;
         else $this->type = self::TYPE_TEXT;
 

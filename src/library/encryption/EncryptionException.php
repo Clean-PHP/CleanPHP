@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: library\encryption
  * Class EncryptionError
@@ -13,7 +14,9 @@
 
 namespace library\encryption;
 
-class EncryptionException extends \Exception
+use Exception;
+
+class EncryptionException extends Exception
 {
 
 }

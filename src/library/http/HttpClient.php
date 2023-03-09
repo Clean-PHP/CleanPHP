@@ -1,7 +1,12 @@
 <?php
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 namespace library\http;
 
+
+use Error;
 
 /**
  * Package: library\http
@@ -14,7 +19,7 @@ namespace library\http;
 class HttpClient
 {
     private $curl = null;
-    private string $base_url  = "";
+    private string $base_url = "";
     private string $path = "";
     private string $url_params = "";
     private array $headers = [];
@@ -22,19 +27,13 @@ class HttpClient
     public function __construct($base_url)
     {
         $this->curl = curl_init();
-        curl_setopt($this->curl , CURLOPT_SSL_VERIFYPEER, FALSE);
+        curl_setopt($this->curl, CURLOPT_SSL_VERIFYPEER, FALSE);
 
-        curl_setopt($this->curl , CURLOPT_SSL_VERIFYHOST, FALSE);
+        curl_setopt($this->curl, CURLOPT_SSL_VERIFYHOST, FALSE);
         curl_setopt($this->curl, CURLOPT_HEADER, 1);
-        curl_setopt($this->curl , CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, 1);
 
         $this->base_url = $base_url;
-    }
-
-    public function __destruct()
-    {
-
-        curl_close($this->curl);
     }
 
     /**
@@ -47,16 +46,10 @@ class HttpClient
         return new HttpClient($base_url);
     }
 
-    /**
-     * 设置CURL选项
-     * @param int $curl_opt
-     * @param mixed $value
-     * @return HttpClient
-     */
-    public function setOption(int $curl_opt,  $value): HttpClient
+    public function __destruct()
     {
-        curl_setopt($this->curl, $curl_opt, $value);
-        return $this;
+
+        curl_close($this->curl);
     }
 
     public function setHeaders($headers = []): HttpClient
@@ -74,20 +67,16 @@ class HttpClient
         return $this->setOption(CURLOPT_HTTPGET, true);
     }
 
-    private function setData(array $data, string $content_type = 'json'){
-        $this->headers["Content-Type"] = $content_type;
-
-        if ($content_type =='form')
-        {
-            $this->headers["Content-Type"] = 'application/x-www-form-urlencoded';
-            $data = http_build_query($data);
-        }
-        elseif($content_type=='json')
-        {
-            $this->headers["Content-Type"] = 'application/json';
-            $data = json_encode($data);
-        }
-        $this->setOption( CURLOPT_POSTFIELDS, $data);
+    /**
+     * 设置CURL选项
+     * @param int $curl_opt
+     * @param mixed $value
+     * @return HttpClient
+     */
+    public function setOption(int $curl_opt, $value): HttpClient
+    {
+        curl_setopt($this->curl, $curl_opt, $value);
+        return $this;
     }
 
     /**
@@ -96,11 +85,25 @@ class HttpClient
      * @param string $content_type
      * @return $this
      */
-    public function post(array $data, string $content_type = 'json'):self
+    public function post(array $data, string $content_type = 'json'): self
     {
         $this->setOption(CURLOPT_POST, true);
-        $this->setData($data,$content_type);
+        $this->setData($data, $content_type);
         return $this;
+    }
+
+    private function setData(array $data, string $content_type = 'json')
+    {
+        $this->headers["Content-Type"] = $content_type;
+
+        if ($content_type == 'form') {
+            $this->headers["Content-Type"] = 'application/x-www-form-urlencoded';
+            $data = http_build_query($data);
+        } elseif ($content_type == 'json') {
+            $this->headers["Content-Type"] = 'application/json';
+            $data = json_encode($data);
+        }
+        $this->setOption(CURLOPT_POSTFIELDS, $data);
     }
 
     /**
@@ -111,9 +114,9 @@ class HttpClient
      */
     function put(array $data, string $content_type = 'json'): HttpClient
     {
-        $this->setOption(CURLOPT_CUSTOMREQUEST,"PUT");
-        $this->setData($data,$content_type);
-       return $this;
+        $this->setOption(CURLOPT_CUSTOMREQUEST, "PUT");
+        $this->setData($data, $content_type);
+        return $this;
     }
 
     /**
@@ -124,8 +127,8 @@ class HttpClient
      */
     function patch(array $data, string $content_type = 'json'): HttpClient
     {
-        $this->setOption(CURLOPT_CUSTOMREQUEST,"PATCH");
-        $this->setData($data,$content_type);
+        $this->setOption(CURLOPT_CUSTOMREQUEST, "PATCH");
+        $this->setData($data, $content_type);
         return $this;
     }
 
@@ -135,7 +138,7 @@ class HttpClient
      */
     function delete(): HttpClient
     {
-        $this->setOption(CURLOPT_CUSTOMREQUEST,"DELETE");
+        $this->setOption(CURLOPT_CUSTOMREQUEST, "DELETE");
         return $this;
     }
 
@@ -149,30 +152,25 @@ class HttpClient
     public function send(string $path = '/', array $url_params = []): ?HttpResponse
     {
         $this->path = $path;
-        if (count($url_params))
-        {
+        if (count($url_params)) {
             $this->url_params = http_build_query($url_params);
         }
 
         $this->setOption(CURLOPT_URL, $this->url());
-        $this->setOption(CURLOPT_HTTPHEADER,$this->headers);
-        try
-        {
+        $this->setOption(CURLOPT_HTTPHEADER, $this->headers);
+        try {
             $request_exec = curl_exec($this->curl);
 
-            if ($request_exec === false)
-            {
-                throw new HttpException( "HttpClient Error: ".curl_errno($this->curl)." ".curl_error($this->curl));
+            if ($request_exec === false) {
+                throw new HttpException("HttpClient Error: " . curl_errno($this->curl) . " " . curl_error($this->curl));
             }
 
-            return new HttpResponse($this->curl,$request_exec);
+            return new HttpResponse($this->curl, $request_exec);
 
+        } catch (Error $e) {
+            throw new HttpException($e->getMessage());
         }
-        catch (\Error $e)
-        {
-           throw new HttpException($e->getMessage());
-        }
-        
+
     }
 
     /**
@@ -183,10 +181,9 @@ class HttpClient
     {
         $base = rtrim($this->base_url, '/');
         $path = ltrim($this->path, '/');
-        $url = $base."/".$path;
+        $url = $base . "/" . $path;
 
-        if ($this->url_params != '')
-        {
+        if ($this->url_params != '') {
             $url .= "?{$this->url_params}";
         }
 

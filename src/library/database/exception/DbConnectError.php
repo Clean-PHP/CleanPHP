@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: library\database\exception
  * Class DbConnectError
@@ -14,12 +15,13 @@
 namespace library\database\exception;
 
 use core\file\Log;
+use exception;
 
-class DbConnectError extends \exception
+class DbConnectError extends exception
 {
-    public function __construct($message ,array $error,$tag)
+    public function __construct($message, array $error, $tag)
     {
-        Log::record($tag, sprintf("数据库连接异常：%s，异常信息：%s", $message,implode(" , ",$error)),Log::TYPE_ERROR);
+        Log::record($tag, sprintf("数据库连接异常：%s，异常信息：%s", $message, implode(" , ", $error)), Log::TYPE_ERROR);
         parent::__construct($message);
     }
 }

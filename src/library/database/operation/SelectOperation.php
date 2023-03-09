@@ -1,7 +1,7 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 /**
  * Package: library\database\operation
@@ -14,6 +14,7 @@
 
 namespace library\database\operation;
 
+use core\exception\ExitApp;
 use Exception;
 use library\database\Db;
 use library\database\exception\DbFieldError;
@@ -33,15 +34,14 @@ class SelectOperation extends BaseOperation
 
     /**
      * 初始化
-     * @param Db $db
      * @param mixed ...$field 需要的字段
      */
-    public function __construct(Db &$db,Dao &$dao,$m, ...$field)
+    public function __construct(Db &$db, Dao &$dao, $m, ...$field)
     {
-        parent::__construct($db,$dao,$m);
+        parent::__construct($db, $dao, $m);
         $this->opt = [];
         $this->opt['type'] = 'select';
-        $this->opt['field'] = (isset($field[0]) && $field[0] instanceof Field)? $field[0]->toString() : (new Field(...$field))->toString();
+        $this->opt['field'] = (isset($field[0]) && $field[0] instanceof Field) ? $field[0]->toString() : (new Field(...$field))->toString();
         $this->bind_param = [];
     }
 
@@ -55,16 +55,17 @@ class SelectOperation extends BaseOperation
     public function orderBy(string $string, string $type = self::SORT_DESC): SelectOperation
     {
         if (!Field::isName($string)) {
-            throw new DbFieldError("字段名称只允许为字母、点、下划线",$string);
+            throw new DbFieldError("字段名称只允许为字母、点、下划线", $string);
         }
         if (!in_array($type, [self::SORT_DESC, self::SORT_ASC])) {
-            throw new DbFieldError("排序方式只允许使用 DESC 和 ASC 两种",$string);
+            $type = self::SORT_DESC;
         }
         if (isset($this->opt['order']) && $this->opt['order'] !== "") {
             $this->opt['order'] = $this->opt['order'] . "," . $string . " " . $type;
         } else {
             $this->opt['order'] = $string . " " . $type;
         }
+
         return $this;
     }
 
@@ -78,7 +79,7 @@ class SelectOperation extends BaseOperation
     public function groupBy(string $string): SelectOperation
     {
         if (!Field::isName($string))
-            throw new DbFieldError("字段名称只允许为字母、点、下划线",$string);
+            throw new DbFieldError("字段名称只允许为字母、点、下划线", $string);
         $this->opt['group_by'] = $string;
         return $this;
     }
@@ -121,7 +122,7 @@ class SelectOperation extends BaseOperation
      * 提交
      * @return array|int
      */
-    public function commit()
+    public function commit($object = true)
     {
 
         if (isset($this->opt['start']) && isset($this->opt['count']) && isset($this->opt['range'])) {
@@ -155,7 +156,7 @@ class SelectOperation extends BaseOperation
         }
 
         $result = parent::__commit(true);
-        if ($this->model !== null) {
+        if ($object && $this->model !== null) {
             return $this->translate2Model($this->model, $result);
         } else {
             return $result;
@@ -215,9 +216,10 @@ class SelectOperation extends BaseOperation
     public function count(array $conditions)
     {
         if (!empty($conditions)) $this->where($conditions);
-        $sql = /** @lang text */"SELECT COUNT(*) AS M_COUNTER FROM " . $this->opt['table_name'] . "  " . (empty($conditions) ? '' : 'where ' . $this->opt['where']);
-
-        $count = $this->db->execute($sql, $this->bind_param, true);
+        $sql = /** @lang text */
+            "SELECT COUNT(*) AS M_COUNTER FROM " . $this->opt['table_name'] . "  " . (empty($conditions) ? '' : 'where ' . $this->opt['where']);
+        $this->tra_sql = $sql;
+        $count = $this->__commit(true);
         return isset($count[0]['M_COUNTER']) && $count[0]['M_COUNTER'] ? $count[0]['M_COUNTER'] : 0;
     }
 
@@ -240,14 +242,15 @@ class SelectOperation extends BaseOperation
     public function sum(array $conditions, string $param)
     {
         if (!Field::isName($param)) {
-            throw new DbFieldError("字段名称只允许为字母、点、下划线",$param);
+            throw new DbFieldError("字段名称只允许为字母、点、下划线", $param);
         }
         if (!empty($conditions)) $this->where($conditions);
 
         $sql = /** @lang text */
             "SELECT SUM($param) AS M_COUNTER FROM " . $this->opt['table_name'] . " " . (empty($conditions) ? '' : 'where ' . $this->opt['where']);
         try {
-            $count = $this->db->execute($sql, $this->bind_param, true);
+            $this->tra_sql = $sql;
+            $count = $this->__commit(true);
         } catch (Exception $e) {
             return 0;
         }

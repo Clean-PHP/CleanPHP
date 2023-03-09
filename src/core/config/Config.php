@@ -1,12 +1,14 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 namespace core\config;
 
 
 use core\App;
+use core\base\Request;
+use core\base\Response;
 use core\base\Variables;
 use core\event\EventManager;
 use core\exception\ExitApp;
@@ -73,7 +75,6 @@ class Config
         //跨域
         $origin = str_replace(["http://", "https://"], "", $_SERVER['HTTP_ORIGIN'] ?? "");
         $origin = preg_replace("/:\d+/", "", $origin);
-        Log::record("跨域", $origin);
         if (in_array($origin, $frame['host'])) {
             try {
                 @header('Access-Control-Allow-Origin:' . $_SERVER['HTTP_ORIGIN'] ?? "");

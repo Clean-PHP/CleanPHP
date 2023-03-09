@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: library\database\operation
  * Class InsertOption
@@ -30,19 +31,20 @@ class InsertOperation extends BaseOperation
      * @param $m
      * @param int $model insert模式
      */
-    public function __construct(Db &$db,Dao &$dao,$m,int $model = self::INSERT_NORMAL)
+    public function __construct(Db &$db, Dao &$dao, $m, int $model = self::INSERT_NORMAL)
     {
-        parent::__construct($db,$dao,$m);
+        parent::__construct($db, $dao, $m);
         $this->opt = [];
         $this->opt['type'] = 'insert';
         $this->opt['model'] = $db->getDriver()->onInsertModel($model);
         $this->bind_param = [];
     }
+
     /**
      * 设置查询条件
      * @param array $conditions 条件内容，必须是数组,格式如下["name"=>"张三","i > :hello",":hello"=>"hi"]
      */
-    public function where(array $conditions):BaseOperation
+    public function where(array $conditions): BaseOperation
     {
         return parent::where($conditions);
     }
@@ -53,11 +55,11 @@ class InsertOperation extends BaseOperation
      * @param $udp_keys array 需要更新的字段
      * @return InsertOperation
      */
-    public function keyValue(array $kv, array $udp_keys=[]):InsertOperation
+    public function keyValue(array $kv, array $udp_keys = []): InsertOperation
     {
         $key = array_keys($kv);
         $value = array_values($kv);
-        return $this->keys($key,$udp_keys)->values([$value]);
+        return $this->keys($key, $udp_keys)->values([$value]);
     }
 
     /**
@@ -95,7 +97,7 @@ class InsertOperation extends BaseOperation
     public function keys(array $key, ?array $columns = []): InsertOperation
     {
         if ($this->opt['model'] == self::INSERT_DUPLICATE && sizeof($columns) == 0) {
-            Error::err('DUPLICATE模式必须具有更新字段。',[],"Database Sql");
+            Error::err('DUPLICATE模式必须具有更新字段。', [], "Database Sql");
         }
         $value = '';
         foreach ($key as $v) {
@@ -104,7 +106,7 @@ class InsertOperation extends BaseOperation
         $value = '(' . rtrim($value, ",") . ')';
         $this->opt['key'] = $value;
         $update = [];
-        if(is_array($columns)&&sizeof($columns)!=0){
+        if (is_array($columns) && sizeof($columns) != 0) {
             foreach ($columns as $k) {
                 $update[] = "`{$k}`" . " = VALUES(" . $k . ')';
             }
@@ -119,7 +121,7 @@ class InsertOperation extends BaseOperation
      */
     public function commit(): string
     {
-       parent::__commit();
+        parent::__commit();
         return $this->db->getDriver()->getDbConnect()->lastInsertId();
     }
 

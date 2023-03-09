@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: library\upload
  * Class UploadException
@@ -14,13 +15,17 @@
 namespace library\upload;
 
 
-class UploadException extends \Exception
+use Exception;
+
+class UploadException extends Exception
 {
-    protected  UploadFile $upload_file;
+    protected UploadFile $upload_file;
+
     public function __construct($message = "", $code = 0, UploadFile $file = null)
     {
         parent::__construct($message, $code);
     }
+
     /**
      * 获取上传的文件对象
      * @return UploadFile

@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 /**
@@ -93,7 +93,10 @@ function file_type(string $filename): string
 function dumps(...$args)
 {
     $line = debug_backtrace()[0]['file'] . ':' . debug_backtrace()[0]['line'] . "\n";
-    dump($args, false, $line);
+    foreach ($args as $v) {
+        dump($v, false, $line);
+    }
+    App::exit("调用输出命令退出");
 }
 
 /**
@@ -102,7 +105,7 @@ function dumps(...$args)
  * @param false $exit 输出变量后是否退出进程
  * @param string|null $line
  */
-function dump($var, bool $exit = false, string $line = null)
+function dump($var, bool $exit = true, string $line = null)
 {
     if (!App::$debug) return;//不是调试模式就直接返回
     if ($line === null)
@@ -145,9 +148,10 @@ EOF;
 function parse_type($sample, $data)
 {
     if (is_array($data)) return $data;
-    if (is_int($sample)) return intval($data);
-    elseif (is_string($sample)) return strval($data);
-    elseif (is_bool($sample)) return boolval($data);
+    elseif (is_int($sample)) return intval($data);
+    elseif (is_string($sample)) {
+        return strval($data);
+    } elseif (is_bool($sample)) return boolval($data);
     elseif (is_float($sample)) return floatval($data);
     elseif (is_double($sample)) return doubleval($data);
     return $data;
@@ -273,10 +277,10 @@ function rand_str(int $length = 8, bool $upper = true, bool $lower = true, bool 
     ];
     $chars = "";
     if ($upper) {
-        $chars .= $charsList[0];
+        $chars .= $charsList[1];
     }
     if ($lower) {
-        $chars .= $charsList[1];
+        $chars .= $charsList[0];
     }
     if ($number) {
         $chars .= $charsList[2];

@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: library\http
  * Class HttpResponse
@@ -23,13 +24,13 @@ class HttpResponse
     protected int $http_code;
     protected array $meta;
 
-    public function __construct($curl,$request_exec)
+    public function __construct($curl, $request_exec)
     {
         $this->meta = curl_getinfo($curl);
         $this->http_code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
         $this->meta['execution_time'] = curl_getinfo($curl, CURLINFO_TOTAL_TIME);
-        App::$debug && Log::record("HttpClient","请求时间：".$this->meta['execution_time']."秒",Log::TYPE_WARNING);
-        $this->setBody($curl,$request_exec);
+        App::$debug && Log::record("HttpClient", "请求时间：" . $this->meta['execution_time'] . "秒", Log::TYPE_WARNING);
+        $this->setBody($curl, $request_exec);
     }
 
     /**
@@ -38,40 +39,13 @@ class HttpResponse
      * @param $request_exec
      * @return void
      */
-    private function setBody($client,$request_exec)
+    private function setBody($client, $request_exec)
     {
         $header_len = curl_getinfo($client, CURLINFO_HEADER_SIZE);
         $header_string = substr($request_exec, 0, $header_len);
         $this->setHeaders($header_string);
         $this->body = substr($request_exec, $header_len);
-        App::$debug && Log::record('HttpClient Result',$this->body);
-    }
-
-    /**
-     * @param string $header_string
-     * @return void
-     */
-    protected function setHeaders(string $header_string)
-    {
-        // Convert the $headers string to an indexed array
-        $headers_indexed_arr = explode("\r\n", $header_string);
-
-        // Define as array before using in loop
-        $headers_arr = array();
-        // Remember the status message in a separate variable
-        $status_message = array_shift($headers_indexed_arr);
-
-        // Create an associative array containing the response headers
-        foreach ($headers_indexed_arr as $value) {
-            if(false !== ($matches = explode(':', $value, 2))) {
-                if (isset($matches[0]) && isset($matches[1]))
-                {
-                    $headers_arr["{$matches[0]}"] = trim($matches[1]);
-                }
-            }
-        }
-
-        $this->headers = $headers_arr;
+        App::$debug && Log::record('HttpClient Result', $this->body);
     }
 
     /**
@@ -99,5 +73,31 @@ class HttpResponse
     public function getHeaders(): array
     {
         return $this->headers;
+    }
+
+    /**
+     * @param string $header_string
+     * @return void
+     */
+    protected function setHeaders(string $header_string)
+    {
+        // Convert the $headers string to an indexed array
+        $headers_indexed_arr = explode("\r\n", $header_string);
+
+        // Define as array before using in loop
+        $headers_arr = array();
+        // Remember the status message in a separate variable
+        $status_message = array_shift($headers_indexed_arr);
+
+        // Create an associative array containing the response headers
+        foreach ($headers_indexed_arr as $value) {
+            if (false !== ($matches = explode(':', $value, 2))) {
+                if (isset($matches[0]) && isset($matches[1])) {
+                    $headers_arr["{$matches[0]}"] = trim($matches[1]);
+                }
+            }
+        }
+
+        $this->headers = $headers_arr;
     }
 }

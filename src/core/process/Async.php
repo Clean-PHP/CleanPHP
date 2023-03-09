@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 /**
@@ -160,7 +160,7 @@ class Async
     private static function checkToken(&$task_key): bool
     {
 
-        if (Request::getClientIP() !== Request::getServerIp()) return false;
+        // if (Request::getClientIP() !== Request::getServerIp()) return false;
 
         $token = Request::getHeaderValue("Token") ?? "";
 

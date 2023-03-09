@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. CleanPHP. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: extend\ankioTask\core
  * Class RBAC
@@ -23,8 +24,9 @@ class RBAC
      * @param $id string 角色id
      * @return void
      */
-    public static function setRole(string $id){
-        Session::getInstance()->set("RBAC_ROLE",$id);
+    public static function setRole(string $id)
+    {
+        Session::getInstance()->set("RBAC_ROLE", $id);
     }
 
     /**
@@ -34,7 +36,7 @@ class RBAC
     public static function getRole(): ?string
     {
         Session::getInstance()->start();
-        return Session::getInstance()->get("RBAC_ROLE")??"-1";
+        return Session::getInstance()->get("RBAC_ROLE") ?? "-1";
     }
 
 }

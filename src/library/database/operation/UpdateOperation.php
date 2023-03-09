@@ -1,7 +1,8 @@
 <?php
-/*******************************************************************************
- * Copyright (c) 2022. Ankio. All Rights Reserved.
- ******************************************************************************/
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  * Package: library\database\operation
  * Class UpdateOperation
@@ -18,9 +19,9 @@ class UpdateOperation extends BaseOperation
     /**
      * 初始化
      */
-    public function __construct(&$db,&$dao,$m)
+    public function __construct(&$db, &$dao, $m)
     {
-        parent::__construct($db,$dao,$m);
+        parent::__construct($db, $dao, $m);
         $this->opt = [];
         $this->opt['type'] = 'update';
         $this->bind_param = [];
@@ -32,9 +33,9 @@ class UpdateOperation extends BaseOperation
      * @param array $conditions
      * @return UpdateOperation
      */
-    public function where(array $conditions):UpdateOperation
+    public function where(array $conditions): UpdateOperation
     {
-        return  parent::where($conditions);
+        return parent::where($conditions);
     }
 
     /**
@@ -60,6 +61,10 @@ class UpdateOperation extends BaseOperation
         return $this;
     }
 
+    public function commit()
+    {
+        return parent::__commit();
+    }
 
     /**
      * 编译
@@ -70,8 +75,5 @@ class UpdateOperation extends BaseOperation
         $sql .= $this->getOpt('SET', 'set');
         $sql .= $this->getOpt('WHERE', 'where');
         $this->tra_sql = $sql . ";";
-    }
-    public function commit(){
-        return parent::__commit();
     }
 }

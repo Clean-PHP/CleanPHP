@@ -1,4 +1,7 @@
 <?php
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
 
 namespace library\encryption;
 
@@ -28,7 +31,7 @@ class RSAEncrypt
      */
     public function create(array $config = []): array
     {
-        if($config===[]){
+        if ($config === []) {
             $config = [
                 "digest_alg" => "sha512",
                 "private_key_bits" => 4096,
@@ -80,7 +83,7 @@ class RSAEncrypt
      */
     private function getContents($file_path)
     {
-        if(!file_exists($file_path) )
+        if (!file_exists($file_path))
             throw new EncryptionException("指定路径的密钥文件不存在：$file_path");
         return file_get_contents($file_path);
     }

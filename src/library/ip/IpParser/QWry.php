@@ -1,7 +1,12 @@
 <?php
+/*
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
+ */
+
 /**
  *
  */
+
 namespace library\ip\IpParser;
 
 use Exception;
@@ -12,32 +17,6 @@ use Exception;
  */
 class QWry implements IpParserInterface
 {
-
-    public function setDBPath($filePath)
-    {
-        $this->filePath = $filePath;
-    }
-
-    /**
-     * @param $ip
-     * @return array
-     */
-    public function getIp($ip): array
-    {
-        try {
-            $tmp = $this->getAddr($ip);
-        } catch (Exception $exception) {
-            return [
-                'error' => $exception->getMessage(),
-            ];
-        }
-
-        return [
-            'ip' => $ip,
-            'country' => $tmp['country'],
-            'area' => $tmp['area'],
-        ];
-    }
 
     /**
      * 文件路径
@@ -69,6 +48,31 @@ class QWry implements IpParserInterface
      */
     private $totalIp;
 
+    public function setDBPath($filePath)
+    {
+        $this->filePath = $filePath;
+    }
+
+    /**
+     * @param $ip
+     * @return array
+     */
+    public function getIp($ip): array
+    {
+        try {
+            $tmp = $this->getAddr($ip);
+        } catch (Exception $exception) {
+            return [
+                'error' => $exception->getMessage(),
+            ];
+        }
+
+        return [
+            'ip' => $ip,
+            'country' => $tmp['country'],
+            'area' => $tmp['area'],
+        ];
+    }
 
     /**
      * 如果ip错误
@@ -87,8 +91,8 @@ class QWry implements IpParserInterface
     {
         $filename = $this->filePath;
         if (!file_exists($filename)) {
-            trigger_error("Failed open ip database file!".$filename);
-            throw new Exception('Failed open ip database: '.$filename);
+            trigger_error("Failed open ip database file!" . $filename);
+            throw new Exception('Failed open ip database: ' . $filename);
         }
         if (is_null($this->fp)) {
             $this->fp = 0;

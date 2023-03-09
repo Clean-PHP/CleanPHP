@@ -1,6 +1,6 @@
 <?php
 /*
- *  Copyright (c) 2023. Ankio. All Rights Reserved.
+ * Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 namespace core\engine;
@@ -8,7 +8,6 @@ namespace core\engine;
 
 use core\App;
 use core\base\Error;
-use core\base\Lang;
 use core\base\Route;
 use core\base\Variables;
 use core\cache\Cache;
@@ -93,7 +92,7 @@ class ViewEngine extends ResponseEngine
      */
     function setArray(array $array): ViewEngine
     {
-        $this->__data = $array;
+        $this->__data = array_merge($this->__data, $array);
         return $this;
     }
 
@@ -201,7 +200,6 @@ TPL
         $template_name = $data[0];
         [$file, $template_name] = $this->preCompileLayout($template_name);
 
-        $this->setData("__lang", Lang::detect());
         $complied_file = $this->compile($template_name, $file);
         ob_start();
         extract($this->__data, EXTR_OVERWRITE);
@@ -387,15 +385,22 @@ TPL
             '{([\w\$\.\[\]\=\'"\s]+)\?([\w\$\.\[\]\=\'":\s]+)}' => '<?php echo $1?$2; ?>',
             '{(\$[\$\w\"\'\[\]]+?)\s*=(.*?)\s*}' => '<?php $1 = $2; ?>',
             '{(\$[\$\w\.\"\'\[\]]+?)\s*}' => '<?php echo htmlspecialchars($1, ENT_QUOTES, "UTF-8"); ?>',
+
+            '{while\s*(.+?)}' => '<?php while ($1) : ?>',
+            '{\/while}' => '<?php endwhile; ?>',
+
             '{if\s*(.+?)}' => '<?php if ($1) : ?>',
+
             '{else\s*if\s*(.+?)}' => '<?php elseif ($1) : ?>',
             '{else}' => '<?php else : ?>',
             '{break}' => '<?php break; ?>',
             '{continue}' => '<?php continue; ?>',
+
             '{\/if}' => '<?php endif; ?>',
             '{foreach\s*(\$[\$\w\.\"\'\[\]]+?)\s*as(\s*)\$([\w\"\'\[\]]+?)}' => $foreach_inner_before . '<?php foreach( $1 as $$3 ) : ?>' . $foreach_inner_after,
-            '{foreach\s*(\$[\$\w\.\"\'\[\]]+?)\s*as\s*(\$[\w\"\'\[\]]+?)\s*=>\s*\$([\w\"\'\[\]]+?)}' => $foreach_inner_before . '<?php foreach( $1 as $2 => $$3 ) : ?>' . $foreach_inner_after,
+            '{foreach\s*(\$[\$\w\.\"\'\[\]_]+?)\s*as\s*(\$[\w\"\'\[\]]+?)\s*=>\s*\$([\w\"\'\[\]]+?)}' => $foreach_inner_before . '<?php foreach( $1 as $2 => $$3 ) : ?>' . $foreach_inner_after,
             '{\/foreach}' => '<?php endforeach; }?>',
+
             '{include\s*file=(.+?)}' => '<?php include $this->compile($1); ?>',
         ];
 
@@ -406,6 +411,7 @@ TPL
                 $template_data = preg_replace($pattern, $r, $template_data, -1, $count);
             }
         }
+
         return $template_data;
     }
 
