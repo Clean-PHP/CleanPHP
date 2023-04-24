@@ -14,7 +14,7 @@
 
 namespace library\database\driver;
 
-use core\base\Variables;
+use cleanphp\base\Variables;
 use library\database\exception\DbConnectError;
 use library\database\object\DbFile;
 use library\database\object\Model;

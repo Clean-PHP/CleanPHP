@@ -5,7 +5,7 @@
 
 /**
  * Package: library\database\object
- * Class Dao
+ * Class dao
  * Created By ankio.
  * Date : 2022/11/15
  * Time : 21:15
@@ -14,8 +14,8 @@
 
 namespace library\database\object;
 
-use core\base\Variables;
-use core\config\Config;
+use cleanphp\base\Variables;
+use cleanphp\config\Config;
 use library\database\Db;
 use library\database\operation\DeleteOperation;
 use library\database\operation\InsertOperation;

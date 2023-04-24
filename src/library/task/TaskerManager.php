@@ -5,10 +5,10 @@
 
 namespace library\task;
 
-use core\App;
-use core\base\Variables;
-use core\cache\Cache;
-use core\file\Log;
+use cleanphp\App;
+use cleanphp\base\Variables;
+use cleanphp\cache\Cache;
+use cleanphp\file\Log;
 
 /**
  * Class Tasker
@@ -17,7 +17,6 @@ use core\file\Log;
  * Author: ankio
  * Description: 定时任务管理器
  */
-
 class TaskerManager
 {
     /**
@@ -145,13 +144,13 @@ class TaskerManager
         foreach ($data as $k => $value){
             //循环并且次序=0
             if($value->times === 0){
-                App::$debug && Log::recordFile("Tasker","该ID ({$value->name})[{$value->key}] 的定时任务执行完毕");
+                App::$debug && Log::record("Tasker", "该ID ({$value->name})[{$value->key}] 的定时任务执行完毕");
                 unset($data[$k]);
             }elseif($value->next<=time()){
                 $time=self::getNext($value->minute,$value->hour,$value->day,$value->month,$value->week,$value->loop);
                 $value->next = $time;
                 $value->times--;
-                App::$debug &&Log::recordFile("Tasker","执行完成后，下次执行时间为：".date("Y-m-d H:i:s",$time));
+                App::$debug && Log::record("Tasker", "执行完成后，下次执行时间为：" . date("Y-m-d H:i:s", $time));
                 /**
                  * @var  TaskerAbstract $task
                  */
@@ -160,12 +159,12 @@ class TaskerManager
 
                 go(function () use($task){
                     try{
-                        App::$debug &&Log::recordFile("Tasker","异步执行：".print_r($task,true));
+                        App::$debug && Log::record("Tasker", "异步执行：" . print_r($task, true));
                         $task->onStart();
                     }catch (\Throwable $e){
                         $task->onAbort($e);
                     }
-                    App::$debug &&Log::recordFile("Tasker","异步执行结束：");
+                    App::$debug && Log::record("Tasker", "异步执行结束：");
                     $task->onStop();
                 },$timeout);
             }

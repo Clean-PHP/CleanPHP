@@ -14,15 +14,13 @@
 
 namespace library\database\object;
 
-use core\base\Error;
-use core\exception\ExitApp;
+use cleanphp\base\Error;
 
 class Field
 {
     public array $fields = [];
 
     /**
-     * @throws ExitApp
      */
     public function __construct(...$fields)
     {

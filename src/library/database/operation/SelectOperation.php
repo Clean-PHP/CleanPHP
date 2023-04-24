@@ -14,7 +14,6 @@
 
 namespace library\database\operation;
 
-use core\exception\ExitApp;
 use Exception;
 use library\database\Db;
 use library\database\exception\DbFieldError;

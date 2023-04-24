@@ -14,12 +14,12 @@
 
 namespace library\redis;
 
-use core\App;
-use core\base\Variables;
-use core\cache\CacheInterface;
-use core\config\Config;
-use core\exception\ExtendError;
-use core\file\Log;
+use cleanphp\App;
+use cleanphp\base\Config;
+use cleanphp\base\Variables;
+use cleanphp\cache\CacheInterface;
+use cleanphp\exception\ExtendError;
+use cleanphp\file\Log;
 use Redis;
 
 class RedisCache implements CacheInterface

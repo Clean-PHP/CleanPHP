@@ -13,7 +13,7 @@
 
 namespace library\waf;
 
-use core\base\Request;
+use cleanphp\base\Request;
 
 class IpRequest
 {

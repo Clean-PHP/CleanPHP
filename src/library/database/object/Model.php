@@ -4,7 +4,7 @@
  */
 
 /**
- * Package: core\base
+ * Package: cleanphp\base
  * Class Model
  * Created By ankio.
  * Date : 2022/11/14
@@ -14,7 +14,7 @@
 
 namespace library\database\object;
 
-use core\objects\ArgObject;
+use cleanphp\objects\ArgObject;
 
 abstract class Model extends ArgObject
 {

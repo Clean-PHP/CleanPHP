@@ -13,8 +13,7 @@
 
 namespace library\websocket;
 
-//use core\file\Log;
-use Throwable;
+//use cleanphp\file\Log;
 
 class WebsocketException extends \Exception
 {

@@ -15,12 +15,12 @@
 namespace library\rbac;
 
 
-use core\base\Session;
+use cleanphp\base\Session;
 
 class RBAC
 {
     /**
-     * 给当前登录用户角色
+     * 设置当前登录用户角色，在用户登录成功的时候进行配置
      * @param $id string 角色id
      * @return void
      */

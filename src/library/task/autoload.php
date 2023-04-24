@@ -12,4 +12,9 @@
 
 //此处建议注册事件，而不是直接执行class，因为此处的包含时机比Config注册的时机还要早。
 
-\core\event\EventManager::addListener("__before_create_controller__",\library\task\TaskerEvent::class);
+use cleanphp\base\EventManager;
+use library\task\TaskerServer;
+
+EventManager::addListener("__before_create_controller__", function ($event, &$data) {
+    TaskerServer::start();
+});

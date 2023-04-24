@@ -15,7 +15,7 @@
 namespace library\database\operation;
 
 
-use core\base\Error;
+use cleanphp\base\Error;
 use library\database\Db;
 use library\database\exception\DbFieldError;
 use library\database\object\Dao;
@@ -50,7 +50,7 @@ abstract class BaseOperation
      */
     public function table(string $tableName): BaseOperation
     {
-        $this->opt['table_name'] = $tableName;
+        $this->opt['table_name'] = '`' . $tableName . '`';
         return $this;
     }
 
@@ -64,11 +64,11 @@ abstract class BaseOperation
         if ($this->tra_sql == null) $this->translateSql();
         $table = $this->opt['table_name'] ?? null;
         if ($table !== null) {
-            $result = $this->db->getDriver()->getDbConnect()->query(/** @lang text */ "SELECT count(*) FROM `{$this->opt['table_name']}` LIMIT 1");
+            $result = $this->db->getDriver()->getDbConnect()->query(/** @lang text */ "SELECT count(*) FROM {$this->opt['table_name']} LIMIT 1");
             $table_exist = $result instanceof PDOStatement && ($result->rowCount() === 1);
             if (!$table_exist) {
                 if ($this->model !== null) {
-                    $this->db->initTable($this->dao, $this->model, $table);
+                    $this->db->initTable($this->dao, $this->model, trim($table, '`'));
                 }
             }
         }

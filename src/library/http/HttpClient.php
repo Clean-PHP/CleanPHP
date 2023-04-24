@@ -6,6 +6,8 @@
 namespace library\http;
 
 
+use cleanphp\App;
+use cleanphp\file\Log;
 use Error;
 
 /**
@@ -23,6 +25,8 @@ class HttpClient
     private string $path = "";
     private string $url_params = "";
     private array $headers = [];
+    private string $cookie = "";
+    private string $cookie_key = "";
 
     public function __construct($base_url)
     {
@@ -32,7 +36,7 @@ class HttpClient
         curl_setopt($this->curl, CURLOPT_SSL_VERIFYHOST, FALSE);
         curl_setopt($this->curl, CURLOPT_HEADER, 1);
         curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, 1);
-
+        $this->headers['user-agent'] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.81 Safari/537.36 Edg/104.0.1293.54";
         $this->base_url = $base_url;
     }
 
@@ -81,28 +85,30 @@ class HttpClient
 
     /**
      * post请求
-     * @param array $data post的数据
+     * @param array|string $data post的数据
      * @param string $content_type
      * @return $this
      */
-    public function post(array $data, string $content_type = 'json'): self
+    public function post($data, string $content_type = 'json'): self
     {
         $this->setOption(CURLOPT_POST, true);
         $this->setData($data, $content_type);
         return $this;
     }
 
-    private function setData(array $data, string $content_type = 'json')
+    private function setData($data, string $content_type = 'json')
     {
         $this->headers["Content-Type"] = $content_type;
-
         if ($content_type == 'form') {
             $this->headers["Content-Type"] = 'application/x-www-form-urlencoded';
-            $data = http_build_query($data);
+            if (is_array($data)) {
+                $data = http_build_query($data);
+            }
         } elseif ($content_type == 'json') {
             $this->headers["Content-Type"] = 'application/json';
             $data = json_encode($data);
         }
+        //$this->headers["content-length"] = mb_strlen($data);
         $this->setOption(CURLOPT_POSTFIELDS, $data);
     }
 
@@ -142,6 +148,18 @@ class HttpClient
         return $this;
     }
 
+    function mergeCookies($wait)
+    {
+        parse_str(str_replace(';', '&', urldecode($this->cookie)), $cookie_array);
+        return str_replace('&', '; ', http_build_query(array_merge($cookie_array, $wait)));
+    }
+
+    function autoUpdateCookie(&$cookie): HttpClient
+    {
+        $this->cookie = &$cookie;
+        return $this;
+    }
+
     /**
      * 发出请求
      * @param string $path
@@ -157,12 +175,56 @@ class HttpClient
         }
 
         $this->setOption(CURLOPT_URL, $this->url());
-        $this->setOption(CURLOPT_HTTPHEADER, $this->headers);
+
+        $headers = [];
+        foreach ($this->headers as $key => $header) {
+            if (!is_int($key)) {
+                $headers[] = "$key: $header";
+            } else {
+                $headers[] = $header;
+            }
+        }
+
+        $this->setOption(CURLOPT_HTTPHEADER, $headers);
+        $this->setOption(CURLOPT_RETURNTRANSFER, true);
+
         try {
+            if (App::$debug) {
+                $this->setOption(CURLOPT_VERBOSE, true);
+                $streamVerboseHandle = fopen('php://temp', 'w+');
+                $this->setOption(CURLOPT_STDERR, $streamVerboseHandle);
+            }
+
             $request_exec = curl_exec($this->curl);
+
 
             if ($request_exec === false) {
                 throw new HttpException("HttpClient Error: " . curl_errno($this->curl) . " " . curl_error($this->curl));
+            }
+
+            $header_size = curl_getinfo($this->curl, CURLINFO_HEADER_SIZE);
+            $header = substr($request_exec, 0, $header_size);
+
+
+            if (App::$debug && isset($streamVerboseHandle)) {
+                rewind($streamVerboseHandle);
+                $verboseLog = stream_get_contents($streamVerboseHandle);
+                Log::record('HttpClient Result', "┌---------------------HTTP CURL DEBUG---------------------");
+                Log::record('HttpClient Result', "│");
+                Log::recordAsLine('HttpClient Result', $verboseLog, Log::TYPE_INFO, "│ ");
+                Log::record('HttpClient Result', "│");
+                Log::record('HttpClient Result', "│" . $request_exec);
+                Log::record('HttpClient Result', "└------------------------------------------------------");
+            }
+
+            preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $header, $matches);
+            if (!empty($this->cookie)) {
+                $cookies = [];
+                foreach ($matches[1] as $item) {
+                    parse_str($item, $cookie);
+                    $cookies = array_merge($cookies, $cookie);
+                }
+                $this->cookie = $this->mergeCookies($cookies);
             }
 
             return new HttpResponse($this->curl, $request_exec);
@@ -188,5 +250,15 @@ class HttpClient
         }
 
         return $url;
+    }
+
+    /**
+     * 接受GZIP
+     * @return $this
+     */
+    public function gzip(): HttpClient
+    {
+        $this->setOption(CURLOPT_ENCODING, "gzip");
+        return $this;
     }
 }

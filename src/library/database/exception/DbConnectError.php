@@ -14,7 +14,7 @@
 
 namespace library\database\exception;
 
-use core\file\Log;
+use cleanphp\file\Log;
 use exception;
 
 class DbConnectError extends exception

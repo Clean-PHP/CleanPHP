@@ -14,8 +14,8 @@
 
 namespace library\database\exception;
 
-use core\App;
-use core\file\Log;
+use cleanphp\App;
+use cleanphp\file\Log;
 use Exception;
 
 class DbExecuteError extends Exception

@@ -13,9 +13,9 @@
 
 namespace library\verity;
 
-use core\App;
-use core\file\Log;
-use core\objects\StringBuilder;
+use cleanphp\App;
+use cleanphp\file\Log;
+use cleanphp\objects\StringBuilder;
 
 trait VerityTrait
 {
@@ -26,6 +26,9 @@ trait VerityTrait
     {
         if (!is_string($val)) return false;
         $rules = $this->getRules();
+        /**
+         * @var $rule ?VerityRule
+         */
         if (!isset($rules[$key])) {
             $rule = null;
             foreach ($rules as $k => $v) {
@@ -44,28 +47,15 @@ trait VerityTrait
             $rule = $rules[$key];
         }
 
-        $msg = "字段 $key 验证失败！";
-        $allow_empty = true;
-        if (is_array($rule)) {
-            $r = $rule;
-            $rule = $r[0];
-            if (sizeof($r) > 1) {
-                $msg = $r[1];
-                if (sizeof($r) > 2 && $r[2]) {
-                    $allow_empty = false;
-                }
-            }
-        }
-
-        App::$debug && Log::record('Verity', sprintf(" 规则: %s 验证数据：%s", $rule, $val), Log::TYPE_WARNING);
+        App::$debug && Log::record('Verity', sprintf(" 规则: %s 验证数据：%s", $rule->rule, $val), Log::TYPE_WARNING);
 
         //检查空值
-        if (($rule === VerityRule::NOT_NULL || !$allow_empty) && empty($val)) {
-            throw new VerityException($msg, $key, $val);
+        if (empty($rule->rule) && !$rule->allow_empty && empty($val)) {
+            throw new VerityException($rule->msg, $key, $val);
         }
         //空值不验证,未曾通过校验直接抛异常
-        if (!empty(strval($val)) && $val !== $demo && !VerityRule::check($rule, $val)) {
-            throw new VerityException($msg, $key, $val);
+        if (!empty(strval($val)) && $val !== $demo && !VerityRule::check($rule->rule, $val)) {
+            throw new VerityException($rule->msg, $key, $val);
         }
         return false;
     }

@@ -14,7 +14,7 @@
 
 namespace library\database\operation;
 
-use core\base\Error;
+use cleanphp\base\Error;
 use library\database\Db;
 use library\database\object\Dao;
 

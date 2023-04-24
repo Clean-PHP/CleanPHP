@@ -13,7 +13,7 @@
 
 namespace library\websocket;
 
-use core\objects\ArgObject;
+use cleanphp\objects\ArgObject;
 
 class SocketInfo extends ArgObject
 {

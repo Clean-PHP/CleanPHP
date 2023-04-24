@@ -5,7 +5,7 @@
 
 namespace library\upload;
 
-use core\event\EventManager;
+use cleanphp\base\EventManager;
 
 /**
  * Class ImageUpload
@@ -19,8 +19,6 @@ class Upload
     public string $path = '';  //上传文件保存的路径
     public array $allow_type = ['jpg', 'gif', 'png', 'jpeg']; //设置限制上传文件的类型
     public int $max_size = 50 * 1024 * 1024; //限制文件上传大小（字节），默认50M
-    public bool $check_php = false;//是否检测php
-
 
     /**
      * @var UploadFile[] $uploads
@@ -52,8 +50,6 @@ class Upload
             $this->checkFileSize($file);
             /* 检查文件类型 */
             $this->checkFileType($file);
-            /* 检查php代码 */
-            if ($this->check_php) $this->checkIsPHP($file);
             /* 为上传文件设置新文件名 */
             $this->setNewFileName($file);
 
@@ -179,26 +175,6 @@ class Upload
         }
     }
 
-    /**
-     * 匹配是否为PHP
-     * 大小写亦可
-     * 匹配16进制中的 <% %>
-     * 匹配16进制中的 <? ?>
-     * 匹配16进制中的 <script /script>
-     * 匹配16进制中的 <?php ?>
-     * 匹配16进制中的 <?PHP ?>
-     * 匹配16进制中的 <SCRIPT /SCRIPT>
-     * @param UploadFile $uploadFile
-     * @return void
-     * @throws UploadException
-     */
-    private function checkIsPHP(UploadFile $uploadFile)
-    {
-        $hexCode = bin2hex(file_get_contents($uploadFile->tmp_name));
-        if (preg_match("/3C3F706870|3F3E|3C3F|3C736372697074|2F7363726970743E|3C25|253E|3C3F504850|3C534352495054|2F5343524950543E/is", $hexCode)) {
-            throw new UploadException("检测到PHP代码", 10003, $uploadFile);
-        }
-    }
 
     /**
      * 设置上传后的文件名称

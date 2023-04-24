@@ -12,7 +12,6 @@
   <component name="PhpIncludePathManager">
     <include_path>
       <path value="$USER_HOME$/.composer/vendor/" />
-      <path value="$PROJECT_DIR$/src/vendor/composer" />
     </include_path>
   </component>
   <component name="PhpProjectSharedConfiguration" php_language_level="7.4" />

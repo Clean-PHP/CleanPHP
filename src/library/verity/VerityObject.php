@@ -14,7 +14,7 @@
 
 namespace library\verity;
 
-use core\objects\ArgObject;
+use cleanphp\objects\ArgObject;
 
 abstract class VerityObject extends ArgObject
 {

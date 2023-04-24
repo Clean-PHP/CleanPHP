@@ -14,10 +14,10 @@
 
 namespace library\websocket\main;
 
-use core\App;
-use core\base\Variables;
-use core\exception\WarningException;
-use core\file\Log;
+use cleanphp\App;
+use cleanphp\base\Variables;
+use cleanphp\exception\WarningException;
+use cleanphp\file\Log;
 use library\websocket\SocketInfo;
 use library\websocket\WebsocketException;
 use library\websocket\WSEvent;

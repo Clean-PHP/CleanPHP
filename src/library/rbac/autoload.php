@@ -11,7 +11,9 @@
  * Description :
  */
 
-use core\event\EventManager;
-use library\rbac\RBACEvent;
+use cleanphp\base\EventManager;
+use library\rbac\RBACListener;
 
-EventManager::addListener("__on_controller_create__", RBACEvent::class);
+EventManager::addListener("__on_controller_create__", function ($event, &$data) {
+    (new RBACListener())->handler($data);
+});

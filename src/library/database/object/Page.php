@@ -14,7 +14,7 @@
 
 namespace library\database\object;
 
-use core\objects\ArgObject;
+use cleanphp\objects\ArgObject;
 
 class Page extends ArgObject
 {

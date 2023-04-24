@@ -13,32 +13,37 @@
 
 namespace library\waf;
 
-use core\file\Log;
+use cleanphp\file\Log;
 
 class Ip
 {
     public string $ip = "";
-    public int $count_per_minute = 0;//每分钟请求次数
-    public int $last_time = 0;//上次请求时间
-    public int $malice_time = 0;//恶意请求次数
+    private int $count_per_minute = 0;//每分钟请求次数
+    private int $last_time = 0;//上次请求时间
+    private int $malice_time = 0;//恶意请求次数
     public array $request = [];//ip的恶意请求包
     public int $black_timeout = 0;//小黑屋时间
     public string $reason = "";
     public bool $is_unlock = true;
-    public function __construct($ip){
+
+    public function __construct($ip)
+    {
+        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+            throw new \InvalidArgumentException('Invalid IP address');
+        }
         $this->ip = $ip;
     }
 
     public function record(): bool
     {
         if($this->black_timeout>time()){
-            $this->is_unlock = false;
             return true;
         }else{
             if(!$this->is_unlock){
                 $this->is_unlock = true;
                 //解封了
                 $this->count_per_minute = 0;//解封就重置
+                $this->reason = "";
             }
 
         }
@@ -83,7 +88,7 @@ class Ip
             if (is_string($k)) {
                 $res[$k] = $this->fixRegex($item);
             } elseif (isset($item[3])) {
-                if ($item[0]) $res[$item[2]] =$this->fixRegex($item[1]);
+                if ($item[0]) $res[$item[2]] = $this->fixRegex($item[1]);
             }
         }
         return $res;

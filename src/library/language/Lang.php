@@ -4,7 +4,7 @@
  ******************************************************************************/
 
 /**
- * Package: core\base
+ * Package: cleanphp\base
  * Class Lang
  * Created By ankio.
  * Date : 2022/11/9
@@ -14,17 +14,19 @@
 
 namespace library\language;
 
-use core\App;
-use core\base\Variables;
-use core\config\Config;
-use core\file\Log;
+use cleanphp\App;
+use cleanphp\base\Variables;
+use cleanphp\file\Log;
 
 class Lang
 {
 
     private static array $lang_data = [];
     private static string $lang = "zh-cn";
-    public static array $lang_map = ["zh"=>"zh-cn"];
+
+    private static string $file = "";
+    public static array $lang_map = ["zh" => "zh-cn"];
+
     /**
      * 注册语言包
      * @return void
@@ -32,13 +34,13 @@ class Lang
     public static function register()
     {
         self::$lang = self::detect();
-        $_file = Variables::getConfigPath("lang", self::$lang . ".yml");
-        if (self::$lang !== "" && file_exists($_file)) {
-            App::$debug && Log::record("Lang", sprintf("加载语言配置：%s.yml",self::$lang));
+        self::$file = self::getLanguage(self::$lang);
+        if (self::$lang !== "" && file_exists(self::$file)) {
+            App::$debug && Log::record("Lang", sprintf("加载语言配置：%s", self::$file));
             //存在定义
-            self::$lang_data = Config::getInstance(self::$lang)->setLocation(Variables::getConfigPath("lang", DS))->getAll();
-        }else{
-            App::$debug && Log::record("Lang", sprintf("语言配置：%s.yml 不存在",self::$lang),Log::TYPE_WARNING);
+            self::$lang_data = include self::$file;
+        } else {
+            App::$debug && Log::record("Lang", sprintf("语言配置：%s 不存在", self::$file), Log::TYPE_WARNING);
         }
     }
 
@@ -87,14 +89,19 @@ class Lang
             return "";
         }
         if (!isset(self::$lang_data[$name])) {//如果处于调试模式且没有找到数据
-            if(App::$debug){
+            if (App::$debug) {
                 self::$lang_data[$name] = $name;
-                Config::getInstance(self::$lang)->setLocation(Variables::getConfigPath("lang", DS))->set($name, $name);
+                file_put_contents(self::$file, '<?php return ' . var_export(self::$lang_data, true) . '; ');
             }
-            Log::record("Lang", sprintf("语言【%s】未在文件中（%s.yml）定义",$name,self::$lang),Log::TYPE_WARNING);
+            Log::record("Lang", sprintf("语言【%s】未在文件中（%s.yml）定义", $name, self::$lang), Log::TYPE_WARNING);
         }
         $value = self::$lang_data[$name] ?? $name;
         return sprintf($value, ...$vars);
+    }
+
+    private static function getLanguage($lang): string
+    {
+        return Variables::getAppPath("language", $lang . ".php");
     }
 
 

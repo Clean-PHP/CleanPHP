@@ -14,12 +14,12 @@
 
 namespace library\database;
 
-use core\App;
-use core\base\Error;
-use core\base\Variables;
-use core\exception\ExtendError;
-use core\file\File;
-use core\file\Log;
+use cleanphp\App;
+use cleanphp\base\Error;
+use cleanphp\base\Variables;
+use cleanphp\exception\ExtendError;
+use cleanphp\file\File;
+use cleanphp\file\Log;
 use library\database\driver\Driver;
 use library\database\exception\DbExecuteError;
 use library\database\object\Dao;

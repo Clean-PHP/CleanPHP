@@ -14,8 +14,8 @@
 
 namespace library\http;
 
-use core\App;
-use core\file\Log;
+use cleanphp\App;
+use cleanphp\file\Log;
 
 class HttpResponse
 {
@@ -45,7 +45,17 @@ class HttpResponse
         $header_string = substr($request_exec, 0, $header_len);
         $this->setHeaders($header_string);
         $this->body = substr($request_exec, $header_len);
-        App::$debug && Log::record('HttpClient Result', $this->body);
+        if (App::$debug) {
+            Log::record('HttpClient Result', "┌---------------------HTTP RESPONSE---------------------");
+            Log::record('HttpClient Result', "│");
+            Log::record('HttpClient Result', "│");
+            Log::record('HttpClient Result', "│" . $this->http_code);
+            Log::record('HttpClient Result', "│" . curl_getinfo($client, CURLINFO_EFFECTIVE_URL));
+            Log::record('HttpClient Result', "│");
+            Log::record('HttpClient Result', "│");
+            Log::record('HttpClient Result', "│" . $this->body);
+            Log::record('HttpClient Result', "└------------------------------------------------------");
+        }
     }
 
     /**

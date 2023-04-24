@@ -13,27 +13,27 @@
 
 namespace library\websocket;
 
-use core\App;
-use core\base\Variables;
-use core\cache\Cache;
-use core\config\Config;
-use core\event\EventListener;
-use core\event\EventManager;
-use core\file\Log;
+use cleanphp\App;
+use cleanphp\base\Config;
+use cleanphp\base\EventManager;
+use cleanphp\base\Variables;
+use cleanphp\cache\Cache;
+use cleanphp\file\Log;
 use library\websocket\main\Server;
 
 
-class WebSocket implements EventListener
+class WebSocket
 {
     /**
      * 启动Websocket
      * @return void
      * @throws WebsocketException
      */
-    static function start(){
+    static function start()
+    {
 
         //加锁
-        if(!self::isLock(Config::getConfig("websocket")["port"]))
+        if (!self::isLock(Config::getConfig("websocket")["port"]))
         {
 
             App::$debug && Log::record("Websocket","WebSocket进程未锁定，下发任务",Log::TYPE_WARNING);
@@ -84,19 +84,4 @@ class WebSocket implements EventListener
         self::$WSEvent = $WSEvent;
     }
 
-
-    /**
-     * 事件响应
-     * @param string $event
-     * @param mixed $data
-     * @return void
-     */
-    public function handleEvent(string $event, &$data)
-    {
-        try {
-            WebSocket::start();
-        } catch (WebsocketException $e) {
-            Log::record("Websocket", $e->getMessage(), Log::TYPE_ERROR);
-        }
-    }
 }

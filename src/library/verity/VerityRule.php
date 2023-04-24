@@ -5,7 +5,7 @@
 
 namespace library\verity;
 
-use core\exception\WarningException;
+use cleanphp\exception\WarningException;
 
 /**
  * Class Verity
@@ -16,7 +16,6 @@ use core\exception\WarningException;
  */
 class VerityRule
 {
-    const NOT_NULL = 0;
     const NUMBER = "^\d+$";
     const NUMBER_ = "^(-)?\d+$";
     const DOMAIN = "^(?=^.{3,255}$)[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+$";
@@ -30,12 +29,30 @@ class VerityRule
     const CARD = "^([0-9]){7,18}(x|X)?$";
     const QQ = "^[1-9][0-9]{4,}$";
     const IPV4 = "^\d+\.\d+\.\d+\.\d+$";
+    const FLOAT_AND_INT = "^(0\.\d+|[1-9]\d*(\.\d+)?)$";
+
+    public string $rule = "";
+    public string $msg = "校验失败";
+    public bool $allow_empty = true;
+
+    /**
+     * @param string $rule 规则
+     * @param string $msg 错误信息
+     * @param bool $allow_empty 是否为空不校验
+     */
+    public function __construct(string $rule, string $msg = "校验失败", bool $allow_empty = true)
+    {
+        $this->allow_empty = $allow_empty;
+        $this->rule = $rule;
+        $this->msg = $msg;
+    }
 
     /**
      * 规则校验
      * @param $rule string
      * @param $string string
      * @return false|int
+     * @throws VerityException
      */
     public static function check(string $rule, string $string)
     {
