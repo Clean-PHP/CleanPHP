@@ -110,7 +110,7 @@ class IpLocation
      */
     private static function getIpV4Path(): string
     {
-        return self::$ipV4Path ?: self::root('/database/qqwry.dat');
+        return self::$ipV4Path ?: self::root('/db/qqwry.dat');
     }
 
     /**
@@ -136,6 +136,6 @@ class IpLocation
      */
     private static function getIpV6Path(): string
     {
-        return self::$ipV6Path ?: self::root('/database/ipv6wry.database');
+        return self::$ipV6Path ?: self::root('/db/ipv6wry.db');
     }
 }
