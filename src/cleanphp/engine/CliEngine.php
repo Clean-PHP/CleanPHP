@@ -29,7 +29,7 @@ class CliEngine extends BaseEngine
      */
     function render(...$data): string
     {
-       return '';
+       return print_r($data,true);
     }
 
     /**
@@ -37,7 +37,7 @@ class CliEngine extends BaseEngine
      */
     function renderError(string $msg, array $traces, string $dumps, string $tag)
     {
-       return '';
+       return  print_r([$msg,$traces,$dumps],true);
     }
 
     function onNotFound($msg = "")

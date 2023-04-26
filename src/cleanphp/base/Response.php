@@ -125,13 +125,13 @@ class Response
         }
 
         if (preg_match("/.*\.(gif|jpg|jpeg|png|bmp|swf|woff)?$/", Request::getNowAddress())) {
-            $seconds_to_cache = 3600 * 24 * 30;//图片缓存30天
+            $seconds_to_cache = 3600 * 24 * 365;//图片缓存30天
             $ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
             $this->header["Expires"] = $ts;
             $this->header["Pragma"] = "cache";
             $this->header["Cache-Control"] = "max-age=$seconds_to_cache";
         } elseif (preg_match("/.*\.(js|css)?$/", Request::getNowAddress())) {
-            $seconds_to_cache = 3600 * 12;//js和CSS缓存12小时
+            $seconds_to_cache = 3600 * 24 * 60;//js和CSS缓存12小时
             $ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
             $this->header["Expires"] = $ts;
             $this->header["Pragma"] = "cache";

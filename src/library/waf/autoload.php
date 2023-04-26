@@ -39,7 +39,8 @@ if (Config::getConfig("waf")) {
         $cache->set($ip, $ip_info);
         if ($result) {
             EventManager::trigger("__waf_on_deny__", $ip_info);
-            (new Response())->render(EngineManager::getEngine()->renderMsg(true, 403, $ip_info->reason, $ip_info->reason, 0, "https://baidu.com"))->send();
+            (new Response())->render(EngineManager::getEngine()->renderMsg(true, 403, "Oops!", $ip_info->reason, 0, "https://baidu.com"))->send();
         }
     });
+    //监听视图输出，补充js脚本调用
 }

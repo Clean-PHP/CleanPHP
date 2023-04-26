@@ -14,6 +14,7 @@
 namespace library\waf;
 
 use cleanphp\file\Log;
+use InvalidArgumentException;
 
 class Ip
 {
@@ -21,7 +22,6 @@ class Ip
     private int $count_per_minute = 0;//每分钟请求次数
     private int $last_time = 0;//上次请求时间
     private int $malice_time = 0;//恶意请求次数
-    public array $request = [];//ip的恶意请求包
     public int $black_timeout = 0;//小黑屋时间
     public string $reason = "";
     public bool $is_unlock = true;
@@ -29,7 +29,7 @@ class Ip
     public function __construct($ip)
     {
         if (!filter_var($ip, FILTER_VALIDATE_IP)) {
-            throw new \InvalidArgumentException('Invalid IP address');
+            throw new InvalidArgumentException('Invalid IP address');
         }
         $this->ip = $ip;
     }
@@ -55,8 +55,8 @@ class Ip
         }
         $this->last_time = time();
         if($this->count_per_minute>120){
-            $this->reason = "请求频率过快【友情提醒：根据《中华人民共和国网络安全法》本站已对本次请求进行取证，并保留追究您责任的权利。】";
-            Log::record("WAF","每分钟请求超过20个，封禁！",Log::TYPE_WARNING);
+            $this->reason = "你的请求频率太快了点吧？歇会。";
+            Log::record("WAF","每分钟请求超过120个，封禁咯！",Log::TYPE_WARNING);
             $this->setBlack();
             return false;
         }
@@ -67,7 +67,7 @@ class Ip
                 $deny = true;//这是恶意请求
                 $this->setBlack();
                 $this->request[] = $req;
-                $this->reason = "存在恶意请求【友情提醒：根据《中华人民共和国网络安全法》本站已对本次请求进行取证，并保留追究您责任的权利。】";
+                $this->reason = "你似乎想做什么不安全的操作？友情提醒：你的IP、浏览器、设备信息已经被记录咯。";
                 Log::record("WAF","恶意请求封禁：$name ---> $regex",Log::TYPE_WARNING);
                 break;
             }

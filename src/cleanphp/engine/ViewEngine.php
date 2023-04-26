@@ -216,7 +216,8 @@ TPL
             $__dumps = (new Dump())->dumpType($vars);
 
             $debug = <<<EOF
-<div class="cleanphp-view-engine">
+<div class="cleanphp-view-engine" style="z-index: 999999999;
+    position: fixed;">
     <script>var page_start_time = new Date().getTime()</script><script>window.onload = function (){
 document.querySelector('.cleanphp-view-engine #localtime').textContent = Math.round(new Date().getTime()  - page_start_time);}</script>
     <style>

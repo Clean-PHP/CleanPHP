@@ -24,6 +24,7 @@ use cleanphp\base\Request;
 use cleanphp\base\Response;
 use cleanphp\base\Route;
 use cleanphp\base\Variables;
+use cleanphp\engine\CliEngine;
 use cleanphp\engine\EngineManager;
 use cleanphp\exception\ExitApp;
 use cleanphp\file\Log;
@@ -51,9 +52,10 @@ class App
         if (version_compare(PHP_VERSION, '7.4.0', '<')) {
             exit("请使用PHP 7.4以上版本运行该应用");
         }
-        if (!isset($_SERVER["SERVER_NAME"])) {
-            self::$cli = false;
+        self::$cli = PHP_SAPI === 'cli' ;
+        if (self::$cli) {
             $_SERVER["SERVER_NAME"] = "0.0.0.0";//命令行重置
+            EngineManager::setDefaultEngine(new CliEngine());
         }
         define("DS", DIRECTORY_SEPARATOR);//定义斜杠符号
         define("APP_CORE", APP_DIR . DS . 'cleanphp' . DS);//定义程序的核心目录
