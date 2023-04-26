@@ -13,9 +13,11 @@
 
 namespace library\websocket;
 
-//use cleanphp\file\Log;
+//use core\file\Log;
 
-class WebsocketException extends \Exception
+use Exception;
+
+class WebsocketException extends Exception
 {
     public function __construct($message = "")
     {

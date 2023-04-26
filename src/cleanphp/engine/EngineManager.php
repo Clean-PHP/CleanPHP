@@ -25,6 +25,7 @@ class EngineManager
      */
     public static function getEngine()
     {
+
         //如果之前没有设置输出引擎，则启用文档引擎
         !self::$engine && self::setDefaultEngine(new ViewEngine());
         return self::$engine;

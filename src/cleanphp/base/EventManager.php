@@ -72,5 +72,10 @@ class EventManager
         }
         return $once ? end($results) : $results;
     }
+
+    public static function list(): array
+    {
+        return self::$events;
+    }
 }
 

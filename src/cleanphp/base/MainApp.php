@@ -16,7 +16,12 @@ namespace cleanphp\base;
 
 interface  MainApp
 {
-
+    /**
+     * 框架刚启动的时候
+     * 可以在这里注册 frame_init事件，部分拓展的运行位置也在此时开始，包括定时任务、Websocket等
+     * @return mixed
+     */
+    function onFrameworkStart();
     /**
      * 请求到达时
      * @return mixed

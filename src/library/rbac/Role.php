@@ -37,9 +37,16 @@ class Role
         return self::$instance;
     }
 
+    public static function getList()
+    {
+        if(self::$instance==null)return null;
+        return self::$instance->list();
+    }
+
+
     public function __destruct()
     {
-        if (!$this->code) Config::set("rbac", $this->config);
+        if (!$this->code) Config::setConfig("rbac", $this->config);
     }
 
 

@@ -16,6 +16,7 @@ namespace library\language;
 
 use cleanphp\App;
 use cleanphp\base\Variables;
+use cleanphp\file\File;
 use cleanphp\file\Log;
 
 class Lang
@@ -34,6 +35,7 @@ class Lang
     public static function register()
     {
         self::$lang = self::detect();
+        Variables::set("__lang",self::$lang);
         self::$file = self::getLanguage(self::$lang);
         if (self::$lang !== "" && file_exists(self::$file)) {
             App::$debug && Log::record("Lang", sprintf("加载语言配置：%s", self::$file));
@@ -101,7 +103,9 @@ class Lang
 
     private static function getLanguage($lang): string
     {
-        return Variables::getAppPath("language", $lang . ".php");
+        $path = Variables::getAppPath("language");
+        File::mkDir($path);
+        return $path.DS. $lang . ".php";
     }
 
 

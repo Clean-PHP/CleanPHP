@@ -52,7 +52,7 @@ class MailInstance
     <div class="info-top"
          style="padding: 15px 25px;border-top-left-radius: 10px;border-top-right-radius: 10px;background: {$bg_color};color: #fff;overflow: hidden;line-height: 32px;">
         <img src="{$logo}" style="float: left; margin: 0 10px 0 0; width: 32px;" alt="">
-        <div style="color:<{$color}>"><strong>{$title}</strong></div>
+        <div style="color:{$color}"><strong>{$title}</strong></div>
     </div>
     <div class="info-wrap" style="border:1px solid #ddd;overflow: hidden;padding: 15px 15px 20px;">
         <div class="tips" style="padding:15px;"><p style="margin: 10px 0;">{$body}</p></div>

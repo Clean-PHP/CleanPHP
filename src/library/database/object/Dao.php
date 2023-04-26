@@ -14,8 +14,8 @@
 
 namespace library\database\object;
 
+use cleanphp\base\Config;
 use cleanphp\base\Variables;
-use cleanphp\config\Config;
 use library\database\Db;
 use library\database\operation\DeleteOperation;
 use library\database\operation\InsertOperation;

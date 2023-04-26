@@ -7,14 +7,16 @@ namespace cleanphp\engine;
 
 
 use cleanphp\App;
+use cleanphp\base\Dump;
 use cleanphp\base\Error;
 use cleanphp\base\EventManager;
+use cleanphp\base\Request;
 use cleanphp\base\Response;
 use cleanphp\base\Route;
 use cleanphp\base\Variables;
-use cleanphp\cache\Cache;
 use cleanphp\file\File;
 use cleanphp\file\Log;
+use cleanphp\objects\StringBuilder;
 
 /**
  * Class View
@@ -42,6 +44,7 @@ class ViewEngine extends BaseEngine
     {
         $this->__compile_dir = Variables::getStoragePath("view");
         $this->__template_dir = Variables::getViewPath();
+        if(!file_exists($this->__compile_dir))mkdir($this->__compile_dir,0777,true);
     }
 
     /**
@@ -96,7 +99,7 @@ class ViewEngine extends BaseEngine
     }
 
 
-    function renderMsg(bool $err = false, int $code = 404, string $title = "", $msg = "", int $time = 3, string $url = '/', string $desc = "立即跳转"): string
+    function renderMsg(bool $err = false, int $code = 404, string $title = "", $msg = "", int $time = -1, string $url = '/', string $desc = "立即跳转"): string
     {
         parent::renderMsg($err, $code, $title, $msg, $time, $url, $desc);
         $err = $err ? ":(" : ":)";
@@ -194,11 +197,213 @@ TPL
         App::$debug && Variables::set("__view_time_start__", microtime(true));
         $template_name = $data[0];
         [$file, $template_name] = $this->preCompileLayout($template_name);
+        //$file = $this->checkTplFile($template_name);
 
         $complied_file = $this->compile($template_name, $file);
         ob_start();
+        if(App::$debug){
+            $__total_time = round((microtime(true) - Variables::get("__frame_start__", 0)) * 1000, 2);
+            Log::record("ViewEngine", sprintf("编译运行时间：%s 毫秒", $__total_time), Log::TYPE_WARNING);
+
+            $headers = array_merge([$_SERVER["REQUEST_METHOD"]." ".$_SERVER["REQUEST_URI"]],Request::getHeaders());
+            $__headers = (new Dump())->dumpType($headers);
+            $__log =Log::getInstance("ViewEngine")->getTempLog();
+            $vars = [];
+            foreach ($GLOBALS as $key => $item){
+                if($key!=="GLOBALS")$vars[$key]=$item;
+            }
+            $__version = Variables::getVersion();
+            $__dumps = (new Dump())->dumpType($vars);
+
+            $debug = <<<EOF
+<div class="cleanphp-view-engine">
+    <script>var page_start_time = new Date().getTime()</script><script>window.onload = function (){
+document.querySelector('.cleanphp-view-engine #localtime').textContent = Math.round(new Date().getTime()  - page_start_time);}</script>
+    <style>
+        /* 悬浮按钮的样式 */
+        .cleanphp-view-engine #float-button {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: fit-content;
+            height: 40px;
+            background-color: #2196f3;
+            color: white;
+            text-align: center;
+            line-height: 40px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        /* 面板的样式 */
+        .cleanphp-view-engine #panel {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            z-index: 9999;
+        }
+
+        /* 面板的标题栏样式 */
+        .cleanphp-view-engine #panel-header {
+            height: 60px;
+            background-color: #2196f3;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        /* 面板的内容区域样式 */
+        .cleanphp-view-engine #panel-content {
+            height: calc(100% - 60px);
+            overflow: auto;
+            padding: 20px;
+        }
+
+        /* tab按钮的样式 */
+        .cleanphp-view-engine .tab-button {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 10px;
+            background-color: #eee;
+            color: #333;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        /* 当前tab按钮的样式 */
+        .cleanphp-view-engine .tab-button.active {
+            background-color: #2196f3;
+            color: white;
+        }
+
+        /* tab内容的样式 */
+        .cleanphp-view-engine .tab-content {
+            display: none;
+        }
+
+        /* 当前tab内容的样式 */
+        .cleanphp-view-engine .tab-content.active {
+            display: block;
+        }
+
+        .cleanphp-view-engine pre {
+            display: block;padding: 10px;margin: 0 0 10px;font-size: 13px;line-height: 1.42857143;color: #333;word-break: break-all;word-wrap: break-word;background-color:#f5f5f5;border: 1px solid #ccc;border-radius: 4px;
+        }
+        .cleanphp-view-engine .tab-content ul{
+            list-style-type: none;
+        }
+    </style>
+
+
+    <!-- 悬浮按钮 -->
+    <div id="float-button" onclick="togglePanel()">
+        <span style="margin-left: 10px;margin-right: 10px">运行时间：{$__total_time} ms  </span>
+    </div>
+
+    <!-- 面板 -->
+    <div id="panel" style="display: none">
+        <!-- 标题栏 -->
+        <div id="panel-header">
+            <span>CleanPHP ViewEngine分析</span>
+            <span onclick="togglePanel()">关闭</span>
+        </div>
+        <!-- tab按钮 -->
+        <div id="tab-buttons" style="padding: 10px">
+            <div class="tab-button active" onclick="switchTab(0)">基本信息</div>
+            <div class="tab-button" onclick="switchTab(1)">日志</div>
+            <div class="tab-button" onclick="switchTab(2)">请求</div>
+            <div class="tab-button" onclick="switchTab(3)">全局变量</div>
+        </div>
+        <!-- tab内容 -->
+        <div id="tab-contents" style="height: calc(100vh - 150px);overflow-y: scroll;padding: 10px">
+            <div class="tab-content active">
+                <div>执行时长：{$__total_time} ms</div>
+                <div>本地资源加载时长：<span id="localtime">计算中</span> ms</div>
+                <div>CleanPHP版本：{$__version}</div>
+            </div>
+            <div class="tab-content">
+                <ul>
+EOF;
+            foreach ($__log as $log){
+                $str =  new StringBuilder($log);
+                if($str->contains("WARN")){
+                    $debug .= "<li style='color: chocolate'>$log</li>";
+                }elseif ($str->contains("ERROR")){
+                    $debug .= "<li style='color: #d21e24'>$log</li>";
+                }else{
+                    $debug .= "<li style='color: #1e5dd2'>$log</li>";
+                }
+            }
+            $debug .= <<<EOF
+                    
+                </ul>
+            </div>
+            <div class="tab-content">
+                <div style="text-align: left"><pre class="xdebug-var-dump" dir="ltr">
+                {$__headers}
+                </pre>
+                </div>
+            </div>
+            <div class="tab-content">
+                <div style="text-align: left"><pre class="xdebug-var-dump" dir="ltr">
+                {$__dumps}
+                </pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 切换面板的显示状态
+        function togglePanel() {
+            const panel = document.getElementById("panel");
+            if (panel.style.display === "none") {
+                panel.style.display = "block";
+            } else {
+                panel.style.display = "none";
+            }
+        }
+
+        // 切换tab
+        function switchTab(index) {
+            // 切换tab按钮的样式
+            var buttons = document.getElementsByClassName("tab-button");
+            for (var i = 0; i < buttons.length; i++) {
+                if (i === index) {
+                    buttons[i].classList.add("active");
+                } else {
+                    buttons[i].classList.remove("active");
+                }
+            }
+            // 切换tab内容的显示状态
+            var contents = document.getElementsByClassName("tab-content");
+            for ( i = 0; i < contents.length; i++) {
+                if (i === index) {
+                    contents[i].classList.add("active");
+                } else {
+                    contents[i].classList.remove("active");
+                }
+            }
+        }
+    </script>
+
+</div>
+EOF;
+
+        }
         extract($this->__data, EXTR_OVERWRITE);
+
+
+
         include $complied_file;
+
+        echo $debug;
 
         App::$debug && Log::record("ViewEngine", sprintf("编译运行时间：%s 毫秒", round((microtime(true) - Variables::get("__view_time_start__", 0)) * 1000, 2)), Log::TYPE_WARNING);
         return ob_get_clean();
@@ -211,68 +416,21 @@ TPL
      */
     private function preCompileLayout(string $template_name): array
     {
-        if (!is_dir($this->__compile_dir)) mkdir($this->__compile_dir, 0777, true);
-        if (!is_dir($this->__template_dir)) mkdir($this->__template_dir, 0777, true);
+        $this->setData("__lang",  Variables::get("__lang","zh-cn"));
         if (!empty($this->__layout)) {
             if ($template_name === $this->__layout)
                 Error::err("父模板不能与当前模板一致，会导致死循环。", [], "ViewEngine");
-            $file = $this->checkTplFile($template_name);
+            $file = $this->checkTplFile($this->__layout);//检查模板文件是否存在
+            $view = $this->checkTplFile($template_name);//检查视图文件是否存在
+            $this->setData("__template_file", $template_name);
 
-            $dir = Variables::getStoragePath('view');
-            if (!is_dir($dir)) mkdir($dir, 0777, true);
-            $__module = Variables::get("__request_module__", "");
-            $hash = md5(realpath($file));
-            $file_name = $hash . '_' . $__module . '_' . $template_name . '_' . md5_file($file) . '_pre';
-            $path = $dir . DS . $file_name . '.tpl';//直接预编译到文件
-            if (!App::$debug && file_exists($path)) {
-                $this->setData("__template_file", $file_name);
-                $this->setData("__template_headers", Cache::init()->get($path . "__template_headers") ?? "");
-                $this->setData("__template_scripts", Cache::init()->get($path . "__template_scripts") ?? "");
-                return [$this->checkTplFile($this->__layout), $this->__layout];
-            }
-
-            $this->_clear_complied_file($hash);
-            $content = file_get_contents($file);
-            /* 处理需要放到头部的信息*/
-            $isMatched = preg_match_all('/<link.*?\/>/', $content, $matches);
-            $layout_head = '';
-            if ($isMatched) {
-                $layout_head .= implode('', $matches[0]);
-                foreach ($matches[0] as $match) {
-                    $content = str_replace($match, '', $content);
-                }
-
-            }
-            $isMatched = preg_match_all('/<style>[\s\S]*?<\/style>/', $content, $matches);
-            if ($isMatched) {
-                $layout_head .= implode('', $matches[0]);
-                foreach ($matches[0] as $match) {
-                    $content = str_replace($match, '', $content);
-                }
-            }
-            $layout_head = Route::replaceStatic($layout_head);
-            Cache::init()->set($path . "__template_headers", $layout_head);
-            $this->setData("__template_headers", $layout_head);
-            $isMatched = preg_match_all('/<script[\s\S]*?<\/script>/', $content, $matches);
-            $layout_scripts = '';
-            if ($isMatched) {
-                $layout_scripts .= implode('', $matches[0]);
-                foreach ($matches[0] as $match) {
-                    $content = str_replace($match, '', $content);
-                }
-            }
-            $layout_scripts = Route::replaceStatic($layout_scripts);
-            Cache::init()->set($path . "__template_scripts", $layout_scripts);
-            $this->setData("__template_scripts", $layout_scripts);
-
-            file_put_contents($path, $content);
-            $this->setData("__template_file", $file_name);
-            return [$this->checkTplFile($this->__layout), $this->__layout];
+            return [$file, $this->__layout];
         }
         return [$this->checkTplFile($template_name), $template_name];
     }
 
     /**
+     * 检测tpl文件是否存在
      */
     private function checkTplFile(string $template_name): string
     {
@@ -323,7 +481,7 @@ TPL
         $dir = scandir($this->__compile_dir);
         if ($dir) {
             foreach ($dir as $d) {
-                if (substr($d, 0, 32) == $hash) {
+                if (substr($d, 0, 8) == $hash) {
                     @unlink($this->__compile_dir . DS . $d);
                 }
             }
@@ -340,8 +498,9 @@ TPL
     {
 
         if ($file == null) $file = $this->checkTplFile($template_name);
-        $hash = md5(realpath($file) . md5_file($file));
-        $complied_file = $this->__compile_dir . DS . $hash . '.' . basename($template_name) . '.php';
+        $hash = substr(md5(realpath($file) ),8,8);
+        $file_hash = substr(md5_file($file),8,8);
+        $complied_file = $this->__compile_dir . DS . $hash . '.'.$file_hash."." . basename($template_name) . '.php';
 
         if (!App::$debug && file_exists($complied_file)) {//调试模式下，直接重新编译
             return $complied_file;
@@ -350,6 +509,8 @@ TPL
         $template_data = file_get_contents($file);
         $template_data = $this->_compile_struct($template_data);
         $template_data = $this->_compile_function($template_data);
+
+
 
         $template_data = '<?php use cleanphp\engine; if(!class_exists("' . str_replace("\\", "\\\\", ViewEngine::class) . '", false)) exit("模板文件禁止被直接访问.");?>' . $template_data;
 
@@ -428,8 +589,7 @@ TPL
     {
         $template_data = Route::replaceStatic($template_data);
 
-        return self::compress($template_data);
-
+        return $template_data;
     }
 
     function getContentType(): string
@@ -705,73 +865,20 @@ pre {
         return "";
     }
 
-    /**
-     * Html压缩
-     * @param $file
-     * @return string
-     */
-    static function compress($file): string
-    {
-        $chunks = preg_split('/(<!--<nocompress>-->.*?<!--<\/nocompress>-->|<nocompress>.*?<\/nocompress>|<pre.*?\/pre>|<textarea.*?\/textarea>|<script.*?\/script>)/msi', $file, -1, PREG_SPLIT_DELIM_CAPTURE);
-        $compress = '';
-        foreach ($chunks as $c) {
-            if (strtolower(substr($c, 0, 19)) == '<!--<nocompress>-->') {
-                $c = substr($c, 19, strlen($c) - 19 - 20);
-                $compress .= $c;
-                continue;
-            } elseif (strtolower(substr($c, 0, 12)) == '<nocompress>') {
-                $c = substr($c, 12, strlen($c) - 12 - 13);
-                $compress .= $c;
-                continue;
-            } elseif (strtolower(substr($c, 0, 4)) == '<pre' || strtolower(substr($c, 0, 9)) == '<textarea') {
-                $compress .= $c;
-                continue;
-            } elseif (strtolower(substr($c, 0, 7)) == '<script' && strpos($c, '//') && (strpos($c, "\r") !== false || strpos($c, "\n") !== false)) { // JS代码，包含“//”注释的，单行代码不处理
-                $tmps = preg_split('/(\r|\n)/ms', $c, -1, PREG_SPLIT_NO_EMPTY);
-                $c = '';
-                foreach ($tmps as $tmp) {
-                    if (strpos($tmp, '//') !== false) { // 对含有“//”的行做处理
-                        if (substr(trim($tmp), 0, 2) == '//') { // 开头是“//”的就是注释
-                            continue;
-                        }
-                        $chars = preg_split('//', $tmp, -1, PREG_SPLIT_NO_EMPTY);
-                        $is_quot = $is_apos = false;
-                        foreach ($chars as $key => $char) {
-                            if ($char == '"' && !$is_apos && $key > 0 && $chars[$key - 1] != '\\') {
-                                $is_quot = !$is_quot;
-                            } elseif ($char == '\'' && !$is_quot && $key > 0 && $chars[$key - 1] != '\\') {
-                                $is_apos = !$is_apos;
-                            } elseif ($char == '/' && $chars[$key + 1] == '/' && !$is_quot && !$is_apos) {
-                                $tmp = substr($tmp, 0, $key); // 不是字符串内的就是注释
-                                break;
-                            }
-                        }
-                    }
-                    $c .= $tmp;
-                }
-            }
-
-            $c = preg_replace('/[\\n\\r\\t]+/', ' ', $c); // 清除换行符，清除制表符
-            $c = preg_replace('/\\s{2,}/', ' ', $c); // 清除额外的空格
-            $c = preg_replace('/>\\s</', '> <', $c); // 清除标签间的空格
-            $c = preg_replace('/\\/\\*.*?\\*\\//i', '', $c); // 清除 CSS & JS 的注释
-            $c = preg_replace('/<!--[^!]*-->/', '', $c); // 清除 HTML 的注释
-            $compress .= $c;
-        }
-        return $compress;
-    }
-
     public function onNotFound($msg = "")
     {
         $__module = Variables::get("__request_module__", '');
         $__controller = Variables::get("__request_controller__", '');
         $__action = Variables::get("__request_action__", '');
-        $base = 'app\\controller\\' . $__module . '\\' . "BaseController";
-        if (class_exists($base)) {
-            new $base($__module, $__controller, $__action);
+        $base = 'app\\' . Variables::getSite("\\") . 'controller\\' . $__module . '\\' . "BaseController";
+        $controller = 'app\\' . Variables::getSite("\\") . 'controller\\' . $__module . '\\' . ucfirst($__controller);
+        if(class_exists($controller)){
+            new $controller();
+        }elseif (class_exists($base)) {
+            new $base();
         }
         $result = $this->onControllerError($__controller, $__action);
-        if ($result) {
+        if ($result!==null) {
             (new Response())->render($result)->send();
         } else {
             (new Response())->code(404)

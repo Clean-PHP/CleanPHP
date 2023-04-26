@@ -17,6 +17,7 @@ namespace cleanphp\base;
 
 class Variables
 {
+    private static string $version = "4.0.1";
     public static string $site_name = "main"; //站点模块名称
     /**
      * @var string[] 内部变量
@@ -27,6 +28,11 @@ class Variables
     {
         if (self::$site_name == "") return "";
         else return self::$site_name . $split;
+    }
+
+    public static function getVersion(): string
+    {
+        return self::$version;
     }
 
     public static function init()

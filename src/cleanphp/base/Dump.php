@@ -17,6 +17,7 @@ namespace cleanphp\base;
 use cleanphp\objects\StringBuilder;
 use ReflectionClass;
 use ReflectionException;
+use ReflectionFunction;
 
 class Dump
 {
@@ -73,35 +74,42 @@ class Dump
      */
     public function dumpType($param, int $i = 0): string
     {
-
-        switch (gettype($param)) {
-            case 'NULL' :
-                $this->output .= '<span style="color: #3465a4">null</span>';
-                break;
-            case 'boolean' :
-                $this->output .= '<small style="color: #333;font-weight: bold">boolean</small> <span style="color:#75507b">' . ($param ? 'true' : 'false') . "</span>";
-                break;
-            case 'integer' :
-                $this->output .= "<small style='color: #333;font-weight: bold'>int</small> <i style='color:#4e9a06'>$param</i>";
-                break;
-            case 'double' :
-                $this->output .= "<small style='color: #333;font-weight: bold'>float</small> <i style='color:#f57900'>$param</i>";
-                break;
-            case 'string' :
-                $this->dumpString($param);
-                break;
-            case 'array' :
-                $this->dumpArray($param, $i);
-                break;
-            case 'object' :
-                $this->dumpObject($param, $i);
-                break;
-            case 'resource' :
-                $this->output .= '<i style=\'color:#3465a4\'>resource</i>';
-                break;
-            default :
-                $this->output .= '<i style=\'color:#3465a4\'>unknown type</i>';
-                break;
+        if($i>15){
+            $this->output .= "<i style='color:#21231e'>......</i>";
+            return $this->output;
+        }
+        if(is_callable($param)){
+            $this->output .= '<span style="color: #3465a4">callable</span>';
+        }else {
+            switch (gettype($param)) {
+                case 'NULL' :
+                    $this->output .= '<span style="color: #3465a4">null</span>';
+                    break;
+                case 'boolean' :
+                    $this->output .= '<small style="color: #333;font-weight: bold">boolean</small> <span style="color:#75507b">' . ($param ? 'true' : 'false') . "</span>";
+                    break;
+                case 'integer' :
+                    $this->output .= "<small style='color: #333;font-weight: bold'>int</small> <i style='color:#4e9a06'>$param</i>";
+                    break;
+                case 'double' :
+                    $this->output .= "<small style='color: #333;font-weight: bold'>float</small> <i style='color:#f57900'>$param</i>";
+                    break;
+                case 'string' :
+                    $this->dumpString($param);
+                    break;
+                case 'array' :
+                    $this->dumpArray($param, $i);
+                    break;
+                case 'object' :
+                    $this->dumpObject($param, $i);
+                    break;
+                case 'resource' :
+                    $this->output .= '<i style=\'color:#3465a4\'>resource</i>';
+                    break;
+                default :
+                    $this->output .= '<i style=\'color:#3465a4\'>unknown type</i>';
+                    break;
+            }
         }
         return $this->output;
     }
@@ -146,4 +154,28 @@ class Dump
         array_pop($pads);
     }
 
+    function dumpCallback($func){
+        try {
+            $func = new ReflectionFunction($func);
+            $start = $func->getStartLine() - 1;
+            $end =  $func->getEndLine() - 1;
+            $filename = $func->getFileName();
+            $fun = implode("", array_slice(file($filename),$start, $end - $start + 1));
+            $count  = $end - $start;
+        } catch (ReflectionException $e) {
+            $fun = "Dump Error: ".$e->getMessage();
+            $count  = 0;
+        }
+        $str = sprintf("<small style='color: #333;font-weight: bold'>callback</small> <i style='color:#cc0000'>'%s'</i> <i>(length=%d)</i>", $fun, $count);
+        $this->output .= $str;
+    }
+
+    function dumpTypeAsString($param){
+        $result = "";
+        ob_start();
+        var_dump($param);
+        $result = ob_get_contents();
+        ob_end_clean();
+        return $result;
+    }
 }

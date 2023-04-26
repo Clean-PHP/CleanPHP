@@ -15,6 +15,7 @@ namespace library\websocket;
 
 use cleanphp\App;
 use cleanphp\base\Config;
+use cleanphp\base\Dump;
 use cleanphp\base\EventManager;
 use cleanphp\base\Variables;
 use cleanphp\cache\Cache;
@@ -29,16 +30,16 @@ class WebSocket
      * @return void
      * @throws WebsocketException
      */
-    static function start()
-    {
+    static function start(){
 
         //加锁
-        if (!self::isLock(Config::getConfig("websocket")["port"]))
+        if(!self::isLock(Config::getConfig("websocket")["port"]))
         {
 
             App::$debug && Log::record("Websocket","WebSocket进程未锁定，下发任务",Log::TYPE_WARNING);
             go(function (){
                 EventManager::trigger('__on_start_websocket__');
+                Log::record("Websocket",(new Dump())->dumpTypeAsString(EventManager::list()));
                 Variables::set("__frame_log_tag__", "ws_");
                 $websocket = new Server(Config::getConfig("websocket")["ip"], Config::getConfig("websocket")["port"], App::$debug, self::$WSEvent);
                 $websocket->run();
@@ -83,5 +84,7 @@ class WebSocket
     static function setDefaultEventHandler(WSEvent $WSEvent){
         self::$WSEvent = $WSEvent;
     }
+
+
 
 }

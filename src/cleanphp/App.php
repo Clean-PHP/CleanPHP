@@ -87,44 +87,33 @@ class App
                 }
 
             }
-
             Error::register();// 注册错误和异常处理机制
-
-
-            Async::register();//异步任务注册
-
-
-            $app = "\app" . Variables::getSite("\\") . "Application"; //入口初始化
-
+            //Application实例化
+            $app = "\app\\" . Variables::getSite("\\") . "Application"; //入口初始化
             if (class_exists($app) && ($imp = class_implements($app)) && in_array(MainApp::class, $imp)) {
                 self::$app = new $app();
-                self::$app->onRequestArrive();
+                self::$app->onFrameworkStart();
             }
-
+            Async::register();//异步任务注册
             EventManager::trigger("__frame_init__");//框架初始化
             //清除缓存
             App::$debug && self::cleanCache();
             //路由
             [$__module, $__controller, $__action] = Route::rewrite();
 
-
-            EventManager::trigger("__before_create_controller__");//框架初始化
             //模块检查
             Variables::set("__request_module__", $__module);
             Variables::set("__request_controller__", $__controller);
             Variables::set("__request_action__", $__action);
-
-            if (!self::isAvailableClassname($__module))
-                Error::err("模块 '$__module' 命名不符合规范!", [], "Module");
+            //通过路由检测后才认为是请求到达
+            self::$app && self::$app->onRequestArrive();
+            EventManager::trigger("__application_init__");//框架初始化
             if (!is_dir(Variables::getControllerPath($__module))) {
-                Error::err("模块 '$__module' 不存在!", [], "Module");
+                EngineManager::getEngine()->onNotFound("模块 '$__module' 不存在!");
             }
             // 控制器检查
             if (strtolower($__controller) === 'basecontroller')
                 Error::err("基类 'BaseController' 不允许被访问！", [], "Controller");
-
-            if (!self::isAvailableClassname($__controller))
-                Error::err("控制器 '" . htmlspecialchars($__controller) . "' 命名不符合规范!", [], "Controller");
 
             $controller_name = ucfirst($__controller);
 
@@ -206,24 +195,7 @@ class App
         }
     }
 
-    /**
-     * 检查命名规范
-     * @param $__module
-     * @return bool
-     */
-    private
-    static function isAvailableClassname($__module): bool
-    {
-        return preg_match('/[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*/', $__module);
-    }
 
-    static function exitDump($msg = null)
-    {
-        if (!App::$debug) return;
-        debug_print_backtrace();
-        $t = round((microtime(true) - Variables::get("__frame_start__", 0)) * 1000, 2);
-        exit("Exit php  => Total time => $t ms");
-    }
 
 
 }

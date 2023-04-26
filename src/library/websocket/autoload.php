@@ -17,10 +17,10 @@ use cleanphp\file\Log;
 use library\websocket\WebSocket;
 use library\websocket\WebsocketException;
 
-EventManager::addListener("__before_create_controller__", function ($event, &$data) {
+EventManager::addListener("__frame_init__",function ($event, &$data){
     try {
         WebSocket::start();
     } catch (WebsocketException $e) {
-        Log::record("Websocket", $e->getMessage(), Log::TYPE_ERROR);
+        Log::record("Websocket",$e->getMessage());
     }
 });

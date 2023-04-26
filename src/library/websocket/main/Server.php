@@ -18,6 +18,7 @@ use cleanphp\App;
 use cleanphp\base\Variables;
 use cleanphp\exception\WarningException;
 use cleanphp\file\Log;
+use Exception;
 use library\websocket\SocketInfo;
 use library\websocket\WebsocketException;
 use library\websocket\WSEvent;
@@ -64,7 +65,7 @@ class Server extends Base
             socket_listen($this->master);
             $this->log("开始监听: $address : $port");
             $this->sockets[0] = new SocketInfo(['resource' => $this->master]);
-        } catch (\Exception $exception) {
+        } catch (Exception $exception) {
             $error = socket_strerror(socket_last_error());
             throw new WebsocketException($error);
         }
@@ -95,7 +96,7 @@ class Server extends Base
                 App::$debug && Log::record("Tasker", "定时任务进程发生变化，当前进程结束");
                 break;
             }
-            $write = $except = null;
+            $write = $except = [];
             $sockets = [];
             foreach ($this->sockets as $item) {
                 $sockets[] = $item->resource;
@@ -134,14 +135,14 @@ class Server extends Base
                             break;
                         case self::OPCODE_TEXT_FRAME:
                         case self::OPCODE_BINARY_FRAME:
-                        /**
-                         * Log::record("data",print_r($data_frame,true));
-                         * if ($data_frame->fin == 0) {
-                         * do {
-                         * $continueFrame = $this->readFrame($socket);
-                         * $data_frame->payload .= $continueFrame->payload;
-                         * } while ($continueFrame->fin == 0);
-                         * }**/
+                            /**
+                             * Log::record("data",print_r($data_frame,true));
+                             * if ($data_frame->fin == 0) {
+                             * do {
+                             * $continueFrame = $this->readFrame($socket);
+                             * $data_frame->payload .= $continueFrame->payload;
+                             * } while ($continueFrame->fin == 0);
+                             * }**/
                             $this->event_handler && $this->event_handler->onMsg($this, $data_frame->payload, $this->sockets[(int)$socket]);
                             break;
                         case self::OPCODE_CLOSE:

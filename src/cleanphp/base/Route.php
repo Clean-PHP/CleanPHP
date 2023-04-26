@@ -82,7 +82,7 @@ class Route
         if (strrpos($ret_url, "?") === strlen($ret_url) - 1) {
             return substr($ret_url, 0, strlen($ret_url) - 1);
         }
-        return $ret_url;
+        return trim($ret_url,"/");
 
     }
 
@@ -163,7 +163,7 @@ class Route
     {
         if ((new StringBuilder($data))->startsWith('clean_static')) {
             $uri = str_replace('clean_static', "", $data);
-            $path = Variables::setPath(APP_DIR, 'app', "public", str_replace("..", ".", $uri));
+            $path = Variables::setPath(APP_DIR, 'app'.DS . Variables::getSite(DS), "public", str_replace("..", ".", $uri));
             self::renderStatic($path);
         }
     }
@@ -180,7 +180,7 @@ class Route
             //\dump($type,true);
             (new Response())->render(self::replaceStatic(file_get_contents($path)), 200, $type)->send();
         } else {
-            Error::err(sprintf("找不到指定的静态资源：%s", $path), [], "Route");
+            EngineManager::getEngine()->onNotFound(sprintf("找不到指定的静态资源：%s", $path));
         }
     }
 

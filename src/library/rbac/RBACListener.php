@@ -18,7 +18,9 @@ use cleanphp\base\Controller;
 use cleanphp\base\EventManager;
 use cleanphp\base\Response;
 use cleanphp\base\Variables;
+use cleanphp\engine\EngineManager;
 use cleanphp\file\Log;
+use cleanphp\objects\StringBuilder;
 
 class RBACListener
 {
@@ -38,24 +40,25 @@ class RBACListener
         if ($allow) {
             return null;
         }
-        Log::record("权限信息", $role_data);
+
+        Log::record("权限信息", print_r($role_data,true));
         //没有返回就是需要授权才能访问
         EventManager::trigger(self::RBAC_ROLE_DENY_EVENT, $role_data);
         $response = new Response();
         $response->code(self::HTTP_FORBIDDEN)
-            ->render($data->eng()->renderMsg(true, self::HTTP_FORBIDDEN, self::HTTP_MESSAGE, "对不起，你没有访问权限。"))
+            ->render(EngineManager::getEngine()->renderMsg(true, self::HTTP_FORBIDDEN, self::HTTP_MESSAGE, "对不起，你没有访问权限。"))
             ->send();
     }
 
     function checkUrl($url, $role_data): bool
     {
+      //  dumps($url, $role_data);
         foreach ($role_data as $item) {
             if ($item == "all") {
                 return true;//所有都可以访问
             }
-            if (in_array($url, [$item, "$item?", "$item/"])) {
-                return true;
-            }
+            if((new StringBuilder($url))->startsWith($item))return true;
+
         }
         return false;
     }

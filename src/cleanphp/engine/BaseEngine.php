@@ -41,7 +41,7 @@ abstract class BaseEngine
 
     /**
      */
-    function renderMsg(bool $err = false, int $code = 404, string $title = "", $msg = "", int $time = 3, string $url = '/', string $desc = "立即跳转"): string
+    function renderMsg(bool $err = false, int $code = 404, string $title = "", $msg = "", int $time = -1, string $url = '/', string $desc = "立即跳转"): string
     {
         if ($time == 0) {
             Response::location($url);

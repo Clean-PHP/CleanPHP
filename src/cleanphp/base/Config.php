@@ -34,24 +34,21 @@ class Config
         return $result;
     }
 
-    /**
-     * 获取配置文件里面一项
-     * @param string $key
-     * @return mixed
-     */
-    public static function get(string $key)
-    {
-        return self::$file_data[$key] ?? "";
-    }
 
+
+    static private function loadConfig(){
+        if(!empty(self::$file_data))return;
+        self::$path = Variables::getAppPath("config.php");
+        self::$file_data = require self::$path;
+    }
     /**
      * 注册配置信息
      * @throws ExitApp
      */
     static public function register()
     {
-        self::$path = Variables::getAppPath("config.php");
-        self::$file_data = include self::$path;
+
+       self::loadConfig();
         date_default_timezone_set(Config::getConfig('frame')['time_zone'] ?? "Asia/Shanghai");
         $frame = self::getConfig("frame");
         if (!in_array("0.0.0.0", $frame['host']) && !App::$cli && !in_array($_SERVER["SERVER_NAME"], $frame['host'])) {
@@ -67,8 +64,9 @@ class Config
      * @param string $key 参数名称
      * @param  $val
      */
-    public static function set(string $key, $val)
+    public static function setConfig(string $key, $val)
     {
+        self::loadConfig();
         self::$file_data[$key] = $val;
         self::setAll(self::$file_data);
     }
@@ -79,6 +77,7 @@ class Config
      */
     static public function getConfig($sub = "")
     {
+        self::loadConfig();
         return self::$file_data[$sub] ?? null;
     }
 

@@ -15,6 +15,7 @@
 namespace library\database\object;
 
 use cleanphp\objects\ArgObject;
+use cleanphp\objects\StringBuilder;
 
 abstract class Model extends ArgObject
 {
@@ -24,6 +25,13 @@ abstract class Model extends ArgObject
     {
         $this->fromDb = $fromDb;
         parent::__construct($item);
+    }
+
+    public function onParseType(string $key, &$val, $demo)
+    {
+        if($this->fromDb && is_string($demo) && !(new StringBuilder($key))->endsWith("no_filter")){
+            $val = urlencode($val);
+        }
     }
 
     /**

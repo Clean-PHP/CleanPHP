@@ -13,20 +13,21 @@
 use cleanphp\base\Config;
 use library\language\Lang;
 
+if (!function_exists("lang")) {
+    /**
+     * 输出语言
+     * @param string $str 语言名称
+     * @param ...$args
+     * @return string
+     */
+    function lang(string $str, ...$args): string
+    {
+        return Lang::get($str, ...$args);
+    }
+}
+//dumps(Config::getConfig("language"));
 if (Config::getConfig("language")) {
     Lang::register();
-    if (!function_exists("lang")) {
-        /**
-         * 输出语言
-         * @param string $str 语言名称
-         * @param ...$args
-         * @return string
-         */
-        function lang(string $str, ...$args): string
-        {
-            return Lang::get($str, ...$args);
-        }
-    }
 }
 
 

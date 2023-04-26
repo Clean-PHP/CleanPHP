@@ -28,11 +28,9 @@ class ArgObject
             if (isset($item[$key])) {
                 $data = $item[$key];
             }
-            if ($this->onParseType($key, $data, $val)) {
-                $this->$key = parse_type($val, $data);
-            } else {
-                $this->$key = $data;
-            }
+            $data = parse_type($val, $data);
+            $this->onParseType($key, $data, $val);
+            $this->$key = $data;
         }
     }
 
@@ -41,11 +39,9 @@ class ArgObject
      * @param string $key 对象属性名
      * @param mixed &$val 对象属性值，传入的是地址，直接修改即可
      * @param mixed $demo 默认属性值
-     * @return bool 返回true表示修改，返回false表示不修改
      */
-    public function onParseType(string $key, &$val, $demo): bool
+    public function onParseType(string $key, &$val, $demo)
     {
-        return false;
     }
 
     /**
