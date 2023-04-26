@@ -1,5 +1,5 @@
 <?php
-namespace server\optimization\css;
+namespace library\release\css;
 
 class CompressCss
 {

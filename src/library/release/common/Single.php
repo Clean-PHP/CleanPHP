@@ -3,7 +3,10 @@
  * Copyright (c) 2022. Ankio. All Rights Reserved.
  ******************************************************************************/
 
-namespace server\optimization\common;
+namespace library\release\common;
+
+use cleanphp\file\File;
+
 /**
  * Package: release
  * Class Single
@@ -18,8 +21,8 @@ class Single
 
     public function __construct($fileName)
     {
-        $file = dirname(__DIR__) . DIRECTORY_SEPARATOR . "dist" . DIRECTORY_SEPARATOR . "$fileName.php";
-        del($file);
+        $file = dirname(BASE_DIR) . DIRECTORY_SEPARATOR . "dist" . DIRECTORY_SEPARATOR . "$fileName.php";
+        File::del($file);
         $this->fp = fopen($file, "w+");
     }
 
@@ -50,7 +53,12 @@ mkdir($path,0777,true);
 $codes = [
 '
         );
-        $this->scan($new);
+
+        File::traverseDirectory($new,function ($f){
+            fwrite($this->fp, '"' . str_replace(dirname(BASE_DIR). DIRECTORY_SEPARATOR . "dist" . DIRECTORY_SEPARATOR . "temp" . DIRECTORY_SEPARATOR, "", $f) . '"=>"' . base64_encode(file_get_contents($f)) . '",');
+
+        });
+
         fwrite($this->fp, '
 
 ];
@@ -66,26 +74,10 @@ file_put_contents($path.$item,base64_decode($data));
 include $path."public/index.php";
 '
         );
-        del($new);
+        File::del($new);
         echo "\n[信息]PHP痕迹清除密钥：$token ";
         echo "\n[信息]单一文件打包完成. ";
     }
 
 
-    function scan($dirname)
-    {
-        $dirArr = scandir($dirname);
-        foreach ($dirArr as $v) {
-            $filename = $dirname . DIRECTORY_SEPARATOR . $v;
-            if (strpos($v, ".") !== 0) {
-                if (is_dir($filename)) {
-                    $this->scan($filename);
-                } else {
-                    if ($v !== "clean") {
-                        fwrite($this->fp, '"' . str_replace(dirname(__DIR__) . DIRECTORY_SEPARATOR . "dist" . DIRECTORY_SEPARATOR . "temp" . DIRECTORY_SEPARATOR, "", $filename) . '"=>"' . base64_encode(file_get_contents($filename)) . '",');
-                    }
-                }
-            }
-        }
-    }
 }

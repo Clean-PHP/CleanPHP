@@ -12,11 +12,13 @@
 
 //此处建议注册事件，而不是直接执行class，因为此处的包含时机比Config注册的时机还要早。
 
+use cleanphp\App;
 use cleanphp\base\EventManager;
 use cleanphp\file\Log;
 use library\websocket\WebSocket;
 use library\websocket\WebsocketException;
 
+if(App::$cli)return null;
 EventManager::addListener("__frame_init__",function ($event, &$data){
     try {
         WebSocket::start();

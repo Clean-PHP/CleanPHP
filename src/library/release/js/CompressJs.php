@@ -12,7 +12,7 @@
  * Description :
  */
 
-namespace server\optimization\js;
+namespace library\release\js;
 
 use Exception;
 
@@ -20,6 +20,7 @@ class CompressJs
 {
     static function compress($file)
     {
+        if(substr($file,(strlen($file)-6),6)=="min.js")return;
         $js = file_get_contents($file);
 
         try {

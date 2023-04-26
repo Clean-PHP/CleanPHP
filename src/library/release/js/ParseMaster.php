@@ -12,7 +12,7 @@
  * Description :
  */
 
-namespace server\optimization\js;
+namespace library\release\js;
 
 class ParseMaster
 {

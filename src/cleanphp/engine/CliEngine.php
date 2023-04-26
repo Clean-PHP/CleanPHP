@@ -13,6 +13,8 @@
 
 namespace cleanphp\engine;
 
+use cleanphp\base\Response;
+
 class CliEngine extends BaseEngine
 {
 
@@ -42,6 +44,6 @@ class CliEngine extends BaseEngine
 
     function onNotFound($msg = "")
     {
-
+       (new Response())->render($msg)->send();
     }
 }

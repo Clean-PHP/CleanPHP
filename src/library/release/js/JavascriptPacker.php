@@ -34,7 +34,8 @@
  * @author  Nicolas Martin
  * @author  Gregor Kralik <g.kralik@gmail.com>
  */
-namespace server\optimization\js;
+namespace library\release\js;
+
 class JavascriptPacker
 {
     // constants

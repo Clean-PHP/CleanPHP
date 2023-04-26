@@ -53,17 +53,17 @@ class App
             exit("请使用PHP 7.4以上版本运行该应用");
         }
         self::$cli = PHP_SAPI === 'cli' ;
-        if (self::$cli) {
-            $_SERVER["SERVER_NAME"] = "0.0.0.0";//命令行重置
-            EngineManager::setDefaultEngine(new CliEngine());
-        }
+        if(self::$cli) {
+            $_SERVER["SERVER_NAME"] = "0.0.0.0";
+            $_SERVER["REQUEST_METHOD"] = "GET";
+        }//命令行重置
         define("DS", DIRECTORY_SEPARATOR);//定义斜杠符号
         define("APP_CORE", APP_DIR . DS . 'cleanphp' . DS);//定义程序的核心目录
         include_once APP_CORE . "helper.php";//载入内置助手函数
         include_once APP_CORE . "base" . DS . "Variables.php";// 加载变量
         include_once APP_CORE . "base" . DS . "Loader.php";// 加载自动加载器
 
-        $path = APP_DIR . DS . "config" . DS . $_SERVER["SERVER_NAME"] . ".txt";
+        $path = APP_DIR . DS . "config" . DS . $_SERVER["SERVER_NAME"]. ".txt";
         if (file_exists($path)) {
             Variables::$site_name = file_get_contents($path);
         }
@@ -75,6 +75,10 @@ class App
             Loader::register();// 注册自动加载
             App::$debug && Log::record("Frame", "框架启动...");
             Config::register();// 加载配置文件
+            if (self::$cli) {
+
+                EngineManager::setDefaultEngine(new CliEngine());
+            }
             if (self::$debug) {
                 if (self::$cli)
                     Log::record("Request", "命令行启动框架", Log::TYPE_WARNING);
@@ -133,9 +137,7 @@ class App
                 $data = [$__module, $__controller, $__action, $controller_class];
                 EventManager::trigger("__not_render__", $data);
                 EngineManager::getEngine()->onNotFound("模块 ( $__module ) => 控制器 ( $controller_name ) 中的方法 ( $__action ) 不存在!");
-
             }
-
 
             if (!in_array_case($__action, get_class_methods($controller_class)) || $__action === '__init') {
                 Error::err("模块 ( $__module ) => 控制器 ( $controller_name ) 中的方法 ( $__action ) 为私有方法，禁止访问!", [], "Action");

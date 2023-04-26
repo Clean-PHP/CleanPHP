@@ -404,7 +404,7 @@ EOF;
 
         include $complied_file;
 
-        echo $debug;
+        if(App::$debug) echo $debug;
 
         App::$debug && Log::record("ViewEngine", sprintf("编译运行时间：%s 毫秒", round((microtime(true) - Variables::get("__view_time_start__", 0)) * 1000, 2)), Log::TYPE_WARNING);
         return ob_get_clean();
@@ -588,9 +588,7 @@ EOF;
      */
     private function _clean_remark(string $template_data): string
     {
-        $template_data = Route::replaceStatic($template_data);
-
-        return $template_data;
+        return Route::replaceStatic($template_data);
     }
 
     function getContentType(): string

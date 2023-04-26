@@ -161,6 +161,7 @@ class Route
      */
     private static function beforeRoute($data)
     {
+
         if ((new StringBuilder($data))->startsWith('clean_static')) {
             $uri = str_replace('clean_static', "", $data);
             $path = Variables::setPath(APP_DIR, 'app'.DS . Variables::getSite(DS), "public", str_replace("..", ".", $uri));
@@ -192,7 +193,10 @@ class Route
     public static function replaceStatic(string $content)
     {
         $is_rewrite = Config::getConfig("frame")["rewrite"];
+
         $replaces = Variables::get("__static_replace__", "../../public");
+
+     
         if ($is_rewrite)
             $template_data = str_replace($replaces, "/clean_static", $content);
         else {

@@ -10,7 +10,7 @@
  * Time : 17:43
  * Description :
  */
-namespace server\optimization\html;
+namespace library\release\html;
 class CompressHtml
 {
     static function compress($file)

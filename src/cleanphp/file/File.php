@@ -6,6 +6,8 @@
 namespace cleanphp\file;
 
 
+use ZipArchive;
+
 /**
  * Class File
  * Created By ankio.
@@ -120,5 +122,47 @@ class File
         return true;
     }
 
+    static function zip($dir, $dst)
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($dst, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
+            self::addFile2Zip($dir, $zip, $dir); //调用方法，对要打包的根目录进行操作，并将ZipArchive的对象传递给方法
+        }
+    }
+
+    static function traverseDirectory($dir, $callback) {
+        if (is_dir($dir)) {
+            if ($dh = opendir($dir)) {
+                while (($file = readdir($dh)) !== false) {
+                    if ($file != '.' && $file != '..' && substr($file,0,1)!==".") {
+                        $path = $dir . DIRECTORY_SEPARATOR . $file;
+                        if (is_dir($path)) {
+                            self::traverseDirectory($path, $callback);
+                        } else {
+                            call_user_func($callback, $path);
+                        }
+                    }
+                }
+                closedir($dh);
+            }
+        }
+    }
+
+
+    private static function addFile2Zip($path, ZipArchive $zip, $replace)
+    {
+        $handler = opendir($path); //打开当前文件夹由$path指定。
+        while (($filename = readdir($handler)) !== false) {
+            if (strpos($filename, ".") !== 0) {//文件夹文件名字为'.'和‘..'，不要对他们进行操作
+                if (is_dir($path . "/" . $filename)) {// 如果读取的某个对象是文件夹，则递归
+                    self::addFile2Zip($path . "/" . $filename, $zip, $replace);
+                } else { //将文件加入zip对象
+                    $zip->addFile($path . "/" . $filename);
+                    $zip->renameName($path . "/" . $filename, str_replace($replace, "", $path) . DIRECTORY_SEPARATOR . $filename);
+                }
+            }
+        }
+        @closedir($handler);
+    }
 
 }
