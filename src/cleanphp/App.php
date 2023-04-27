@@ -63,10 +63,7 @@ class App
         include_once APP_CORE . "base" . DS . "Variables.php";// 加载变量
         include_once APP_CORE . "base" . DS . "Loader.php";// 加载自动加载器
 
-        $path = APP_DIR . DS . "config" . DS . $_SERVER["SERVER_NAME"]. ".txt";
-        if (file_exists($path)) {
-            Variables::$site_name = file_get_contents($path);
-        }
+
         Variables::init();//初始化变量
         //初始化时间
         App::$debug && Variables::set('__frame_start__', microtime(true));

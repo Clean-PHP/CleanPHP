@@ -43,18 +43,17 @@ switch ($argv[1]) {
 
         $version = "0.0.1";
         $name = "main";
-        $model = in_array('-m',$argv);
         $single = in_array('-s',$argv);
         $compress = in_array('-c',$argv);
 
         foreach ($argv as $value){
             switch (substr($value,0,2)){
 
-                case "-v":$version = substr($value,4);break;
-                case "-n":$name = substr($value,4);break;
+                case "-v":$version = substr($value,3);break;
+                case "-n":$name = substr($value,3);break;
             }
         }
-        Release::package($compress,$single,$model,$name,$version);
+        Release::package($compress,$single,$name,$version);
         break;
     case "start":
         $_SERVER["REQUEST_URI"] = $argv[2] ?? "";

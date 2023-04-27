@@ -49,15 +49,20 @@ root			/www/a.com/public;
 ### Nginx伪静态配置
 
 ```
-if ( $uri ~* "^(.*)\.php$") {    
-rewrite ^(.*) /index.php break;  
-}	
-
-location / {    
-if (!-e $request_filename){      
-rewrite (.*) /index.php;    
-}  
+location / {
+  try_files $uri $uri/ /index.php?$query_string;
 }
+
+location /ws {
+         proxy_pass http://127.0.0.1:4405;
+         proxy_read_timeout 300s;
+         proxy_send_timeout 300s;
+         proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        # 下面这两行是关键
+        proxy_set_header Upgrade '';
+        proxy_set_header Connection upgrade;
+     }
 ```
 
 ### 修改域名

@@ -17,6 +17,7 @@ class CompressHtml
     {
         $chunks = preg_split('/(<!--<nocompress>-->.*?<!--<\/nocompress>-->|<nocompress>.*?<\/nocompress>|<pre.*?\/pre>|<textarea.*?\/textarea>|<script.*?\/script>)/msi', file_get_contents($file), -1, PREG_SPLIT_DELIM_CAPTURE);
         $compress = '';
+        if(!$chunks)return;
         foreach ($chunks as $c) {
             if (strtolower(substr($c, 0, 19)) == '<!--<nocompress>-->') {
                 $c = substr($c, 19, strlen($c) - 19 - 20);

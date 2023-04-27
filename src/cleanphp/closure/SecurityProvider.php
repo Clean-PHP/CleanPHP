@@ -33,7 +33,7 @@ class SecurityProvider implements ISecurityProvider
     /**
      * @inheritdoc
      */
-    public function verify(array $data)
+    public function verify(array $data): ?bool
     {
         return base64_encode(hash_hmac('sha256', $data['closure'], $this->secret, true)) === $data['hash'];
     }

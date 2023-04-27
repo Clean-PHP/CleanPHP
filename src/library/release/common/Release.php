@@ -52,11 +52,12 @@ class Release
         });
     }
 
-    static function package($compress,$single,$model,$name,$version)
+    static function package($compress,$single,$name,$version)
     {
 
+        $raw_name = $name;
         $new = dirname(BASE_DIR) . DIRECTORY_SEPARATOR . "dist" . DIRECTORY_SEPARATOR . "temp";
-        $app_dir = $new.DIRECTORY_SEPARATOR."app".DIRECTORY_SEPARATOR.$name;
+        $app_dir = $new.DIRECTORY_SEPARATOR."app".DIRECTORY_SEPARATOR;
 
         File::copy(BASE_DIR, $new);
 
@@ -86,11 +87,7 @@ class Release
                 $name = "compress_$name";
             }
             $fileName = dirname(BASE_DIR) . DIRECTORY_SEPARATOR."dist".DIRECTORY_SEPARATOR . $name . "_"  . $version.".zip";
-            if($model){
-                File::zip($app_dir, $fileName);
-            }else{
-                File::zip($new, $fileName);
-            }
+            File::zip($new, $fileName);
 
             echo "\n[项目打包程序]php程序已打包至$fileName";
            File::del($new);
