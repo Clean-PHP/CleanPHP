@@ -49,6 +49,10 @@ root			/www/a.com/public;
 ### Nginx伪静态配置
 
 ```
+if ( $uri ~* "^(.*)\.php$") {    
+rewrite ^(.*) /index.php break;  
+}	
+
 location / {
   try_files $uri $uri/ /index.php?$query_string;
 }
