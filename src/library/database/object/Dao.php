@@ -295,14 +295,10 @@ abstract class Dao
         $this->db->execute("COMMIT");
     }
 
-    /**
-     * @param $start
-     * @param $size
-     * @param $page
-     * @return array|int
-     */
-    function getAll($fields = [], $start = null, $size = null, &$page = null, $where = [])
+
+    function getAll(?array $fields = [], array $where = [], ?int $start = null, int $size = 10, &$page = null)
     {
+        if($fields===null)$fields = [];
         if ($start === null) return $this->select(...$fields)->where($where)->commit();
         return $this->select(...$fields)->page($start, $size, 10, $page)->where($where)->commit();
     }

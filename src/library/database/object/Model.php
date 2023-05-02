@@ -29,8 +29,8 @@ abstract class Model extends ArgObject
 
     public function onParseType(string $key, &$val, $demo)
     {
-        if($this->fromDb && is_string($demo) && !(new StringBuilder($key))->endsWith("no_filter")){
-            $val = urlencode($val);
+        if($this->fromDb && is_string($demo) && !(new StringBuilder($key))->endsWith("nofilter")){
+            $val = htmlspecialchars($val);
         }
     }
 

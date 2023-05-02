@@ -13,7 +13,6 @@ class Role
 {
     protected static ?Role $instance = null;
     private array $config;
-    private bool $code = false;
 
 
     public function __construct($rbac = [])
@@ -44,10 +43,6 @@ class Role
     }
 
 
-    public function __destruct()
-    {
-        if (!$this->code) Config::setConfig("rbac", $this->config);
-    }
 
 
     /**

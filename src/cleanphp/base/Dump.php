@@ -74,7 +74,7 @@ class Dump
      */
     public function dumpType($param, int $i = 0): string
     {
-        if($i>15){
+        if($i>6){
             $this->output .= "<i style='color:#21231e'>......</i>";
             return $this->output;
         }

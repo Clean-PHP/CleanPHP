@@ -22,9 +22,9 @@ trait VerityTrait
     /**
      * @throws VerityException
      */
-    public function onParseType(string $key, &$val, $demo): bool
+    public function onParseType(string $key, &$val, $demo)
     {
-        if (!is_string($val)) return false;
+        if (!is_string($val)) return;
         $rules = $this->getRules();
         /**
          * @var $rule ?VerityRule
@@ -42,7 +42,7 @@ trait VerityTrait
                     if (!empty($rule)) break;
                 }
             }
-            if (empty($rule)) return false;
+            if (empty($rule)) return;
         } else {
             $rule = $rules[$key];
         }
@@ -57,6 +57,5 @@ trait VerityTrait
         if (!empty(strval($val)) && $val !== $demo && !VerityRule::check($rule->rule, $val)) {
             throw new VerityException($rule->msg, $key, $val);
         }
-        return false;
     }
 }

@@ -135,7 +135,9 @@ class SelectOperation extends BaseOperation
                 $total = $this->db->execute($sql, $this->bind_param, true)[0]['M_COUNTER'];
             } catch (Exception $e) {
                 $total = 0;
+
             }
+
 
             if (!isset($this->opt['start'])) {
                 $this->opt['start'] = 0;

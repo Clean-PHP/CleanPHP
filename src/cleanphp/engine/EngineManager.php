@@ -34,7 +34,6 @@ class EngineManager
     /**
      * 设置默认引擎
      * @param $engine BaseEngine
-     * @return void
      */
     static function setDefaultEngine(BaseEngine $engine)
     {

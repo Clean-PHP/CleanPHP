@@ -18,9 +18,9 @@ class ArgObject
 {
     /**
      * 将数组转换为对象，使其更具表现力
-     * @param $item array 数组
+     * @param array|null $item array 数组
      */
-    public function __construct(array $item = [])
+    public function __construct(?array $item = [])
     {
         if (empty($item)) return;
         foreach (get_object_vars($this) as $key => $val) {

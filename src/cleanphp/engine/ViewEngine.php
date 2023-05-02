@@ -7,6 +7,7 @@ namespace cleanphp\engine;
 
 
 use cleanphp\App;
+use cleanphp\base\Config;
 use cleanphp\base\Dump;
 use cleanphp\base\Error;
 use cleanphp\base\EventManager;
@@ -201,7 +202,7 @@ TPL
 
         $complied_file = $this->compile($template_name, $file);
         ob_start();
-        if(App::$debug){
+        if(App::$debug && Config::getConfig('frame')['view_debug']){
             $__total_time = round((microtime(true) - Variables::get("__frame_start__", 0)) * 1000, 2);
             Log::record("ViewEngine", sprintf("编译运行时间：%s 毫秒", $__total_time), Log::TYPE_WARNING);
 
@@ -214,7 +215,6 @@ TPL
             }
             $__version = Variables::getVersion();
             $__dumps = (new Dump())->dumpType($vars);
-
             $debug = <<<EOF
 <div class="cleanphp-view-engine" style="z-index: 999999999;
     position: fixed;">
@@ -374,7 +374,7 @@ EOF;
         // 切换tab
         function switchTab(index) {
             // 切换tab按钮的样式
-            var buttons = document.getElementsByClassName("tab-button");
+            var buttons = document.querySelectorAll(".cleanphp-view-engine .tab-button");
             for (var i = 0; i < buttons.length; i++) {
                 if (i === index) {
                     buttons[i].classList.add("active");
@@ -383,7 +383,7 @@ EOF;
                 }
             }
             // 切换tab内容的显示状态
-            var contents = document.getElementsByClassName("tab-content");
+            var contents = document.querySelectorAll(".cleanphp-view-engine .tab-content");
             for ( i = 0; i < contents.length; i++) {
                 if (i === index) {
                     contents[i].classList.add("active");
@@ -404,7 +404,7 @@ EOF;
 
         include $complied_file;
 
-        if(App::$debug) echo $debug;
+        if(App::$debug && Config::getConfig('frame')['view_debug']) echo $debug;
 
         App::$debug && Log::record("ViewEngine", sprintf("编译运行时间：%s 毫秒", round((microtime(true) - Variables::get("__view_time_start__", 0)) * 1000, 2)), Log::TYPE_WARNING);
         return ob_get_clean();
@@ -876,15 +876,18 @@ pre {
         }elseif (class_exists($base)) {
             new $base();
         }
-        $result = $this->onControllerError($__controller, $__action);
-        if ($result!==null) {
-            (new Response())->render($result)->send();
-        } else {
-            (new Response())->code(404)
-                ->contentType($this->getContentType())
-                ->render($this->renderMsg(true, 404, "404 not found", $msg))
-                ->send();
+        //调试模式才显示详细错误
+        if(App::$debug){
+            $result = $this->onControllerError($__controller, $__action);
+            if ($result!==null) {
+                (new Response())->render($result)->send();
+            }
         }
+
+        (new Response())->code(404)
+            ->contentType($this->getContentType())
+            ->render($this->renderMsg(true, 404, "404 not found", $msg))
+            ->send();
 
     }
 }

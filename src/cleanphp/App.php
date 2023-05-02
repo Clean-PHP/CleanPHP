@@ -29,6 +29,7 @@ use cleanphp\engine\EngineManager;
 use cleanphp\exception\ExitApp;
 use cleanphp\file\Log;
 use cleanphp\process\Async;
+use Exception;
 
 
 class App
@@ -155,9 +156,12 @@ class App
                 EngineManager::getEngine()->onNotFound("No data.");
             }
 
-        } catch (ExitApp $exit_app) {//执行退出
+        }catch (ExitApp $exit_app) {//执行退出
             App::$debug && Log::record("Frame", sprintf("框架执行退出: %s", $exit_app->getMessage()));
-        } finally {
+        } catch (Exception|\Error $exception){
+            Error::err($exception->getMessage(),$exception->getTrace());
+        }
+        finally {
             self::$app && self::$app->onRequestEnd();
             if (App::$debug) {
                 Log::record("Frame", "框架响应结束...");

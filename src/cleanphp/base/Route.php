@@ -176,7 +176,7 @@ class Route
      */
     public static function renderStatic($path)
     {
-        if (file_exists($path)) {
+        if (is_file($path)) {
             $type = file_type($path);
             //\dump($type,true);
             (new Response())->render(self::replaceStatic(file_get_contents($path)), 200, $type)->send();
