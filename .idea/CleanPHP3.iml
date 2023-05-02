@@ -6,6 +6,16 @@
       <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/dist" />
       <excludeFolder url="file://$MODULE_DIR$/src/storage/logs" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/jsLinters" />
+      <excludeFolder url="file://$MODULE_DIR$/.idea/sonarlint" />
+      <excludeFolder url="file://$MODULE_DIR$/src/app/arguments" />
+      <excludeFolder url="file://$MODULE_DIR$/src/app/controller" />
+      <excludeFolder url="file://$MODULE_DIR$/src/app/database" />
+      <excludeFolder url="file://$MODULE_DIR$/src/app/language" />
+      <excludeFolder url="file://$MODULE_DIR$/src/app/public" />
+      <excludeFolder url="file://$MODULE_DIR$/src/app/tasker" />
+      <excludeFolder url="file://$MODULE_DIR$/src/app/view" />
+      <excludeFolder url="file://$MODULE_DIR$/src/app/ws" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

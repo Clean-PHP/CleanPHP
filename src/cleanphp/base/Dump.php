@@ -23,7 +23,7 @@ class Dump
 {
 
     private string $output = "";
-
+    private $vars = [];
 
     /**
      * 输出对象
@@ -66,6 +66,8 @@ class Dump
         }
     }
 
+
+
     /**
      * 自动选择类型输出
      * @param       $param
@@ -74,13 +76,23 @@ class Dump
      */
     public function dumpType($param, int $i = 0): string
     {
-        if($i>6){
-            $this->output .= "<i style='color:#21231e'>......</i>";
-            return $this->output;
+
+        if(is_object($param)){
+            $hash = spl_object_hash($param);
+            if (!empty($param) && in_array($hash, $this->vars)) {
+                $this->output .= '<small style="color: #333;font-weight: bold">reference</small> <span style="color:#75507b">' . get_class($param) . "</span>";
+                return $this->output;
+            }
+            $this->vars[] = $hash;
+        }elseif (is_array($param)){
+          //  var_dump($param);
+            if (!empty($param) && in_array($param, $this->vars)) {
+                $this->output .= '<small style="color: #333;font-weight: bold">reference</small> <span style="color:#75507b">&array</span>';
+                return $this->output;
+            }
+            $this->vars[] = $param;
         }
-        if(is_callable($param)){
-            $this->output .= '<span style="color: #3465a4">callable</span>';
-        }else {
+
             switch (gettype($param)) {
                 case 'NULL' :
                     $this->output .= '<span style="color: #3465a4">null</span>';
@@ -110,7 +122,7 @@ class Dump
                     $this->output .= '<i style=\'color:#3465a4\'>unknown type</i>';
                     break;
             }
-        }
+
         return $this->output;
     }
 
@@ -177,5 +189,9 @@ class Dump
         $result = ob_get_contents();
         ob_end_clean();
         return $result;
+    }
+    public function __destruct()
+    {
+        unset($this->vars);
     }
 }
