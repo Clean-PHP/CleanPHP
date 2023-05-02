@@ -80,12 +80,12 @@ class Dump
         if(is_object($param)){
             $hash = spl_object_hash($param);
             if (!empty($param) && in_array($hash, $this->vars)) {
-                $this->output .= '<small style="color: #333;font-weight: bold">reference</small> <span style="color:#75507b">' . get_class($param) . "</span>";
+                $this->output .= '<small style="color: #333;font-weight: bold">reference</small> <span style="color:#75507b">&' . get_class($param) . "</span>";
                 return $this->output;
             }
             $this->vars[] = $hash;
         }elseif (is_array($param)){
-          //  var_dump($param);
+            //  var_dump($param);
             if (!empty($param) && in_array($param, $this->vars)) {
                 $this->output .= '<small style="color: #333;font-weight: bold">reference</small> <span style="color:#75507b">&array</span>';
                 return $this->output;
@@ -93,35 +93,35 @@ class Dump
             $this->vars[] = $param;
         }
 
-            switch (gettype($param)) {
-                case 'NULL' :
-                    $this->output .= '<span style="color: #3465a4">null</span>';
-                    break;
-                case 'boolean' :
-                    $this->output .= '<small style="color: #333;font-weight: bold">boolean</small> <span style="color:#75507b">' . ($param ? 'true' : 'false') . "</span>";
-                    break;
-                case 'integer' :
-                    $this->output .= "<small style='color: #333;font-weight: bold'>int</small> <i style='color:#4e9a06'>$param</i>";
-                    break;
-                case 'double' :
-                    $this->output .= "<small style='color: #333;font-weight: bold'>float</small> <i style='color:#f57900'>$param</i>";
-                    break;
-                case 'string' :
-                    $this->dumpString($param);
-                    break;
-                case 'array' :
-                    $this->dumpArray($param, $i);
-                    break;
-                case 'object' :
-                    $this->dumpObject($param, $i);
-                    break;
-                case 'resource' :
-                    $this->output .= '<i style=\'color:#3465a4\'>resource</i>';
-                    break;
-                default :
-                    $this->output .= '<i style=\'color:#3465a4\'>unknown type</i>';
-                    break;
-            }
+        switch (gettype($param)) {
+            case 'NULL' :
+                $this->output .= '<span style="color: #3465a4">null</span>';
+                break;
+            case 'boolean' :
+                $this->output .= '<small style="color: #333;font-weight: bold">boolean</small> <span style="color:#75507b">' . ($param ? 'true' : 'false') . "</span>";
+                break;
+            case 'integer' :
+                $this->output .= "<small style='color: #333;font-weight: bold'>int</small> <i style='color:#4e9a06'>$param</i>";
+                break;
+            case 'double' :
+                $this->output .= "<small style='color: #333;font-weight: bold'>float</small> <i style='color:#f57900'>$param</i>";
+                break;
+            case 'string' :
+                $this->dumpString($param);
+                break;
+            case 'array' :
+                $this->dumpArray($param, $i);
+                break;
+            case 'object' :
+                $this->dumpObject($param, $i);
+                break;
+            case 'resource' :
+                $this->output .= '<i style=\'color:#3465a4\'>resource</i>';
+                break;
+            default :
+                $this->output .= '<i style=\'color:#3465a4\'>unknown type</i>';
+                break;
+        }
 
         return $this->output;
     }

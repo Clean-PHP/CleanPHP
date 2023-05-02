@@ -209,12 +209,9 @@ TPL
             $headers = array_merge([$_SERVER["REQUEST_METHOD"]." ".$_SERVER["REQUEST_URI"]],Request::getHeaders());
             $__headers = (new Dump())->dumpType($headers);
             $__log =Log::getInstance("ViewEngine")->getTempLog();
-            $vars = [];
-            foreach ($GLOBALS as $key => $item){
-                if($key!=="GLOBALS")$vars[$key]=$item;
-            }
+
             $__version = Variables::getVersion();
-            $__dumps = (new Dump())->dumpType($vars);
+            $__dumps = (new Dump())->dumpType($GLOBALS);
             $debug = <<<EOF
 <div class="cleanphp-view-engine" style="z-index: 999999999;
     position: fixed;">

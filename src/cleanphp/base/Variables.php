@@ -57,7 +57,6 @@ class Variables
                 mkdir($value, 0777, true);
             }
         }
-
     }
 
     /**
