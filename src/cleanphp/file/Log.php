@@ -117,10 +117,11 @@ class Log
     public function getTempLog(): array
     {
         $file_handle = fopen($this->temp, "r");
-        $ret = [];$max = 500;//最多500行
+        $ret = [];
+        $max = 500;//最多500行
         if ($file_handle) {
             //接着采用 while 循环一行行地读取文件，然后输出每行的文字
-            while (!feof($file_handle)&&$max>0) { //判断是否到最后一行
+            while (!feof($file_handle) && $max > 0) { //判断是否到最后一行
                 $line = fgets($file_handle, 4096); //读取一行文本
                 $ret[] = $line;
                 $max--;

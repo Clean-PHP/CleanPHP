@@ -22,6 +22,7 @@ interface  MainApp
      * @return mixed
      */
     function onFrameworkStart();
+
     /**
      * 请求到达时
      * @return mixed

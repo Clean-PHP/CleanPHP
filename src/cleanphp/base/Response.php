@@ -49,6 +49,7 @@ class Response
         if ($timeout !== 0) {
             header("refresh:$timeout," . $url);
         } else {
+            http_response_code(302);
             header("Location:{$url}");
         }
         App::exit(sprintf("发生强制跳转：%s", $url));
@@ -124,13 +125,15 @@ class Response
             $this->header['Access-Control-Allow-Origin'] = $origin;
         }
 
-        if (preg_match("/.*\.(gif|jpg|jpeg|png|bmp|swf|woff|woff2)?$/", Request::getNowAddress())) {
+        $addr = Request::getNowAddress();
+        $addr = strstr($addr, '?', true) ?: $addr;
+        if (preg_match("/.*\.(gif|jpg|jpeg|png|bmp|swf|woff|woff2)?$/", $addr)) {
             $seconds_to_cache = 3600 * 24 * 365;//图片缓存30天
             $ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
             $this->header["Expires"] = $ts;
             $this->header["Pragma"] = "cache";
             $this->header["Cache-Control"] = "max-age=$seconds_to_cache";
-        } elseif (preg_match("/.*\.(js|css)?$/", Request::getNowAddress())) {
+        } elseif (preg_match("/.*\.(js|css)?$/", $addr)) {
             $seconds_to_cache = 3600 * 24 * 180;//js和CSS缓存12小时
             $ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
             $this->header["Expires"] = $ts;

@@ -35,12 +35,13 @@ class Config
     }
 
 
-
-    static private function loadConfig(){
-        if(!empty(self::$file_data))return;
+    static private function loadConfig()
+    {
+        if (!empty(self::$file_data)) return;
         self::$path = Variables::getAppPath("config.php");
         self::$file_data = require self::$path;
     }
+
     /**
      * 注册配置信息
      * @throws ExitApp
@@ -48,7 +49,7 @@ class Config
     static public function register()
     {
 
-       self::loadConfig();
+        self::loadConfig();
         date_default_timezone_set(Config::getConfig('frame')['time_zone'] ?? "Asia/Shanghai");
         $frame = self::getConfig("frame");
         if (!in_array("0.0.0.0", $frame['host']) && !App::$cli && !in_array($_SERVER["SERVER_NAME"], $frame['host'])) {

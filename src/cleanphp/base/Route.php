@@ -82,7 +82,7 @@ class Route
         if (strrpos($ret_url, "?") === strlen($ret_url) - 1) {
             return substr($ret_url, 0, strlen($ret_url) - 1);
         }
-        return trim($ret_url,"/");
+        return trim($ret_url, "/");
 
     }
 
@@ -164,7 +164,7 @@ class Route
 
         if ((new StringBuilder($data))->startsWith('clean_static')) {
             $uri = str_replace('clean_static', "", $data);
-            $path = Variables::setPath(APP_DIR, 'app'.DS . Variables::getSite(DS), "public", str_replace("..", ".", $uri));
+            $path = Variables::setPath(APP_DIR, 'app' . DS . Variables::getSite(DS), "public", str_replace("..", ".", $uri));
             self::renderStatic($path);
         }
     }
@@ -196,7 +196,7 @@ class Route
 
         $replaces = Variables::get("__static_replace__", "../../public");
 
-     
+
         if ($is_rewrite)
             $template_data = str_replace($replaces, "/clean_static", $content);
         else {

@@ -67,7 +67,6 @@ class Dump
     }
 
 
-
     /**
      * 自动选择类型输出
      * @param       $param
@@ -77,14 +76,14 @@ class Dump
     public function dumpType($param, int $i = 0): string
     {
 
-        if(is_object($param)){
+        if (is_object($param)) {
             $hash = spl_object_hash($param);
             if (!empty($param) && in_array($hash, $this->vars)) {
                 $this->output .= '<small style="color: #333;font-weight: bold">reference</small> <span style="color:#75507b">&' . get_class($param) . "</span>";
                 return $this->output;
             }
             $this->vars[] = $hash;
-        }elseif (is_array($param)){
+        } elseif (is_array($param)) {
             //  var_dump($param);
             if (!empty($param) && in_array($param, $this->vars)) {
                 $this->output .= '<small style="color: #333;font-weight: bold">reference</small> <span style="color:#75507b">&array</span>';
@@ -166,23 +165,25 @@ class Dump
         array_pop($pads);
     }
 
-    function dumpCallback($func){
+    function dumpCallback($func)
+    {
         try {
             $func = new ReflectionFunction($func);
             $start = $func->getStartLine() - 1;
-            $end =  $func->getEndLine() - 1;
+            $end = $func->getEndLine() - 1;
             $filename = $func->getFileName();
-            $fun = implode("", array_slice(file($filename),$start, $end - $start + 1));
-            $count  = $end - $start;
+            $fun = implode("", array_slice(file($filename), $start, $end - $start + 1));
+            $count = $end - $start;
         } catch (ReflectionException $e) {
-            $fun = "Dump Error: ".$e->getMessage();
-            $count  = 0;
+            $fun = "Dump Error: " . $e->getMessage();
+            $count = 0;
         }
         $str = sprintf("<small style='color: #333;font-weight: bold'>callback</small> <i style='color:#cc0000'>'%s'</i> <i>(length=%d)</i>", $fun, $count);
         $this->output .= $str;
     }
 
-    function dumpTypeAsString($param){
+    function dumpTypeAsString($param)
+    {
         $result = "";
         ob_start();
         var_dump($param);
@@ -190,6 +191,7 @@ class Dump
         ob_end_clean();
         return $result;
     }
+
     public function __destruct()
     {
         unset($this->vars);

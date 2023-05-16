@@ -32,7 +32,7 @@ class Async
 
     public static function register()
     {
-        if(App::$cli)return;
+        if (App::$cli) return;
         EventManager::addListener("__route_end__", function ($event, &$data) {
             $array = $data;
             if ($array["m"] === "async" && $array["c"] === "task" && $array["a"] === "start") {
@@ -57,7 +57,7 @@ class Async
      */
     static function start(Closure $function, int $timeout = 300): ?AsyncObject
     {
-        if(App::$cli)return null;
+        if (App::$cli) return null;
         $key = uniqid("async_");
 
         Log::record("Async", "异步任务启动：$key");
@@ -65,7 +65,7 @@ class Async
         $asyncObject->timeout = $timeout;
         $asyncObject->state = AsyncObject::WAIT;
         $asyncObject->function = $function;
-
+        $asyncObject->key = $key;
 
         $url = url("async", "task", "start");
         $url_array = parse_url($url);
@@ -142,6 +142,7 @@ class Async
         $timeout = $asyncObject->timeout;
         set_time_limit($timeout);
         Variables::set("__async_task_id__", $key);
+        Variables::set("__frame_log_tag__", "async_{$key}_");
         App::$debug && Log::record("Async", "异步任务开始执行");
         $function();
         Cache::init($timeout, Variables::getCachePath("async", DS))->del($key);
@@ -156,7 +157,7 @@ class Async
      */
     public static function noWait(int $time = 0, string $outText = "")
     {
-        if(App::$cli)return null;
+        if (App::$cli) return null;
         ignore_user_abort(true); // 后台运行，不受前端断开连接影响
         set_time_limit($time);
         ob_end_clean();

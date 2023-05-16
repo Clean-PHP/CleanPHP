@@ -27,6 +27,7 @@ use cleanphp\base\Variables;
 use cleanphp\engine\CliEngine;
 use cleanphp\engine\EngineManager;
 use cleanphp\exception\ExitApp;
+use cleanphp\file\File;
 use cleanphp\file\Log;
 use cleanphp\process\Async;
 use Exception;
@@ -53,8 +54,8 @@ class App
         if (version_compare(PHP_VERSION, '7.4.0', '<')) {
             exit("请使用PHP 7.4以上版本运行该应用");
         }
-        self::$cli = PHP_SAPI === 'cli' ;
-        if(self::$cli) {
+        self::$cli = PHP_SAPI === 'cli';
+        if (self::$cli) {
             $_SERVER["SERVER_NAME"] = "0.0.0.0";
             $_SERVER["REQUEST_METHOD"] = "GET";
         }//命令行重置
@@ -72,6 +73,16 @@ class App
 
             Loader::register();// 注册自动加载
             App::$debug && Log::record("Frame", "框架启动...");
+
+            $config = APP_DIR . DS . "app" . DS . "config.php";
+            $config_example = APP_DIR . DS . "app" . DS . "config_example.php";
+            if (!file_exists($config)) {
+                if (file_exists($config_example)) {
+                    File::copy($config_example, $config);
+                } else {
+                    exit("缺少配置文件config.php");
+                }
+            }
             Config::register();// 加载配置文件
             if (self::$cli) {
 
@@ -98,8 +109,9 @@ class App
                 self::$app = new $app();
                 self::$app->onFrameworkStart();
             }
-            Async::register();//异步任务注册
             EventManager::trigger("__frame_init__");//框架初始化
+            Async::register();//异步任务注册
+
             //清除缓存
             App::$debug && self::cleanCache();
             //路由
@@ -156,12 +168,11 @@ class App
                 EngineManager::getEngine()->onNotFound("No data.");
             }
 
-        }catch (ExitApp $exit_app) {//执行退出
+        } catch (ExitApp $exit_app) {//执行退出
             App::$debug && Log::record("Frame", sprintf("框架执行退出: %s", $exit_app->getMessage()));
-        } catch (Exception|\Error $exception){
-            Error::err($exception->getMessage(),$exception->getTrace());
-        }
-        finally {
+        } catch (Exception|\Error $exception) {
+            Error::err($exception->getMessage(), $exception->getTrace());
+        } finally {
             self::$app && self::$app->onRequestEnd();
             if (App::$debug) {
                 Log::record("Frame", "框架响应结束...");
@@ -199,8 +210,6 @@ class App
             opcache_reset();
         }
     }
-
-
 
 
 }

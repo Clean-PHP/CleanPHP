@@ -9,6 +9,8 @@ use cleanphp\App;
 use cleanphp\base\Variables;
 use cleanphp\cache\Cache;
 use cleanphp\file\Log;
+use library\task\Cron\CronExpression;
+use Throwable;
 
 /**
  * Class Tasker
@@ -23,11 +25,12 @@ class TaskerManager
      * 获取定时任务列表
      * @return array|mixed
      */
-    public static function list(){
-        $list = Cache::init(0,Variables::getCachePath("tasker",DS))->get("tasker_list");
-        if(empty($list)){
+    public static function list()
+    {
+        $list = Cache::init(0, Variables::getCachePath("tasker", DS))->get("tasker_list");
+        if (empty($list)) {
             return [];
-        }else{
+        } else {
             return $list;
         }
     }
@@ -43,20 +46,20 @@ class TaskerManager
         /**
          * @var $value TaskInfo
          */
-        foreach ($list as $value){
-            if($key === $value->key)return $value;
+        foreach ($list as $value) {
+            if ($key === $value->key) return $value;
         }
         return null;
     }
-
 
 
     /**
      * 清空所有定时任务
      * @return void
      */
-    public static function clean(){
-        Cache::init(0,Variables::getCachePath("tasker",DS))->del("tasker_list");
+    public static function clean()
+    {
+        Cache::init(0, Variables::getCachePath("tasker", DS))->del("tasker_list");
     }
 
     /**
@@ -67,7 +70,7 @@ class TaskerManager
     private static function getTimes($key): int
     {
         $task = self::get($key);
-        if(!$task){
+        if (!$task) {
             return 1 - $task->times;
         }
         return 0;
@@ -79,54 +82,69 @@ class TaskerManager
      * @param $key
      * @return void
      */
-    public static function del($key){
+    public static function del($key)
+    {
         $list = self::list();
         /**
          * @var $value TaskInfo
          */
-        foreach ($list as &$value){
-            if($key === $value->key){
+        $new = [];
+        foreach ($list as $value) {
+            if ($key === $value->key||$key === $value->name) {
                 unset($value);
-                break;
+                //break;
+            }else{
+                $new[] = $value;
             }
         }
-        Cache::init(0,Variables::getCachePath("tasker",DS))->set("tasker_list",$list);
+        Cache::init(0, Variables::getCachePath("tasker", DS))->set("tasker_list", $new);
     }
 
 
     /**
      * 添加一个定时任务，与linux定时任务语法完全一致
-     * @param array $package 定时任务时间包，使用{@link TaskerTime}来指定
+     * @param string $cron 定时任务时间包，使用{@link TaskerTime}来指定或手写cron字符串
      * @param TaskerAbstract $taskerAbstract 需要运行的定时任务，需要继承{@link TaskerAbstract}类并实现{@link TaskerAbstract::onStart()}方法
      * @param string $name 定时任务名称
      * @param int $times 定时任务的执行次数，只有当{@link $loop}参数为true的时候，执行次数才会生效
      * @param bool $loop 是不是为循环定时任务
      * 返回定时任务ID
-     * @return false|string
+     * @return string
      */
-    public static function add(array $package, TaskerAbstract $taskerAbstract, string $name, int $times=-1, bool $loop=false){
-        if(sizeof($package)!=5)return false;
-        [$minute,$hour,$day,$month,$week]  = $package;
-        $time=self::getNext($minute,$hour,$day,$month,$week,$loop?1:0);
+    public static function add(string $cron, TaskerAbstract $taskerAbstract, string $name, int $times = -1, bool $loop = false): string
+    {
+
+        if ($cron === "") {
+            Log::record("Tasker", "该任务：$name 立即执行" );
+            //属于立即执行
+            go(function () use ($taskerAbstract) {
+                try {
+                    $taskerAbstract->onStart();
+                } catch (Throwable $exception) {
+                    $taskerAbstract->onAbort($exception);
+                } finally {
+                    $taskerAbstract->onStop();
+                }
+
+            }, $taskerAbstract->getTimeOut());
+            return '';
+        }
+
         $task = new TaskInfo();
-        $task->times = $times;
         $task->name = $name;
-        $task->minute = $minute;
-        $task->hour = $hour;
-        $task->day = $day;
-        $task->month = $month;
-        $task->week = $week;
+        $task->cron = $cron;
         $task->times = $times;
-        if(!$loop)$task->times = -1;
+        if (!$loop) $task->times = -1;
         $task->loop = $loop;
         $task->key = uniqid("task_");
+        $task->next =  CronExpression::factory($cron)->getNextRunDate()->getTimestamp();
         $task->closure = $taskerAbstract;
         $list = self::list();
         $list[] = $task;
-        Cache::init(0,Variables::getCachePath("tasker",DS))->set("tasker_list",$list);
-        if(App::$debug){
-            Log::record("Tasker","添加定时任务：$name => ".get_class($taskerAbstract));
-            Log::record("Tasker","初次添加后，执行时间为：".date("Y-m-d H:i:s",$time));
+        Cache::init(0, Variables::getCachePath("tasker", DS))->set("tasker_list", $list);
+        if (App::$debug) {
+            Log::record("Tasker", "添加定时任务：$name => " . get_class($taskerAbstract));
+            Log::record("Tasker", "初次添加后，执行时间为：" . date("Y-m-d H:i:s",  $task->next));
         }
         return $task->key;
     }
@@ -135,19 +153,20 @@ class TaskerManager
      * 执行一次遍历数据库
      * @return void
      */
-    public static function run(){
+    public static function run()
+    {
 
         $data = self::list();
         /**
          * @var $value TaskInfo
          */
-        foreach ($data as $k => $value){
+        foreach ($data as $k => $value) {
             //循环并且次序=0
-            if($value->times === 0){
+            if ($value->times === 0) {
                 App::$debug && Log::record("Tasker", "该ID ({$value->name})[{$value->key}] 的定时任务执行完毕");
                 unset($data[$k]);
-            }elseif($value->next<=time()){
-                $time=self::getNext($value->minute,$value->hour,$value->day,$value->month,$value->week,$value->loop);
+            } elseif ($value->next <= time()) {
+                $time = CronExpression::factory($value->cron)->getNextRunDate()->getTimestamp();
                 $value->next = $time;
                 $value->times--;
                 App::$debug && Log::record("Tasker", "执行完成后，下次执行时间为：" . date("Y-m-d H:i:s", $time));
@@ -157,62 +176,24 @@ class TaskerManager
                 $task = $value->closure;
                 $timeout = $task->getTimeOut();
 
-                go(function () use($task){
-                    try{
+                go(function () use ($task) {
+                    try {
                         App::$debug && Log::record("Tasker", "异步执行：" . print_r($task, true));
                         $task->onStart();
-                    }catch (\Throwable $e){
+                    } catch (Throwable $e) {
                         $task->onAbort($e);
+                    } finally {
+                        App::$debug && Log::record("Tasker", "异步执行结束：");
+                        $task->onStop();
                     }
-                    App::$debug && Log::record("Tasker", "异步执行结束：");
-                    $task->onStop();
-                },$timeout);
+
+                }, $timeout);
             }
         }
-        Cache::init(0,Variables::getCachePath("tasker",DS))->set("tasker_list",$data);
+        Cache::init(0, Variables::getCachePath("tasker", DS))->set("tasker_list", $data);
 
     }
 
 
-    /**
-     * 计算下一次执行时间
-     * @param $minute int 分钟
-     * @param $hour int 时
-     * @param $day int 天
-     * @param $month int 月
-     * @param $week int 周
-     * @return float 返回下次执行时间
-     */
-    private  static  function getNext(int $minute, int $hour, int $day, int $month, int $week,bool $loop){
-        $days = intval(date('t',strtotime("+{$month} month")));//获取指定的月份天数
-        $time=$minute*60+$hour*60*60+$day*60*60*24+$month*60*60*24*$days+$week*60*60*24*7;
-        //if($day!=0||$month!=0||)
-        if($loop==0){//如果是循环的话，每小时，每天，每周，每月
-            $date = mktime(0,0,0,date('m'),1,date('Y'));//取当前月的第一天
-
-            $add= $month*60*60*24*$days;
-            if($month==0){
-                $date = mktime(0,0,0,date("m"),date("d")-date("w")+1,date("Y"));//取当前周的第一天
-                $add= $week*60*60*24*7;
-                if($week==0){
-                    $date = mktime(0,0,0,date('m'),date('d'),date('Y'));//获取当天的
-                    $add= $day*60*60*24;
-                    if($day==0){
-                        $date = mktime($hour,0,0,date('m'),date('d'),date('Y'));//获取当天的
-                        $add= $hour*60*60;
-                    }
-                }
-            }
-            //判断出循环类型
-            $ret_time = $date+$time;
-            if($add<=0)$add=60;
-            while($ret_time<time()){
-                $ret_time = $ret_time+$add;
-            }
-        }else{
-            $ret_time = time()+$time;
-        }
-        return $ret_time;
-    }
 
 }

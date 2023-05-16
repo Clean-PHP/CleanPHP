@@ -130,11 +130,12 @@ class File
         }
     }
 
-    static function traverseDirectory($dir, $callback) {
+    static function traverseDirectory($dir, $callback)
+    {
         if (is_dir($dir)) {
             if ($dh = opendir($dir)) {
                 while (($file = readdir($dh)) !== false) {
-                    if ($file != '.' && $file != '..' && substr($file,0,1)!==".") {
+                    if ($file != '.' && $file != '..' && substr($file, 0, 1) !== ".") {
                         $path = $dir . DIRECTORY_SEPARATOR . $file;
                         if (is_dir($path)) {
                             self::traverseDirectory($path, $callback);

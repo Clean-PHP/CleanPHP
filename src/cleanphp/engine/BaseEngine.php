@@ -31,6 +31,7 @@ abstract class BaseEngine
      * @return string
      */
     abstract function render(...$data): string;
+
     /**
      * 错误渲染
      * @param string $msg 错误信息

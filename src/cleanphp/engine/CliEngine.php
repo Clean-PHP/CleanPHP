@@ -2,6 +2,7 @@
 /*******************************************************************************
  * Copyright (c) 2022. Ankio. All Rights Reserved.
  ******************************************************************************/
+
 /**
  * Package: cleanphp\engine
  * Class CliEngine
@@ -31,7 +32,7 @@ class CliEngine extends BaseEngine
      */
     function render(...$data): string
     {
-       return print_r($data,true);
+        return print_r($data, true);
     }
 
     /**
@@ -39,11 +40,11 @@ class CliEngine extends BaseEngine
      */
     function renderError(string $msg, array $traces, string $dumps, string $tag)
     {
-       return  print_r([$msg,$traces,$dumps],true);
+        return print_r([$msg, $traces, $dumps], true);
     }
 
     function onNotFound($msg = "")
     {
-       (new Response())->render($msg)->send();
+        (new Response())->render($msg)->send();
     }
 }

@@ -45,7 +45,7 @@ class ViewEngine extends BaseEngine
     {
         $this->__compile_dir = Variables::getStoragePath("view");
         $this->__template_dir = Variables::getViewPath();
-        if(!file_exists($this->__compile_dir))mkdir($this->__compile_dir,0777,true);
+        if (!file_exists($this->__compile_dir)) mkdir($this->__compile_dir, 0777, true);
     }
 
     /**
@@ -202,13 +202,13 @@ TPL
 
         $complied_file = $this->compile($template_name, $file);
         ob_start();
-        if(App::$debug && Config::getConfig('frame')['view_debug']){
+        if (App::$debug && Config::getConfig('frame')['view_debug']) {
             $__total_time = round((microtime(true) - Variables::get("__frame_start__", 0)) * 1000, 2);
             Log::record("ViewEngine", sprintf("编译运行时间：%s 毫秒", $__total_time), Log::TYPE_WARNING);
 
-            $headers = array_merge([$_SERVER["REQUEST_METHOD"]." ".$_SERVER["REQUEST_URI"]],Request::getHeaders());
+            $headers = array_merge([$_SERVER["REQUEST_METHOD"] . " " . $_SERVER["REQUEST_URI"]], Request::getHeaders());
             $__headers = (new Dump())->dumpType($headers);
-            $__log =Log::getInstance("ViewEngine")->getTempLog();
+            $__log = Log::getInstance("ViewEngine")->getTempLog();
 
             $__version = Variables::getVersion();
             $__dumps = (new Dump())->dumpType($GLOBALS);
@@ -328,13 +328,13 @@ document.querySelector('.cleanphp-view-engine #localtime').textContent = Math.ro
             <div class="tab-content">
                 <ul>
 EOF;
-            foreach ($__log as $log){
-                $str =  new StringBuilder($log);
-                if($str->contains("WARN")){
+            foreach ($__log as $log) {
+                $str = new StringBuilder($log);
+                if ($str->contains("WARN")) {
                     $debug .= "<li style='color: chocolate'>$log</li>";
-                }elseif ($str->contains("ERROR")){
+                } elseif ($str->contains("ERROR")) {
                     $debug .= "<li style='color: #d21e24'>$log</li>";
-                }else{
+                } else {
                     $debug .= "<li style='color: #1e5dd2'>$log</li>";
                 }
             }
@@ -398,10 +398,9 @@ EOF;
         extract($this->__data, EXTR_OVERWRITE);
 
 
-
         include $complied_file;
 
-        if(App::$debug && Config::getConfig('frame')['view_debug']) echo $debug;
+        if (App::$debug && Config::getConfig('frame')['view_debug']) echo $debug;
 
         App::$debug && Log::record("ViewEngine", sprintf("编译运行时间：%s 毫秒", round((microtime(true) - Variables::get("__view_time_start__", 0)) * 1000, 2)), Log::TYPE_WARNING);
         return ob_get_clean();
@@ -414,7 +413,7 @@ EOF;
      */
     private function preCompileLayout(string $template_name): array
     {
-        $this->setData("__lang",  Variables::get("__lang","zh-cn"));
+        $this->setData("__lang", Variables::get("__lang", "zh-cn"));
         if (!empty($this->__layout)) {
             if ($template_name === $this->__layout)
                 Error::err("父模板不能与当前模板一致，会导致死循环。", [], "ViewEngine");
@@ -496,9 +495,9 @@ EOF;
     {
 
         if ($file == null) $file = $this->checkTplFile($template_name);
-        $hash = substr(md5(realpath($file) ),8,8);
-        $file_hash = substr(md5_file($file),8,8);
-        $complied_file = $this->__compile_dir . DS . $hash . '.'.$file_hash."." . basename($template_name) . '.php';
+        $hash = substr(md5(realpath($file)), 8, 8);
+        $file_hash = substr(md5_file($file), 8, 8);
+        $complied_file = $this->__compile_dir . DS . $hash . '.' . $file_hash . "." . basename($template_name) . '.php';
 
         if (!App::$debug && file_exists($complied_file)) {//调试模式下，直接重新编译
             return $complied_file;
@@ -507,7 +506,6 @@ EOF;
         $template_data = file_get_contents($file);
         $template_data = $this->_compile_struct($template_data);
         $template_data = $this->_compile_function($template_data);
-
 
 
         $template_data = '<?php use cleanphp\engine; if(!class_exists("' . str_replace("\\", "\\\\", ViewEngine::class) . '", false)) exit("模板文件禁止被直接访问.");?>' . $template_data;
@@ -868,15 +866,15 @@ pre {
         $__action = Variables::get("__request_action__", '');
         $base = 'app\\' . Variables::getSite("\\") . 'controller\\' . $__module . '\\' . "BaseController";
         $controller = 'app\\' . Variables::getSite("\\") . 'controller\\' . $__module . '\\' . ucfirst($__controller);
-        if(class_exists($controller)){
+        if (class_exists($controller)) {
             new $controller();
-        }elseif (class_exists($base)) {
+        } elseif (class_exists($base)) {
             new $base();
         }
         //调试模式才显示详细错误
-        if(App::$debug){
+        if (App::$debug) {
             $result = $this->onControllerError($__controller, $__action);
-            if ($result!==null) {
+            if ($result !== null) {
                 (new Response())->render($result)->send();
             }
         }
