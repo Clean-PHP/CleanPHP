@@ -69,7 +69,7 @@ class DayOfWeekField extends AbstractField
             if (!is_numeric($nth)) {
                 throw new InvalidArgumentException("Hashed weekdays must be numeric, {$nth} given");
             } else {
-                $nth = (int) $nth;
+                $nth = (int)$nth;
             }
 
             // 0 and 7 are both Sunday, however 7 matches date('N') format ISO-8601

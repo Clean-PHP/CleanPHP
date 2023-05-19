@@ -43,7 +43,7 @@ abstract class AbstractField implements FieldInterface
      * Check to see if a field is satisfied by a value
      *
      * @param string $dateValue Date value to check
-     * @param string $value     Value to test
+     * @param string $value Value to test
      *
      * @return bool
      */
@@ -86,7 +86,7 @@ abstract class AbstractField implements FieldInterface
      * Test if a value is within a range
      *
      * @param string $dateValue Set date value
-     * @param string $value     Value to test
+     * @param string $value Value to test
      *
      * @return bool
      */
@@ -101,7 +101,7 @@ abstract class AbstractField implements FieldInterface
      * Test if a value is within an increments of ranges (offset[-to]/step size)
      *
      * @param string $dateValue Set date value
-     * @param string $value     Value to test
+     * @param string $value Value to test
      *
      * @return bool
      */
@@ -147,7 +147,7 @@ abstract class AbstractField implements FieldInterface
      * Returns a range of values for the given cron expression
      *
      * @param string $expression The expression to evaluate
-     * @param int $max           Maximum offset for range
+     * @param int $max Maximum offset for range
      *
      * @return array
      */
@@ -159,8 +159,7 @@ abstract class AbstractField implements FieldInterface
             if (!$this->isIncrementsOfRanges($expression)) {
                 list ($offset, $to) = explode('-', $expression);
                 $stepSize = 1;
-            }
-            else {
+            } else {
                 $range = array_map('trim', explode('/', $expression, 2));
                 $stepSize = isset($range[1]) ? $range[1] : 0;
                 $range = $range[0];
@@ -173,8 +172,7 @@ abstract class AbstractField implements FieldInterface
                 $values[] = $i;
             }
             sort($values);
-        }
-        else {
+        } else {
             $values = array($expression);
         }
 
@@ -246,7 +244,7 @@ abstract class AbstractField implements FieldInterface
 
         // We should have a numeric by now, so coerce this into an integer
         if (filter_var($value, FILTER_VALIDATE_INT) !== false) {
-            $value = (int) $value;
+            $value = (int)$value;
         }
 
         return in_array($value, $this->fullRange, true);

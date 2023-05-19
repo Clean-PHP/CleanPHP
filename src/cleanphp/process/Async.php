@@ -131,6 +131,7 @@ class Async
 
         /**@var $asyncObject AsyncObject* */
         $asyncObject = Cache::init(300, Variables::getCachePath("async", DS))->get($token);
+        Cache::init(300, Variables::getCachePath("async", DS))->del($token);
         if (empty($asyncObject)) {
             Log::record("Async", "key检查失败！");
             App::exit("您无权访问该资源。");
@@ -140,13 +141,12 @@ class Async
         $key = $asyncObject->key;
         $function = $asyncObject->function;
         $timeout = $asyncObject->timeout;
-        Cache::init($timeout, Variables::getCachePath("async", DS))->del($key);
+
         set_time_limit($timeout);
         Variables::set("__async_task_id__", $key);
         Variables::set("__frame_log_tag__", "async_{$key}_");
         App::$debug && Log::record("Async", "异步任务开始执行");
         $function();
-
         App::exit("异步任务执行完毕");
     }
 

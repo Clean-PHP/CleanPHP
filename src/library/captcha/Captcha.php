@@ -49,7 +49,7 @@ class Captcha
         $str = $this->code($scene);//获取验证码
         for ($i = 0; $i < 4; $i++) {
             // 逐个绘制验证码中的字符
-            imagettftext($image, rand(20, 38), rand(0, 30), $i * 50 + 25, rand(30, 70), $this->color($image), Variables::getLibPath( 'captcha', 'fonts', 'Bitsumishi.ttf'), $str[$i]);
+            imagettftext($image, rand(20, 38), rand(0, 30), $i * 50 + 25, rand(30, 70), $this->color($image), Variables::getLibPath('captcha', 'fonts', 'Bitsumishi.ttf'), $str[$i]);
         }
         @header('Content-type:image/jpeg');
         imagejpeg($image);

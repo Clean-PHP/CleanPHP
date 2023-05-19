@@ -16,6 +16,7 @@ use cleanphp\base\Argument;
 use cleanphp\base\Dump;
 use cleanphp\base\Route;
 use cleanphp\closure\SerializableClosure;
+use cleanphp\exception\NoticeException;
 use cleanphp\process\Async;
 use cleanphp\process\AsyncObject;
 
@@ -221,12 +222,17 @@ function __serialize($data): string
  */
 function __unserialize(string $data, array $options = null)
 {
-    SerializableClosure::enterContext();
-    $data = ($options === null || PHP_MAJOR_VERSION < 7)
-        ? unserialize($data)
-        : unserialize($data, $options);
-    SerializableClosure::unwrapClosures($data);
-    SerializableClosure::exitContext();
+    if($data==null)return null;
+    try{
+        SerializableClosure::enterContext();
+        $data = ($options === null || PHP_MAJOR_VERSION < 7)
+            ? unserialize($data)
+            : unserialize($data, $options);
+        SerializableClosure::unwrapClosures($data);
+        SerializableClosure::exitContext();
+    }catch (NoticeException $exception){
+        return $data;
+    }
     return $data;
 }
 
@@ -275,6 +281,7 @@ function rand_str(int $length = 8, bool $upper = true, bool $lower = true, bool 
 {
     $charsList = [
         'abcdefghijklmnopqrstuvwxyz',
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         '0123456789',
     ];

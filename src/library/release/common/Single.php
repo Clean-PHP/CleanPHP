@@ -54,8 +54,8 @@ $codes = [
 '
         );
 
-        File::traverseDirectory($new,function ($f){
-            fwrite($this->fp, '"' . str_replace(dirname(BASE_DIR). DIRECTORY_SEPARATOR . "dist" . DIRECTORY_SEPARATOR . "temp" . DIRECTORY_SEPARATOR, "", $f) . '"=>"' . base64_encode(file_get_contents($f)) . '",');
+        File::traverseDirectory($new, function ($f) {
+            fwrite($this->fp, '"' . str_replace(dirname(BASE_DIR) . DIRECTORY_SEPARATOR . "dist" . DIRECTORY_SEPARATOR . "temp" . DIRECTORY_SEPARATOR, "", $f) . '"=>"' . base64_encode(file_get_contents($f)) . '",');
 
         });
 

@@ -14,8 +14,6 @@
 
 namespace library\mail;
 
-use cleanphp\App;
-
 
 class AnkioMail
 {
@@ -26,9 +24,10 @@ class AnkioMail
      * @param $fromname string 发送者的昵称
      * @return bool|string
      */
-    static function send(string $mailto, string $subject, string $content, string $fromname)
+    static function send(string $mailto, string $subject, string $content, string $fromname, $debug = false)
     {
-        return (new Email())->send($mailto, $subject, $content, $fromname, App::$debug ? 1 : 0);
+        //TODO 此处添加统一邮件发送逻辑
+        return (new Email())->send($mailto, $subject, $content, $fromname, $debug ? 1 : 0);
     }
 
     static function compileNotify($bg_color, $color, $logo, $site_name, $title, $body): string

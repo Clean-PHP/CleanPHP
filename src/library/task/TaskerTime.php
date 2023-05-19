@@ -23,9 +23,9 @@ class TaskerTime
      * @param $minute int 分钟
      * @return string
      */
-    static public function day(int $hour, int $minute):string
+    static public function day(int $hour, int $minute): string
     {
-        return "0 $minute $hour * * ?";
+        return "$minute $hour * * *";
     }
 
     /**
@@ -35,9 +35,9 @@ class TaskerTime
      * @param $minute int 分钟
      * @return string
      */
-    static public function nDay(int $day, int $hour, int $minute):string
+    static public function nDay(int $day, int $hour, int $minute): string
     {
-        return "0 $minute $hour */$day * ?";
+        return "$minute $hour */$day * *";
     }
 
     /**
@@ -46,9 +46,9 @@ class TaskerTime
      * @param $minute int 分钟
      * @return string
      */
-    static public function nHour(int $hour, int $minute):string
+    static public function nHour(int $hour, int $minute): string
     {
-        return "0 $minute */$hour * * ?";
+        return "$minute */$hour * * *";
     }
 
     /**
@@ -56,9 +56,9 @@ class TaskerTime
      * @param $minute int 分钟
      * @return string
      */
-    static public function hour(int $minute):string
+    static public function hour(int $minute): string
     {
-        return "0 $minute */1 * * ?";
+        return "$minute */1 * * *";
     }
 
     /**
@@ -66,9 +66,10 @@ class TaskerTime
      * @param $minute int 分钟
      * @return string
      */
-    static public function nMinute(int $minute):string
+    static public function nMinute(int $minute): string
     {
-        return "0 */$minute * * * ?";
+        if ($minute === 0) return "";
+        return "*/$minute * * * *";
     }
 
 

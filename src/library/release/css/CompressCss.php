@@ -1,4 +1,5 @@
 <?php
+
 namespace library\release\css;
 
 class CompressCss
