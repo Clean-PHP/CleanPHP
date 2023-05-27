@@ -222,7 +222,7 @@ function __serialize($data): string
  */
 function __unserialize(string $data, array $options = null)
 {
-    if($data==null)return null;
+    if(empty($data))return null;
     try{
         SerializableClosure::enterContext();
         $data = ($options === null || PHP_MAJOR_VERSION < 7)
@@ -281,7 +281,6 @@ function rand_str(int $length = 8, bool $upper = true, bool $lower = true, bool 
 {
     $charsList = [
         'abcdefghijklmnopqrstuvwxyz',
-        'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
         '0123456789',
     ];
