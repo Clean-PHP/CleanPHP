@@ -25,12 +25,19 @@ class TaskerManager
      * 获取定时任务列表
      * @return array|mixed
      */
-    public static function list()
+    public static function getList()
     {
         $list = Cache::init(0, Variables::getCachePath("tasker", DS))->get("tasker_list");
         if (empty($list)) {
             return [];
         } else {
+
+            foreach ($list as $key=>$value){
+                if(!is_object($value)|| get_class($value)!==TaskInfo::class){
+                    unset($list[$key]);
+                }
+            }
+
             return $list;
         }
     }
@@ -42,7 +49,7 @@ class TaskerManager
      */
     private static function get($key): ?TaskInfo
     {
-        $list = self::list();
+        $list = self::getList();
         /**
          * @var $value TaskInfo
          */
@@ -83,7 +90,7 @@ class TaskerManager
      */
     public static function has($key): bool
     {
-        $list = self::list();
+        $list = self::getList();
         /**
          * @var $value TaskInfo
          */
@@ -102,7 +109,7 @@ class TaskerManager
      */
     public static function del($key)
     {
-        $list = self::list();
+        $list = self::getList();
         /**
          * @var $value TaskInfo
          */
@@ -151,8 +158,8 @@ class TaskerManager
         $task->key = uniqid("task_");
 
         $task->next = CronExpression::factory($cron)->getNextRunDate()->getTimestamp();
-        $task->closure = $taskerAbstract;
-        $list = self::list();
+        $task->closure = __serialize($taskerAbstract);
+        $list = self::getList();
         $list[] = $task;
         Cache::init(0, Variables::getCachePath("tasker", DS))->set("tasker_list", $list);
         if (App::$debug) {
@@ -169,7 +176,8 @@ class TaskerManager
     public static function run()
     {
 
-        $data = self::list();
+        $data = self::getList();
+        App::$debug && Log::record("Tasker", "当前定时任务列表：".print_r($data,true));
         /**
          * @var $value TaskInfo
          */
@@ -186,7 +194,7 @@ class TaskerManager
                 /**
                  * @var  TaskerAbstract $task
                  */
-                $task = $value->closure;
+                $task = __unserialize($value->closure);
                 $timeout = $task->getTimeOut();
 
                 go(function () use ($task) {
