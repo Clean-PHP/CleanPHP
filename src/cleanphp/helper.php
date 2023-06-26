@@ -17,7 +17,6 @@ use cleanphp\base\Dump;
 use cleanphp\base\Route;
 use cleanphp\closure\SerializableClosure;
 use cleanphp\exception\NoticeException;
-use cleanphp\file\Log;
 use cleanphp\process\Async;
 use cleanphp\process\AsyncObject;
 
@@ -232,8 +231,7 @@ function __unserialize(string $data, array $options = null)
         SerializableClosure::unwrapClosures($data);
         SerializableClosure::exitContext();
     }catch (NoticeException $exception){
-        Log::record("__unserialize", "反序列化错误：".$exception->getMessage());
-        return null;
+        return $data;
     }
     return $data;
 }

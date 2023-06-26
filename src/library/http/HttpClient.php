@@ -25,8 +25,6 @@ class HttpClient
     private string $path = "";
     private string $url_params = "";
     private array $headers = [];
-    private string $cookie = "";
-    private string $cookie_key = "";
 
     public function __construct($base_url)
     {
@@ -41,11 +39,31 @@ class HttpClient
     }
 
     /**
+     * 设置代理
+     * @param $host
+     * @param $port
+     * @param string $username
+     * @param string $password
+     * @return $this
+     */
+    function proxy($host, $port, string $username='', string $password='')
+    {
+        if(!empty($host)) {
+            curl_setopt($this->curl, CURLOPT_PROXY, $host);
+            curl_setopt($this->curl, CURLOPT_PROXYPORT, $port);
+        }
+        if(!empty($username)){
+            curl_setopt($this->curl, CURLOPT_PROXYUSERPWD, "$username:$password");
+        }
+        return $this;
+    }
+
+    /**
      * 初始化
      * @param $base_url string 基础URL
      * @return HttpClient
      */
-    static function init(string $base_url): HttpClient
+    static function init(string $base_url = ''): HttpClient
     {
         return new HttpClient($base_url);
     }
@@ -148,17 +166,7 @@ class HttpClient
         return $this;
     }
 
-    function mergeCookies($wait)
-    {
-        parse_str(str_replace(';', '&', urldecode($this->cookie)), $cookie_array);
-        return str_replace('&', '; ', http_build_query(array_merge($cookie_array, $wait)));
-    }
 
-    function autoUpdateCookie(&$cookie): HttpClient
-    {
-        $this->cookie = &$cookie;
-        return $this;
-    }
 
     /**
      * 发出请求
@@ -167,7 +175,7 @@ class HttpClient
      * @return HttpResponse
      * @throws HttpException
      */
-    public function send(string $path = '/', array $url_params = []): ?HttpResponse
+    public function send(string $path = '', array $url_params = []): ?HttpResponse
     {
         $this->path = $path;
         if (count($url_params)) {
@@ -178,6 +186,7 @@ class HttpClient
 
         $headers = [];
         foreach ($this->headers as $key => $header) {
+
             if (!is_int($key)) {
                 $headers[] = "$key: $header";
             } else {
@@ -202,9 +211,6 @@ class HttpClient
                 throw new HttpException("HttpClient Error: " . curl_errno($this->curl) . " " . curl_error($this->curl));
             }
 
-            $header_size = curl_getinfo($this->curl, CURLINFO_HEADER_SIZE);
-            $header = substr($request_exec, 0, $header_size);
-
 
             if (App::$debug && isset($streamVerboseHandle)) {
                 rewind($streamVerboseHandle);
@@ -217,17 +223,8 @@ class HttpClient
                 Log::record('HttpClient Result', "└------------------------------------------------------");
             }
 
-            preg_match_all('/^Set-Cookie:\s*([^;]*)/mi', $header, $matches);
-            if (!empty($this->cookie)) {
-                $cookies = [];
-                foreach ($matches[1] as $item) {
-                    parse_str($item, $cookie);
-                    $cookies = array_merge($cookies, $cookie);
-                }
-                $this->cookie = $this->mergeCookies($cookies);
-            }
 
-            return new HttpResponse($this->curl, $request_exec);
+            return new HttpResponse($this->curl,$headers, $request_exec);
 
         } catch (Error $e) {
             throw new HttpException($e->getMessage());
@@ -241,10 +238,12 @@ class HttpClient
      */
     private function url(): string
     {
-        $base = rtrim($this->base_url, '/');
-        $path = ltrim($this->path, '/');
-        $url = $base . "/" . $path;
 
+        if(substr($this->path,0,4)=="http"){
+            $url = $this->path;
+        }else{
+            $url = rtrim($this->base_url, '/') . "/" . ltrim($this->path, '/');
+        }
         if ($this->url_params != '') {
             $url .= "?{$this->url_params}";
         }

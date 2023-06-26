@@ -45,7 +45,7 @@ class Json
             //
             $result = json_encode($array, JSON_UNESCAPED_UNICODE);
         } else {
-            $result = json_encode($array);
+            $result = json_encode($array,JSON_PARTIAL_OUTPUT_ON_ERROR);
         }
 
         if ($result === false) {

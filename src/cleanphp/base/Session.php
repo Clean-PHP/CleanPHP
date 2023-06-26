@@ -64,6 +64,7 @@ class Session
      */
     public function destroy()
     {
+        if (session_status() !== PHP_SESSION_ACTIVE)return;
         session_destroy();
     }
 

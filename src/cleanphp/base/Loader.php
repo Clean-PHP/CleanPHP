@@ -26,10 +26,11 @@ class Loader
     public static function register()
     {
         spl_autoload_register(__NAMESPACE__ . "\Loader::autoload", true, true);
+
         //注册第三方库的自动加载
         if (is_dir(Variables::getLibPath())) {
-
             $data = scandir(Variables::getLibPath());
+
             foreach ($data as $value) {
                 if (substr($value, 0, 1) !== ".") {
                     $file = Variables::setPath(Variables::getLibPath(), $value, 'autoload.php');
@@ -41,6 +42,7 @@ class Loader
             }
 
         }
+
         $file = Variables::setPath(APP_DIR, 'vendor', 'autoload.php');
 
         if (file_exists($file)) include_once $file;

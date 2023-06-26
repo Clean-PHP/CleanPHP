@@ -24,6 +24,15 @@ class StringBuilder
         $this->str = $str;
     }
 
+    private static ?StringBuilder $stringBuilder = null;
+    public static function init($str = ""): ?StringBuilder
+    {
+        if(empty(self::$stringBuilder)){
+            self::$stringBuilder = new StringBuilder($str);
+        }
+        return self::$stringBuilder;
+    }
+
     /**
      * 添加函数
      * @param string $s
