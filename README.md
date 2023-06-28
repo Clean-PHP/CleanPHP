@@ -8,8 +8,8 @@
 <p align="center">
  <img src="https://img.shields.io/badge/Composer-885630?style=for-the-badge&logo=Composer&logoColor=white"/>
  <img src="https://img.shields.io/static/v1?label=licenes&message=MIT&color=important&style=for-the-badge"/>
- <img src="https://img.shields.io/static/v1?label=version&message=3.0&color=9cf&style=for-the-badge"/>
- <img src="https://img.shields.io/static/v1?label=php&message=%3E%3D7.4&color=777BB4&style=for-the-badge"/>
+ <img src="https://img.shields.io/static/v1?label=version&message=3.&color=9cf&style=for-the-badge"/>
+ <img src="https://img.shields.io/static/v1?label=php&message=%3E%3D8.0&color=777BB4&style=for-the-badge"/>
 </p>
 
 ## 简介
@@ -34,7 +34,7 @@
 
 ## 快速上手
 
-硬性要求: PHP版本 >= `7.4`
+硬性要求: PHP版本 >= `8.0`
 
 ```shell
 git clone https://github.com/dreamncn/CleanPHP
@@ -69,17 +69,7 @@ location /ws {
      }
 ```
 
-### 修改域名
 
-> 配置文件 /src/config/frame.yml，第三行，修改或添加即可。
-
-```yml
----
-host :
-  # 绑定域名
-  - "localhost"
-  - "127.0.0.1"
-```
 
 ## 开源协议
 
