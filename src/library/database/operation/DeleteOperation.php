@@ -44,7 +44,7 @@ class DeleteOperation extends BaseOperation
         return parent::__commit();
     }
 
-    protected function translateSql()
+    protected function translateSql(): void
     {
         $sql = $this->getOpt('DELETE FROM', 'table_name');
         $sql .= $this->getOpt('WHERE', 'where');

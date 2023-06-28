@@ -69,7 +69,7 @@ class UpdateOperation extends BaseOperation
     /**
      * 编译
      */
-    protected function translateSql()
+    protected function translateSql(): void
     {
         $sql = $this->getOpt('UPDATE', 'table_name');
         $sql .= $this->getOpt('SET', 'set');

@@ -29,7 +29,7 @@ use Throwable;
 class Error
 {
 
-    public static function register()
+    public static function register(): void
     {
         $old_error_handler = set_error_handler([__CLASS__, 'appError'], E_ALL);
         set_exception_handler([__CLASS__, 'appException']);
@@ -40,9 +40,8 @@ class Error
      *
      * App异常退出
      * @param $e Throwable
-     * @throws ExitApp
      */
-    public static function appException(Throwable $e)
+    public static function appException(Throwable $e): void
     {
 
         if ($e instanceof ExitApp) {
@@ -59,7 +58,7 @@ class Error
      * @param array $errInfo 堆栈
      * @param string $log_tag 记录日志的tag
      */
-    public static function err(string $msg, array $errInfo = [], string $log_tag = "ErrorInfo")
+    public static function err(string $msg, array $errInfo = [], string $log_tag = "ErrorInfo"): void
     {
         if (Variables::get('__frame_error__', false)) return;
         //捕获异常后清除数据
@@ -91,7 +90,7 @@ class Error
 
     /**
      * 调用用户自定义的错误渲染器
-     * @return string
+     * @return string|null
      */
     static function renderError(): ?string
     {

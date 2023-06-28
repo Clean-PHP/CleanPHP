@@ -39,7 +39,7 @@ class Response
      * @param string $url 跳转路径
      * @param int $timeout 延时跳转
      */
-    public static function location(string $url, int $timeout = 0)
+    public static function location(string $url, int $timeout = 0): void
     {
         if (!(new StringBuilder($url))->startsWith("http")) {
             $url = Response::getHttpScheme() . Request::getDomain() . $url;
@@ -57,9 +57,9 @@ class Response
 
     /**
      * 获取浏览器的http协议
-     * @return mixed|string|null
+     * @return string
      */
-    static function getHttpScheme()
+    static function getHttpScheme(): string
     {
         if (($http = Variables::get("__http_scheme__")) !== null) {
             return $http;
@@ -116,7 +116,7 @@ class Response
     }
 
 
-    public function send()
+    public function send(): void
     {
         //允许跨域
         $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
@@ -174,7 +174,7 @@ class Response
      * 结束Http响应
      * @return void
      */
-    static function finish()
+    static function finish(): void
     {
         if (function_exists('fastcgi_finish_request')) {
             // 提高页面响应

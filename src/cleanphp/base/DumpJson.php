@@ -18,15 +18,16 @@ use ReflectionException;
 
 class DumpJson
 {
-    private $vars = [];
+    private array $vars = [];
 
     /**
      * 自动选择类型输出
      * @param       $param
      * @param int $i
+     * @param array $data
      * @return array
      */
-    public function dumpType($param, int $i = 0,$data = []): array
+    public function dumpType($param, int $i = 0, array $data = []): array
     {
         if(!is_iterable($param))return  $data;
         foreach ($param as $key => $value) {

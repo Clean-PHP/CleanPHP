@@ -50,7 +50,7 @@ class StringBuilder
      */
     public function startsWith(string $sub_string): bool
     {
-        return strpos($this->str, $sub_string) === 0;
+        return str_starts_with($this->str, $sub_string);
     }
 
     /**
@@ -77,7 +77,7 @@ class StringBuilder
      */
     public function contains(string $s): bool
     {
-        return strpos($this->str, $s) !== false;
+        return str_contains($this->str, $s);
     }
 
     /**
@@ -85,10 +85,10 @@ class StringBuilder
      * @param string $startString
      * @return false|string
      */
-    public function findAndSubStart(string $startString)
+    public function findAndSubStart(string $startString): bool|string
     {
         $pos = strpos($this->str, $startString);
-        if ($pos == false) return "";
+        if (!$pos) return "";
         return substr($this->str, $pos);
     }
 
@@ -97,7 +97,7 @@ class StringBuilder
      * @param string $endString 倒找文本，并截取掉
      * @return false|string
      */
-    public function findAndSubEnd(string $endString)
+    public function findAndSubEnd(string $endString): bool|string
     {
         $pos = strpos($this->str, $endString);
         if (!$pos) return "";
@@ -106,9 +106,9 @@ class StringBuilder
 
     /**
      * 转换为文本
-     * @return mixed|string
+     * @return string
      */
-    public function toString()
+    public function toString(): string
     {
         return $this->str;
     }

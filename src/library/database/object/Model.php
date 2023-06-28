@@ -27,10 +27,13 @@ abstract class Model extends ArgObject
         parent::__construct($item);
     }
 
-    public function onParseType(string $key, &$val, $demo)
+    public function onParseType(string $key, mixed &$val, mixed $demo)
     {
         if (is_bool($demo)) {
             $val = ($val === "1" || $val === 1 || $val === "true" || $val === true);
+        }
+        if(is_string($val) && (is_array($demo)||is_object($demo))){
+            $val = __unserialize($val);
         }
         if ($this->fromDb && is_string($demo) && !(new StringBuilder($key))->endsWith("nofilter")) {
             $val = htmlspecialchars($val);
@@ -57,7 +60,12 @@ abstract class Model extends ArgObject
         if (is_bool($value)) {
             $value = $value ? 1 : 0;
         }
+        if(is_array($value)||is_object($value)){
+            $value = __serialize($value);
+        }
     }
+
+
 
 
 }

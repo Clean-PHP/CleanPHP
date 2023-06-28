@@ -15,8 +15,9 @@ use cleanphp\App;
 use cleanphp\base\Argument;
 use cleanphp\base\Dump;
 use cleanphp\base\Route;
+use cleanphp\closure\Exceptions\PhpVersionNotSupportedException;
 use cleanphp\closure\SerializableClosure;
-use cleanphp\exception\NoticeException;
+use cleanphp\file\Log;
 use cleanphp\process\Async;
 use cleanphp\process\AsyncObject;
 
@@ -197,43 +198,55 @@ function url(string $m = 'index', string $c = 'main', string $a = 'index', array
 {
     return Route::url(...func_get_args());
 }
-
+//闭包序列化
+function traversalClosure($array,$callback){
+    if (is_array($array) || (is_object($array) && !$array instanceof Closure)) {
+        foreach ($array as &$item) {
+            if (is_array($item)|| (is_object($item) && !$item instanceof Closure)) {
+                $item = traversalClosure($item,$callback);
+            } elseif ($item instanceof Closure) {
+                $callback($item);
+            }elseif (is_string($item) && str_starts_with($item, "__SerializableClosure__")) {
+                $item = substr($item,23);
+                $callback($item);
+            }
+        }
+    }
+    return $array;
+}
 /**
  * Serialize
  *
  * @param mixed $data
  * @return string
  */
-function __serialize($data): string
+function __serialize(mixed $data): string
 {
-    SerializableClosure::enterContext();
-    SerializableClosure::wrapClosures($data);
-    $data = serialize($data);
-    SerializableClosure::exitContext();
-    return $data;
+
+    return  serialize(traversalClosure($data,function (&$item){
+        try {
+            $item = "__SerializableClosure__" . serialize(new SerializableClosure($item));
+        } catch (PhpVersionNotSupportedException $e) {
+            Log::record("序列化失败",$e->getMessage());
+            $item = "";
+        }
+    }));
 }
 
 /**
  * Unserialize
  *
- * @param string $data
- * @param array|null $options
+ * @param string|null $data
  * @return mixed
  */
-function __unserialize(string $data, array $options = null)
+function __unserialize(?string $data): mixed
 {
     if(empty($data))return null;
-    try{
-        SerializableClosure::enterContext();
-        $data = ($options === null || PHP_MAJOR_VERSION < 7)
-            ? unserialize($data)
-            : unserialize($data, $options);
-        SerializableClosure::unwrapClosures($data);
-        SerializableClosure::exitContext();
-    }catch (NoticeException $exception){
-        return $data;
-    }
-    return $data;
+    $result = unserialize($data);
+    traversalClosure($result,function (&$item){
+        $item =  unserialize($item)->getClosure();
+    });
+    return $result;
 }
 
 /**

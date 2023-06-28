@@ -31,7 +31,7 @@ class Cache implements CacheInterface
      * @param CacheInterface $drive
      * @return void
      */
-    public static function setDriver(CacheInterface $drive)
+    public static function setDriver(CacheInterface $drive): void
     {
         Variables::del("__cache__");//以前的对象需要释放
         App::$debug && Log::record("Cache", sprintf("设置缓存器：%s", get_class($drive)));
@@ -41,9 +41,8 @@ class Cache implements CacheInterface
     /**
      * @inheritDoc
      */
-    public function del(string $key)
+    public function del(string $key): void
     {
-        App::$debug && Log::record("Cache", sprintf("删除缓存：%s", $key));
         $filename = self::fileName($key);
         File::del($filename);
 
@@ -75,9 +74,8 @@ class Cache implements CacheInterface
     /**
      * @inheritDoc
      */
-    public function get(string $key)
+    public function get(string $key): mixed
     {
-        App::$debug && Log::record("Cache", sprintf("读取缓存：%s", $key));
         $filename = self::fileName($key);
         if (!file_exists($filename) || !is_readable($filename)) {
             return null;
@@ -93,7 +91,7 @@ class Cache implements CacheInterface
         }
     }
 
-    function setData(int $exp_time, string $path)
+    function setData(int $exp_time, string $path): CacheInterface
     {
         if ($path === "") $path = Variables::getCachePath();
         if ($path === "temp") $path = sys_get_temp_dir();
@@ -107,16 +105,15 @@ class Cache implements CacheInterface
     /**
      * @inheritDoc
      */
-    public function set(string $key, $data)
+    public function set(string $key, mixed $data): void
     {
-        App::$debug && Log::record("Cache", sprintf("设置缓存：%s", $key));
         file_put_contents($this->fileName($key), __serialize($data));
     }
 
     /**
      * @inheritDoc
      */
-    public function empty()
+    public function empty(): void
     {
         App::$debug && Log::record("Cache", "清空所有缓存");
         File::empty($this->cache_path);

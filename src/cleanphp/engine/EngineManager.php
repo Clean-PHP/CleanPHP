@@ -36,7 +36,7 @@ class EngineManager
      * 设置默认引擎
      * @param $engine BaseEngine
      */
-    static function setDefaultEngine(BaseEngine $engine)
+    static function setDefaultEngine(BaseEngine $engine): void
     {
         self::$engine = $engine;
     }

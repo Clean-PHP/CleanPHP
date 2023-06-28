@@ -92,7 +92,7 @@ class JsonEngine extends BaseEngine
         return Json::encode($array);
     }
 
-    public function onNotFound($msg = "")
+    public function onNotFound($msg = ""): void
     {
         (new Response())->code(404)
             ->contentType($this->getContentType())

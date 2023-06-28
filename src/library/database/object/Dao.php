@@ -17,6 +17,7 @@ namespace library\database\object;
 use cleanphp\base\Config;
 use cleanphp\base\Variables;
 use library\database\Db;
+use library\database\exception\DbFieldError;
 use library\database\operation\DeleteOperation;
 use library\database\operation\InsertOperation;
 use library\database\operation\SelectOperation;
@@ -41,17 +42,16 @@ abstract class Dao
      * 数据库初始化
      * @return void
      */
-    protected function dbInit()
+    protected function dbInit(): void
     {
         $this->db = Db::init(new DbFile(Config::getConfig("database")["main"]));//数据库初始化
     }
 
     /**
      * 获取数据库实例
-     * @param string|null $model 绑定的具体模型
      * @return $this
      */
-    static function getInstance(string $model = null): Dao
+    static function getInstance(): Dao
     {
         $cls = get_called_class();
         $instance = Variables::get($cls) ?? new static();
@@ -67,7 +67,7 @@ abstract class Dao
      * @param $set_value
      * @return void
      */
-    public function setOption($key_name, $key_value, $set_key, $set_value)
+    public function setOption($key_name, $key_value, $set_key, $set_value): void
     {
         $this->update()->set([$set_key => $set_value])->where([$key_name => $key_value])->commit();
     }
@@ -91,7 +91,7 @@ abstract class Dao
      * 获取指定条件下的数据量
      * @return int|mixed
      */
-    function getCount($condition = [])
+    function getCount($condition = []): mixed
     {
         return $this->select()->count($condition);
     }
@@ -110,16 +110,20 @@ abstract class Dao
      * 获取指定参数的求和
      * @return int|mixed
      */
-    function getSum($condition = [], $field = "id")
+    function getSum($condition = [], $field = "id"): int
     {
-        return $this->select()->sum($condition, $field);
+        try {
+            return $this->select()->sum($condition, $field);
+        } catch (DbFieldError $e) {
+            return 0;
+        }
     }
 
     /**
      * 删除当前表
      * @return array|int
      */
-    public function dropTable()
+    public function dropTable(): int|array
     {
         return $this->db->execute("DROP TABLE IF EXISTS `{$this->getTable()}`");
     }
@@ -131,7 +135,7 @@ abstract class Dao
      * @param false $readonly 是否为查询
      * @return array|int
      */
-    protected function execute(string $sql, array $params = [], bool $readonly = false)
+    protected function execute(string $sql, array $params = [], bool $readonly = false): int|array
     {
         return $this->db->execute($sql, $params, $readonly);
     }
@@ -140,7 +144,7 @@ abstract class Dao
      * 清空当前表
      * @return array|int
      */
-    public function emptyTable()
+    public function emptyTable(): int|array
     {
         return $this->db->execute($this->db->getDriver()->renderEmpty($this->getTable()));
     }
@@ -240,7 +244,7 @@ abstract class Dao
      * @param Model $model
      * @return void
      */
-    public function deleteModel(Model $model)
+    public function deleteModel(Model $model): void
     {
         $condition = $this->getPrimaryCondition($model);
         $this->delete()->where($condition)->commit();
@@ -261,7 +265,7 @@ abstract class Dao
      * @param array $condition 查询条件
      * @return mixed|null
      */
-    protected function find(Field $field = null, array $condition = [])
+    protected function find(Field $field = null, array $condition = []): mixed
     {
         if ($field === null) $field = new Field();
         $result = $this->select($field)->where($condition)->limit()->commit();
@@ -274,7 +278,7 @@ abstract class Dao
     /**
      * 事务开始
      */
-    protected function affairBegin()
+    protected function affairBegin(): void
     {
         $this->db->execute("BEGIN");
     }
@@ -282,7 +286,7 @@ abstract class Dao
     /**
      * 事务回滚
      */
-    protected function affairRollBack()
+    protected function affairRollBack(): void
     {
         $this->db->execute("ROLLBACK");
     }
@@ -290,13 +294,13 @@ abstract class Dao
     /**
      * 事务提交
      */
-    protected function affairCommit()
+    protected function affairCommit(): void
     {
         $this->db->execute("COMMIT");
     }
 
 
-    function getAll(?array $fields = [], array $where = [], ?int $start = null, int $size = 10, &$page = null, $object = true)
+    function getAll(?array $fields = [], array $where = [], ?int $start = null, int $size = 10, &$page = null, $object = true): int|array
     {
         if ($fields === null) $fields = [];
         if ($start === null) return $this->select(...$fields)->where($where)->commit();

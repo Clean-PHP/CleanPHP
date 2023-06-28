@@ -3,14 +3,11 @@
 namespace cleanphp\closure;
 
 use cleanphp\closure\Contracts\Serializable;
-use cleanphp\closure\Exceptions\InvalidSignatureException;
 use cleanphp\closure\Exceptions\PhpVersionNotSupportedException;
-use cleanphp\closure\Serializers\Signed;
-use cleanphp\closure\Signers\Hmac;
 use Closure;
 use const PHP_VERSION_ID;
 
-class SerializableClosure
+class UnsignedSerializableClosure
 {
     /**
      * The closure's serializable.
@@ -31,9 +28,7 @@ class SerializableClosure
             throw new PhpVersionNotSupportedException();
         }
 
-        $this->serializable = Serializers\Signed::$signer
-            ? new Serializers\Signed($closure)
-            : new Serializers\Native($closure);
+        $this->serializable = new Serializers\Native($closure);
     }
 
     /**
@@ -65,52 +60,6 @@ class SerializableClosure
     }
 
     /**
-     * Create a new unsigned serializable closure instance.
-     *
-     * @param  Closure  $closure
-     * @return UnsignedSerializableClosure
-     */
-    public static function unsigned(Closure $closure)
-    {
-        return new UnsignedSerializableClosure($closure);
-    }
-
-    /**
-     * Sets the serializable closure secret key.
-     *
-     * @param  string|null  $secret
-     * @return void
-     */
-    public static function setSecretKey($secret)
-    {
-        Serializers\Signed::$signer = $secret
-            ? new Hmac($secret)
-            : null;
-    }
-
-    /**
-     * Sets the serializable closure secret key.
-     *
-     * @param Closure|null  $transformer
-     * @return void
-     */
-    public static function transformUseVariablesUsing($transformer)
-    {
-        Serializers\Native::$transformUseVariables = $transformer;
-    }
-
-    /**
-     * Sets the serializable closure secret key.
-     *
-     * @param Closure|null  $resolver
-     * @return void
-     */
-    public static function resolveUseVariablesUsing($resolver)
-    {
-        Serializers\Native::$resolveUseVariables = $resolver;
-    }
-
-    /**
      * Get the serializable representation of the closure.
      *
      * @return array
@@ -127,15 +76,9 @@ class SerializableClosure
      *
      * @param  array  $data
      * @return void
-     *
-     * @throws InvalidSignatureException
      */
     public function __unserialize($data)
     {
-        if (Signed::$signer && ! $data['serializable'] instanceof Signed) {
-            throw new InvalidSignatureException();
-        }
-
         $this->serializable = $data['serializable'];
     }
 }

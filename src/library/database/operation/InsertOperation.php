@@ -128,7 +128,7 @@ class InsertOperation extends BaseOperation
     /**
      * 构造sql
      */
-    protected function translateSql()
+    protected function translateSql(): void
     {
         $sql = '';
         switch ($this->opt['model']) {

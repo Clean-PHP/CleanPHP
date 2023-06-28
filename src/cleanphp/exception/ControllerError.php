@@ -31,7 +31,7 @@ class ControllerError extends Exception
      * @param string $__action
      * @param boolean $_controller_exist 是否存在
      */
-    public function __construct($message = "", $__module = "", $__controller = "", string $__action = "", bool $_controller_exist = false)
+    public function __construct(string $message = "", $__module = "", $__controller = "", string $__action = "", bool $_controller_exist = false)
     {
         $this->__action = $__action;
         $this->__controller = $__controller;

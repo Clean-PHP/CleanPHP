@@ -28,7 +28,7 @@ class SelectOperation extends BaseOperation
     /**
      * @var Page|null
      */
-    private Page $page;//开启分页的分页数据
+    private ?Page $page;//开启分页的分页数据
 
 
     /**
@@ -94,7 +94,7 @@ class SelectOperation extends BaseOperation
     {
         unset($this->opt['page']);
         $limit = strval($start);
-        if ($end != -1) $limit = "," . $end;
+        if ($end != -1) $limit .= "," . $end;
         $this->opt['limit'] = $limit;
         return $this;
     }
@@ -214,7 +214,7 @@ class SelectOperation extends BaseOperation
      * @param array $conditions 统计条件
      * @return int|mixed
      */
-    public function count(array $conditions)
+    public function count(array $conditions): mixed
     {
         if (!empty($conditions)) $this->where($conditions);
         $sql = /** @lang text */
@@ -240,7 +240,7 @@ class SelectOperation extends BaseOperation
      * @param string $param 求和字段
      * @return int|mixed
      */
-    public function sum(array $conditions, string $param)
+    public function sum(array $conditions, string $param): mixed
     {
         if (!Field::isName($param)) {
             throw new DbFieldError("字段名称只允许为字母、点、下划线", $param);
@@ -261,7 +261,7 @@ class SelectOperation extends BaseOperation
     /**
      * 编译
      */
-    protected function translateSql()
+    protected function translateSql(): void
     {
         $sql = $this->getOpt('SELECT', 'field');
         $sql .= $this->getOpt('FROM', 'table_name');

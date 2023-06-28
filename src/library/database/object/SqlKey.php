@@ -20,6 +20,7 @@ class SqlKey
     const TYPE_FLOAT = 1;
     const TYPE_TEXT = 2;
     const TYPE_BOOLEAN = 3;
+    const TYPE_ARRAY = 4;
 
     public string $name;//键名
     public int $type;//类型
@@ -49,7 +50,9 @@ class SqlKey
             $this->type = self::TYPE_BOOLEAN;
         } elseif (is_float($default_value)) $this->type = self::TYPE_FLOAT;
         elseif (is_double($default_value)) $this->type = self::TYPE_FLOAT;
-        else $this->type = self::TYPE_TEXT;
+        elseif(is_array($default_value)||is_object($default_value)){
+            $this->type = self::TYPE_ARRAY;
+        }else $this->type = self::TYPE_TEXT;
 
 
     }

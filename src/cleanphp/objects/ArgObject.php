@@ -41,7 +41,7 @@ class ArgObject
      * @param mixed &$val 对象属性值，传入的是地址，直接修改即可
      * @param mixed $demo 默认属性值
      */
-    public function onParseType(string $key, &$val, $demo)
+    public function onParseType(string $key, mixed &$val, mixed $demo)
     {
     }
 

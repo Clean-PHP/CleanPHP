@@ -88,7 +88,7 @@ class Db
      * @return void
      * @throws DbExecuteError
      */
-    function initTable(Dao $dao, string $model, string $table)
+    function initTable(Dao $dao, string $model, string $table): void
     {
         App::$debug && Log::record("SQL", sprintf("创建数据表 `%s`", $table));
         if (class_exists($model)) {
@@ -107,7 +107,7 @@ class Db
      * @return array|int
      * @throws DbExecuteError
      */
-    public function execute(string $sql, array $params = [], bool $readonly = false)
+    public function execute(string $sql, array $params = [], bool $readonly = false): int|array
     {
 
         App::$debug && Variables::set("__db_sql_start__", microtime(true));
@@ -159,7 +159,7 @@ class Db
 
     /**
      * 获取数据库驱动
-     * @return Driver
+     * @return Driver|null
      */
     public function getDriver(): ?Driver
     {

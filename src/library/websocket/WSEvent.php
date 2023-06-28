@@ -23,13 +23,15 @@ interface WSEvent
      * @param SocketInfo $socket
      * @return mixed
      */
-    public function onConnect(Server $ws,  SocketInfo &$socket);
+    public function onConnect(Server $ws,  SocketInfo &$socket): mixed;
 
     /**
      * 当websocket关闭的时候
+     * @param Server $ws
+     * @param SocketInfo $socket
      * @return mixed
      */
-    public function onClose(Server $ws,  SocketInfo &$socket);
+    public function onClose(Server $ws,  SocketInfo &$socket): mixed;
 
     /**
      * 当收到websocket信息的时候
@@ -38,5 +40,5 @@ interface WSEvent
      * @param SocketInfo $socket
      * @return mixed
      */
-    public function onMsg(Server $ws,?string $msg,   SocketInfo &$socket);
+    public function onMsg(Server $ws,?string $msg,   SocketInfo &$socket): mixed;
 }

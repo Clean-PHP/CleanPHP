@@ -59,7 +59,7 @@ abstract class BaseOperation
      * 提交
      * @return array|int
      */
-    protected function __commit($readonly = false)
+    protected function __commit($readonly = false): int|array
     {
         if ($this->tra_sql == null) $this->translateSql();
         $table = $this->opt['table_name'] ?? null;
@@ -81,7 +81,7 @@ abstract class BaseOperation
      * 编译sql语句
      * @return void
      */
-    abstract protected function translateSql();
+    abstract protected function translateSql(): void;
 
     /**
      * 获取存储的数据选项
@@ -103,7 +103,7 @@ abstract class BaseOperation
      */
     protected function where(array $conditions): BaseOperation
     {
-        if (is_array($conditions) && !empty($conditions)) {
+        if (!empty($conditions)) {
             $sql = null;
             $join = [];
             reset($conditions);
@@ -165,7 +165,7 @@ abstract class BaseOperation
                 }
                 $keyRaw = $key;
                 $key = str_replace('.', '_', $key);
-                if (substr($key, 0, 1) != ":") {
+                if (!str_starts_with($key, ":")) {
                     unset($conditions[$keyRaw]);
                     $conditions[":_WHERE_" . $key] = $condition;
                     $join[] = "`" . str_replace('.', '`.`', $keyRaw) . "` = :_WHERE_" . $key;

@@ -25,19 +25,12 @@ class TaskerManager
      * 获取定时任务列表
      * @return array|mixed
      */
-    public static function getList()
+    public static function list()
     {
-        $list = Cache::init(0, Variables::getCachePath("tasker", DS))->get("tasker_list");
+        $list = Cache::init(0, Variables::getCachePath())->get("tasker_list");
         if (empty($list)) {
             return [];
         } else {
-
-            foreach ($list as $key=>$value){
-                if(!is_object($value)|| get_class($value)!==TaskInfo::class){
-                    unset($list[$key]);
-                }
-            }
-
             return $list;
         }
     }
@@ -49,7 +42,7 @@ class TaskerManager
      */
     private static function get($key): ?TaskInfo
     {
-        $list = self::getList();
+        $list = self::list();
         /**
          * @var $value TaskInfo
          */
@@ -66,7 +59,7 @@ class TaskerManager
      */
     public static function clean()
     {
-        Cache::init(0, Variables::getCachePath("tasker", DS))->del("tasker_list");
+        Cache::init(0, Variables::getCachePath())->del("tasker_list");
     }
 
     /**
@@ -90,7 +83,7 @@ class TaskerManager
      */
     public static function has($key): bool
     {
-        $list = self::getList();
+        $list = self::list();
         /**
          * @var $value TaskInfo
          */
@@ -109,7 +102,7 @@ class TaskerManager
      */
     public static function del($key)
     {
-        $list = self::getList();
+        $list = self::list();
         /**
          * @var $value TaskInfo
          */
@@ -119,7 +112,7 @@ class TaskerManager
                 $new[] = $value;
             }
         }
-        Cache::init(0, Variables::getCachePath("tasker", DS))->set("tasker_list", $new);
+        Cache::init(0, Variables::getCachePath())->set("tasker_list", $new);
     }
 
 
@@ -158,10 +151,10 @@ class TaskerManager
         $task->key = uniqid("task_");
 
         $task->next = CronExpression::factory($cron)->getNextRunDate()->getTimestamp();
-        $task->closure = __serialize($taskerAbstract);
-        $list = self::getList();
+        $task->closure = $taskerAbstract;
+        $list = self::list();
         $list[] = $task;
-        Cache::init(0, Variables::getCachePath("tasker", DS))->set("tasker_list", $list);
+        Cache::init(0, Variables::getCachePath())->set("tasker_list", $list);
         if (App::$debug) {
             Log::record("Tasker", "添加定时任务：$name => " . get_class($taskerAbstract));
             Log::record("Tasker", "初次添加后，执行时间为：" . date("Y-m-d H:i:s", $task->next));
@@ -176,8 +169,7 @@ class TaskerManager
     public static function run()
     {
 
-        $data = self::getList();
-        App::$debug && Log::record("Tasker", "当前定时任务列表：".print_r($data,true));
+        $data = self::list();
         /**
          * @var $value TaskInfo
          */
@@ -194,12 +186,12 @@ class TaskerManager
                 /**
                  * @var  TaskerAbstract $task
                  */
-                $task = __unserialize($value->closure);
+                $task = $value->closure;
                 $timeout = $task->getTimeOut();
 
                 go(function () use ($task) {
                     try {
-                        App::$debug && Log::record("Tasker", "异步执行：" . print_r($task, true));
+                        App::$debug && Log::record("Tasker", "异步执行：" . __serialize($task));
                         $task->onStart();
                     } catch (Throwable $e) {
                         $task->onAbort($e);
@@ -211,7 +203,7 @@ class TaskerManager
                 }, $timeout);
             }
         }
-        Cache::init(0, Variables::getCachePath("tasker", DS))->set("tasker_list", $data);
+        Cache::init(0, Variables::getCachePath())->set("tasker_list", $data);
 
     }
 

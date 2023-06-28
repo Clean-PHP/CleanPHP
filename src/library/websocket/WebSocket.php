@@ -18,6 +18,8 @@ use cleanphp\base\Config;
 use cleanphp\base\EventManager;
 use cleanphp\base\Variables;
 use cleanphp\cache\Cache;
+use cleanphp\exception\NoticeException;
+use cleanphp\exception\WarningException;
 use cleanphp\file\Log;
 use library\websocket\main\Server;
 
@@ -52,16 +54,18 @@ class WebSocket
 
     static function isLock($port): bool
     {
-        $sock = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
-        socket_set_nonblock($sock);
-        socket_connect($sock,'127.0.0.1', $port);
-        socket_set_block($sock);
-        $r = array($sock);
-        $w = array($sock);
-        $f = array($sock);
-        $return = @socket_select($r , $w,$f , 3);
-        socket_close($sock);
-        return $return !== 2;
+        $timeout = 1; // 连接超时时间（秒）
+        try {
+            $socket = @fsockopen("127.0.0.1", $port, $errno, $errstr, $timeout);
+            if ($socket) {
+                fclose($socket);
+                return true; // 端口已被占用
+            } else {
+                return false; // 端口未被占用
+            }
+        } catch (NoticeException|WarningException $exception) {
+            return true; // 端口已被占用
+        }
 
     }
 
@@ -69,20 +73,22 @@ class WebSocket
      * 停止Websocket
      * @return void
      */
-    static function stop(){
+    static function stop(): void
+    {
         Cache::init()->del("websocket");
     }
 
     private static ?WSEvent $WSEvent = null;
+
     /**
      * 设置默认的事件处理器
      * @param WSEvent $WSEvent 事件处理器，需要实现{@link WSEvent}
      * @return void
      */
-    static function setDefaultEventHandler(WSEvent $WSEvent){
+    static function setDefaultEventHandler(WSEvent $WSEvent): void
+    {
         self::$WSEvent = $WSEvent;
     }
-
 
 
 }

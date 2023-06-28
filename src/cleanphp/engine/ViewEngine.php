@@ -192,10 +192,6 @@ TPL
         return null;
     }
 
-    private function convert2Json($str){
-        return explode("\r\n",htmlspecialchars_decode(strip_tags($str)));
-    }
-
 
 
     function render(...$data): string
@@ -418,7 +414,7 @@ EOF;
      * 清除过期的文件
      * @param string $hash
      */
-    private function _clear_complied_file(string $hash)
+    private function _clear_complied_file(string $hash): void
     {
         $dir = scandir($this->__compile_dir);
         if ($dir) {

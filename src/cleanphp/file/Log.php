@@ -41,7 +41,7 @@ class Log
      * @param $msg
      * @param int $type
      */
-    public static function record($tag, $msg, int $type = self::TYPE_INFO)
+    public static function record($tag, $msg, int $type = self::TYPE_INFO): void
     {
         self::getInstance($tag)->addTemp(self::getInstance($tag)->setType($type)->write($msg));
     }
@@ -53,7 +53,7 @@ class Log
      * @param int $type
      * @param string $pre
      */
-    public static function recordAsLine($tag, $msg, int $type = self::TYPE_INFO, string $pre = "")
+    public static function recordAsLine($tag, $msg, int $type = self::TYPE_INFO, string $pre = ""): void
     {
         foreach (explode("\n", $msg) as $item) {
             self::getInstance($tag)->addTemp(self::getInstance($tag)->setType($type)->write($pre . trim($item)));
@@ -61,7 +61,7 @@ class Log
 
     }
 
-    private function addTemp($msg)
+    private function addTemp($msg): void
     {
         $handler = fopen($this->temp, 'a');
         fwrite($handler, $msg, strlen($msg));

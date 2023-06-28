@@ -51,9 +51,6 @@ class App
         App::$debug = $debug;
         error_reporting(E_ALL & ~(E_STRICT | E_NOTICE));
         ini_set("display_errors", "Off");//禁用错误提醒
-        if (version_compare(PHP_VERSION, '7.4.0', '<')) {
-            exit("请使用PHP 7.4以上版本运行该应用");
-        }
         define("DS", DIRECTORY_SEPARATOR);//定义斜杠符号
         define("APP_CORE", APP_DIR . DS . 'cleanphp' . DS);//定义程序的核心目录
 
