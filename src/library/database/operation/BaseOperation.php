@@ -70,15 +70,23 @@ abstract class BaseOperation
 
     /**
      * 设置表名
-     * @param string $tableName
+     * @param string ...$tableName
      * @return BaseOperation $this
      */
-    public function table(string $tableName): BaseOperation
+    public function table(string ...$tableName): BaseOperation
     {
-        $names = explode(",",$tableName);
+        if(is_array($tableName)){
+            $names = $tableName;
+        }else{
+            $names = explode(",",$tableName);
+        }
+
         $table = "";
         foreach ($names as $name){
-            $table.= '`' . $name . '`,';
+            if(!empty($name)){
+                $table.= '`' . $name . '`,';
+            }
+
         }
         $this->opt['table_name'] = trim($table,",");
         return $this;
