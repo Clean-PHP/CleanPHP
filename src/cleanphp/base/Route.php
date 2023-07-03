@@ -230,7 +230,7 @@ class Route
             $debugEnabled && Log::record("Route", sprintf("路由匹配：%s => %s", $rule, $mapper));
             $rule = '@^' . str_ireplace(
                     ['\\\\', '/', '<', '>', '.'],
-                    ['', '\/', '(?P<', '>[\x{4e00}-\x{9fa5}a-zA-Z0-9_\.-\/]+)', '\.'],
+                    ['', '\/', '(?P<', '>[\x{4e00}-\x{9fa5}a-zA-Z0-9_\.\-\/]+)', '\.'],
                     strtolower($rule)
                 ) . '$@ui';
             if (preg_match($rule, $query, $matches)) {

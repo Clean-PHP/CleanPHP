@@ -85,7 +85,7 @@ abstract class Dao
      * 当前操作的表
      * @return string
      */
-    abstract protected function getTable(): string;
+    abstract public function getTable(): string;
 
     /**
      * 获取指定条件下的数据量
@@ -108,9 +108,11 @@ abstract class Dao
 
     /**
      * 获取指定参数的求和
-     * @return int|mixed
+     * @param array $condition
+     * @param string $field
+     * @return int
      */
-    function getSum($condition = [], $field = "id"): int
+    function getSum(array $condition = [], string $field = "id"): int
     {
         try {
             return $this->select()->sum($condition, $field);

@@ -172,7 +172,7 @@ class App
         } catch (ExitApp $exit_app) {//执行退出
             App::$debug && Log::record("Frame", sprintf("框架执行退出: %s", $exit_app->getMessage()));
         } catch (Exception|\Error $exception) {
-            Error::err($exception->getMessage(), $exception->getTrace());
+            Error::err("Exception: ".get_class($exception)."\r\n\r\n".$exception->getMessage(), $exception->getTrace());
         } finally {
             self::$app && self::$app->onRequestEnd();
             if (App::$debug) {

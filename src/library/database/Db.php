@@ -26,6 +26,7 @@ use library\database\object\Dao;
 use library\database\object\DbFile;
 use library\database\object\Model;
 use PDO;
+use PDOException;
 use PDOStatement;
 
 class Db
@@ -37,6 +38,7 @@ class Db
     /**
      * 构造函数
      * @param DbFile $dbFile 数据库配置类
+     * @throws ExtendError
      */
     public function __construct(DbFile $dbFile)
     {
@@ -63,6 +65,7 @@ class Db
         }
     }
 
+    private static ?Db $dbInstance = null;
     /**
      * 使用指定数据库配置初始化数据库连接
      * @param DbFile $dbFile
@@ -70,33 +73,26 @@ class Db
      */
     public static function init(DbFile $dbFile): Db
     {
-        $hash = $dbFile->hash();
-
-        $db = Variables::get($hash);
-        if ($db === null) {
-            $db = new self($dbFile);
+        if (empty(self::$dbInstance)) {
+            self::$dbInstance = new self($dbFile);
         }
-        Variables::set($hash, $db);
-        return $db;
+
+        return self::$dbInstance;
     }
 
     /**
      * 数据表初始化
      * @param Dao $dao
-     * @param string $model
+     * @param Model $model
      * @param string $table
      * @return void
      * @throws DbExecuteError
      */
-    function initTable(Dao $dao, string $model, string $table): void
+    function initTable(Dao $dao, Model $model, string $table): void
     {
         App::$debug && Log::record("SQL", sprintf("创建数据表 `%s`", $table));
-        if (class_exists($model)) {
-            /**@var Model $m */
-            $m = new $model();
-            $this->execute($this->db->renderCreateTable($m, $table));
-            $dao->onCreateTable();
-        }
+        $this->execute($this->db->renderCreateTable($model, $table));
+        $dao->onCreateTable();
     }
 
     /**
@@ -134,13 +130,18 @@ class Db
             $sth->bindValue($k, $v, $data_type);
         }
         $ret_data = null;
-        if ($sth->execute()) {
-            $ret_data = $readonly ? $sth->fetchAll(PDO::FETCH_ASSOC) : $sth->rowCount();
+        try{
+            if ($sth->execute()) {
+                $ret_data = $readonly ? $sth->fetchAll(PDO::FETCH_ASSOC) : $sth->rowCount();
+            }
+        }catch (PDOException $exception){
+            throw new DbExecuteError(sprintf("执行SQL语句出错：\r\n%s\r\n\r\n错误信息：%s", $this->highlightSQL($sql), $sth->errorInfo()[2]));
         }
         if (App::$debug) {
             $end = microtime(true) - Variables::get("__db_sql_start__");
             Variables::del("__db_sql_start__");
             $sql_default = $sql;
+            $params = array_reverse($params);
             foreach ($params as $k => $v) {
                 $sql_default = str_replace($k, "\"$v\"", $sql_default);
             }
@@ -148,8 +149,43 @@ class Db
             Log::record("SQL", sprintf("执行时间：%s 毫秒", $end * 1000));
         }
         if ($ret_data !== null) return $ret_data;
-        throw new DbExecuteError(sprintf("执行SQL语句【%s】出错：%s", $sql, implode(" , ", $sth->errorInfo())));
+        throw new DbExecuteError(sprintf("执行SQL语句出错：\r\n%s\r\n\r\n错误信息：%s", $this->highlightSQL($sql), $sth->errorInfo()[2]));
     }
+
+   private function highlightSQL($sql) {
+       // 定义 SQL 关键词列表
+       $keywords = array(
+           'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'INSERT', 'INTO', 'VALUES',
+           'UPDATE', 'SET', 'DELETE', 'ORDER BY', 'GROUP BY', 'LIMIT', 'JOIN',
+           'LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'ON'
+           // 可根据需要添加其他关键词
+       );
+
+       // 标记关键词
+       $pattern = '/\b(' . implode('|', $keywords) . ')\b/i';
+       $replacement = '<span style="color: blue;">$0</span>';
+       $highlightedSQL = preg_replace($pattern, $replacement, $sql);
+
+       // 标记字符串值
+       $pattern = "/'(.*?)'/i";
+       $replacement = '<span style="color: green;">$0</span>';
+       $highlightedSQL = preg_replace($pattern, $replacement, $highlightedSQL);
+
+       // 标记表名和字段名
+       $pattern = '/(`[\w]+`)/i';
+       $replacement = '<span style="color: red;">$0</span>';
+       $highlightedSQL = preg_replace($pattern, $replacement, $highlightedSQL);
+
+       // 标记注释
+       $pattern = '/--.*$/m';
+       $replacement = '<span style="color: gray;">$0</span>';
+       $highlightedSQL = preg_replace($pattern, $replacement, $highlightedSQL);
+
+       return $highlightedSQL;
+   }
+
+
+
 
     public function __destruct()
     {

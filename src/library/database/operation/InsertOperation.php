@@ -62,6 +62,15 @@ class InsertOperation extends BaseOperation
         return $this->keys($key, $udp_keys)->values([$value]);
     }
 
+    public function keyValues(array $kv, array $udp_keys = []): InsertOperation{
+        $key = array_keys($kv[0]);
+        $values = [];
+        foreach ($kv as $item){
+            $values[] = array_values($item);
+        }
+        return $this->keys($key, $udp_keys)->values($values);
+    }
+
     /**
      * 插入值
      * @param $row array 需要插入的数组

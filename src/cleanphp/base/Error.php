@@ -49,7 +49,7 @@ class Error
             return;//Exit异常不进行处理
         }
 
-        self::err($e->getMessage(), array_merge([["file" => $e->getFile(), "line" => $e->getLine(), "function" => "", "class" => '', "type" => ""]], $e->getTrace()), get_class($e));
+       self::err("Exception: ".get_class($e)."\r\n\r\n".$e->getMessage(), array_merge([["file" => $e->getFile(), "line" => $e->getLine(), "function" => "", "class" => '', "type" => ""]], $e->getTrace()), get_class($e));
     }
 
     /**
@@ -60,6 +60,7 @@ class Error
      */
     public static function err(string $msg, array $errInfo = [], string $log_tag = "ErrorInfo"): void
     {
+
         if (Variables::get('__frame_error__', false)) return;
         //捕获异常后清除数据
         error_clear_last();
@@ -68,10 +69,11 @@ class Error
         Log::record($log_tag, $msg, Log::TYPE_ERROR);
         $traces = sizeof($errInfo) === 0 ? debug_backtrace() : $errInfo;
 
-        foreach ($traces as $i => $call) {
+        foreach ($traces as $i => &$call) {
             $trace_text[$i] = sprintf("#%s %s(%s): %s%s%s", $i, $call['file'] ?? "", $call['line'] ?? "", $call["class"] ?? "", $call["type"] ?? "", $call['function'] ?? "");
             Log::record($log_tag, $trace_text[$i], Log::TYPE_ERROR);
         }
+
 
         if ($dump = ob_get_contents()) {
             ob_end_clean();
@@ -83,7 +85,7 @@ class Error
         } else if (App::$debug) {
             (new Response())->render($engine->renderError($msg, $traces, $dump, $log_tag), 200, $engine->getContentType())->send();
         } else {
-            (new Response())->render($engine->renderMsg(true, 404, "404 Not Found", "您访问的资源不存在。", 5, "/", "立即跳转"), 404, $engine->getContentType())->send();
+            (new Response())->render($engine->renderMsg(true, 404, "404 Not Found", "您访问的资源不存在。", 5), 404, $engine->getContentType())->send();
         }
 
     }

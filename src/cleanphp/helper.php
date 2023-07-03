@@ -317,3 +317,8 @@ function rand_str(int $length = 8, bool $upper = true, bool $lower = true, bool 
 
     return $password;
 }
+
+function filterCharacters($input)
+{
+    return preg_replace('/[^\x{4e00}-\x{9fa5}a-zA-Z0-9_.\-]/u', '', $input);
+}
