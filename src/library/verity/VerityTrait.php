@@ -22,7 +22,7 @@ trait VerityTrait
     /**
      * @throws VerityException
      */
-    public function onParseType(string $key, &$val, $demo)
+    public function onParseType(string $key, mixed &$val, mixed $demo)
     {
         if (!is_string($val)) return;
         $rules = $this->getRules();

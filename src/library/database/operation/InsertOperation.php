@@ -16,7 +16,6 @@ namespace library\database\operation;
 
 use cleanphp\base\Error;
 use library\database\Db;
-use library\database\object\Dao;
 
 class InsertOperation extends BaseOperation
 {
@@ -31,9 +30,9 @@ class InsertOperation extends BaseOperation
      * @param $m
      * @param int $model insert模式
      */
-    public function __construct(Db &$db, Dao &$dao, $m, int $model = self::INSERT_NORMAL)
+    public function __construct(Db &$db,  $m, int $model = self::INSERT_NORMAL)
     {
-        parent::__construct($db, $dao, $m);
+        parent::__construct($db, $m);
         $this->opt = [];
         $this->opt['type'] = 'insert';
         $this->opt['model'] = $db->getDriver()->onInsertModel($model);

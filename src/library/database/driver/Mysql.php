@@ -56,33 +56,19 @@ class Mysql extends Driver
      */
     function renderCreateTable(Model $model, string $table): string
     {
-        $primary_keys = $model->getPrimaryKey() instanceof SqlKey ? [$model->getPrimaryKey()] : $model->getPrimaryKey();
+        $primary_keys = $model->getPrimaryKey();
         $sql = 'CREATE TABLE IF NOT EXISTS `' . $table . '`(';
-        $primary = [];
-        /**
-         * @var $value SqlKey
-         */
-        foreach ($primary_keys as $value) {
-            if ($value instanceof SqlKey) {
-                $name = $value->name;
-                $primary[] = $name;
-                $sql .= $this->renderKey($value) . ",";
-            } else {
-                $primary[] = $value;
-            }
-        }
+        $name = $primary_keys->name;
+        $primary = $name;
+        $sql .= $this->renderKey($primary_keys) . ",";
+
+
         foreach (get_object_vars($model) as $key => $value) {
-            if (in_array($key, $primary)) continue;
+            if ($key === $primary) continue;
             $sql .= $this->renderKey(new SqlKey($key, $value)) . ",";
         }
         $sql .= "PRIMARY KEY (";
-
-        foreach ($primary as $key => $item) {
-            $sql .= "`$item`";
-            if ($key < sizeof($primary) - 1) {
-                $sql .= ",";
-            }
-        }
+        $sql .= "`$primary`";
         $sql .= ")";
         $sql .= ')ENGINE=InnoDB DEFAULT CHARSET=' . $this->dbFile->charset . ';';
 
@@ -94,12 +80,20 @@ class Mysql extends Driver
     {
         if ($sqlKey->type === SqlKey::TYPE_TEXT && $sqlKey->value !== null)
             $sqlKey->value = str_replace("'", "\'", $sqlKey->value);
-
+        if (str_contains($sqlKey->name,'_unique')){
+            if($sqlKey->type === SqlKey::TYPE_INT)return "`$sqlKey->name` INT DEFAULT '$sqlKey->value' UNIQUE";
+            if($sqlKey->type === SqlKey::TYPE_TEXT)return "`$sqlKey->name` VARCHAR(512) DEFAULT '$sqlKey->value' UNIQUE";
+            if($sqlKey->type === SqlKey::TYPE_FLOAT)return "`$sqlKey->name` FLOAT  DEFAULT '$sqlKey->value' UNIQUE";
+            if($sqlKey->type === SqlKey::TYPE_BOOLEAN)return "`$sqlKey->name` TINYINT(1)  DEFAULT ".intval($sqlKey->value)." UNIQUE";
+        }
         if ($sqlKey->type === SqlKey::TYPE_INT && $sqlKey->auto) return "`$sqlKey->name` INT AUTO_INCREMENT";
 
-        elseif ($sqlKey->type === SqlKey::TYPE_INT && !$sqlKey->auto) return "`$sqlKey->name` INT";
+        elseif ($sqlKey->type === SqlKey::TYPE_INT && !$sqlKey->auto) return "`$sqlKey->name` INT DEFAULT '$sqlKey->value'";
 
-        elseif ($sqlKey->type === SqlKey::TYPE_BOOLEAN) return "`$sqlKey->name` INT";
+        elseif ($sqlKey->type === SqlKey::TYPE_BOOLEAN) return "`$sqlKey->name` TINYINT(1) DEFAULT ".intval($sqlKey->value)." ";
+
+
+
 
         elseif ($sqlKey->type === SqlKey::TYPE_TEXT && $sqlKey->length !== 0) return "`$sqlKey->name` VARCHAR(" . $sqlKey->length . ") DEFAULT '$sqlKey->value'";
 

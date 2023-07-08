@@ -15,27 +15,61 @@
 namespace library\database\object;
 
 use cleanphp\base\Config;
+use cleanphp\base\Error;
 use cleanphp\base\Variables;
+use cleanphp\exception\ExitApp;
+use cleanphp\file\Log;
 use library\database\Db;
-use library\database\exception\DbFieldError;
+use library\database\exception\DbExecuteError;
 use library\database\operation\DeleteOperation;
 use library\database\operation\InsertOperation;
 use library\database\operation\SelectOperation;
 use library\database\operation\UpdateOperation;
+use PDOStatement;
+use Throwable;
 
 abstract class Dao
 {
 
     protected ?Db $db = null;
     protected ?string $model = null;//具体的模型
+    protected string $table = "";
+    private ?string $child = null;
 
     /**
      * @param string|null $model 指定具体模型
      */
-    public function __construct(string $model = null)
+    public function __construct(string $model = null,string $child = null)
     {
         $this->dbInit();
-        $this->model = $model;
+        if(!empty($model)){
+            $this->model = $model;
+        }elseif(!empty($child)){
+            $class = str_replace(["dao","Dao"],["model","Model"],$child);
+            $this->child = $child;
+            if(class_exists($class)){
+                $this->model = $class;
+                $table =  $this->getTable();
+                try {
+                    $result = $this->db->getDriver()->getDbConnect()->query(/** @lang text */ "SELECT count(*) FROM {$table} LIMIT 1");
+                    $table_exist = $result instanceof PDOStatement && ($result->rowCount() === 1);
+                }catch (Throwable $exception){
+                    if($exception instanceof ExitApp){
+                        throw $exception;
+                    }
+                    $table_exist = false;
+                    Log::record("Sql错误",$exception->getMessage());
+                }
+                if (!$table_exist) {
+                    try {
+                        $this->db->initTable($this, new $class, trim($table, '`'));
+                    } catch (DbExecuteError $e) {
+                        Error::err("初始化异常：".$e->getMessage(),$e->getTrace(),"Sql");
+                    }
+                }
+            }
+        }
+
     }
 
     /**
@@ -54,8 +88,11 @@ abstract class Dao
     static function getInstance(): Dao
     {
         $cls = get_called_class();
-        $instance = Variables::get($cls) ?? new static();
-        Variables::set($cls, $instance);
+        $instance = Variables::get($cls);
+        if(empty($instance)){
+            $instance =  new static(null,$cls);
+            Variables::set($cls, $instance);
+        }
         return $instance;
     }
 
@@ -78,14 +115,25 @@ abstract class Dao
      */
     protected function update(): UpdateOperation
     {
-        return (new UpdateOperation($this->db, $this, $this->model))->table($this->getTable());
+        return (new UpdateOperation($this->db, $this->model))->table($this->getTable());
     }
 
     /**
      * 当前操作的表
      * @return string
      */
-    abstract public function getTable(): string;
+     public function getTable(): string{
+         if(!empty($this->table))return $this->table;
+         if(!empty($this->child) ){
+             $array = explode("\\", $this->child);
+             $class = str_replace("Dao","",end($array));
+             $pattern = '/(?<=[a-z])([A-Z])/';
+             $replacement = '_$1';
+             $this->table = strtolower(preg_replace($pattern, $replacement, $class));
+             return $this->table;
+         }
+       throw new DbExecuteError("未定义数据表");
+     }
 
     /**
      * 获取指定条件下的数据量
@@ -103,7 +151,7 @@ abstract class Dao
      */
     protected function select(...$field): SelectOperation
     {
-        return (new SelectOperation($this->db, $this, $this->model, ...$field))->table($this->getTable());
+        return (new SelectOperation($this->db, $this->model, ...$field))->table($this->getTable());
     }
 
     /**
@@ -114,11 +162,7 @@ abstract class Dao
      */
     function getSum(array $condition = [], string $field = "id"): int
     {
-        try {
-            return $this->select()->sum($condition, $field);
-        } catch (DbFieldError $e) {
-            return 0;
-        }
+        return $this->select()->sum($condition, $field);
     }
 
     /**
@@ -198,7 +242,7 @@ abstract class Dao
      */
     protected function insert(int $model = InsertOperation::INSERT_NORMAL): InsertOperation
     {
-        return (new InsertOperation($this->db, $this, $this->model, $model))->table($this->getTable());
+        return (new InsertOperation($this->db, $this->model, $model))->table($this->getTable());
     }
 
     /**
@@ -258,7 +302,7 @@ abstract class Dao
      */
     protected function delete(): DeleteOperation
     {
-        return (new DeleteOperation($this->db, $this, $this->model))->table($this->getTable());
+        return (new DeleteOperation($this->db, $this->model))->table($this->getTable());
     }
 
     /**
@@ -301,13 +345,23 @@ abstract class Dao
         $this->db->execute("COMMIT");
     }
 
-
-    function getAll(?array $fields = [], array $where = [], ?int $start = null, int $size = 10, &$page = null, $object = true): int|array
+    /**
+     * 获取所有数据
+     * @param array|null $fields
+     * @param array $where
+     * @param bool $object
+     * @param int|null $start
+     * @param int $size
+     * @param $page
+     * @return int|array
+     */
+    function getAll(?array $fields = [], array $where = [], bool $object = true, ?int $start = null, int $size = 10, &$page = null): int|array
     {
         if ($fields === null) $fields = [];
-        if ($start === null) return $this->select(...$fields)->where($where)->commit();
+        if ($start === null) return $this->select(...$fields)->where($where)->commit($object);
         return $this->select(...$fields)->page($start, $size, 10, $page)->where($where)->commit($object);
     }
+
 
 
 }

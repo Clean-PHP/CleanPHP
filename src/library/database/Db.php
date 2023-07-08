@@ -17,6 +17,7 @@ namespace library\database;
 use cleanphp\App;
 use cleanphp\base\Error;
 use cleanphp\base\Variables;
+use cleanphp\cache\Cache;
 use cleanphp\exception\ExtendError;
 use cleanphp\file\File;
 use cleanphp\file\Log;
@@ -65,7 +66,6 @@ class Db
         }
     }
 
-    private static ?Db $dbInstance = null;
     /**
      * 使用指定数据库配置初始化数据库连接
      * @param DbFile $dbFile
@@ -73,11 +73,15 @@ class Db
      */
     public static function init(DbFile $dbFile): Db
     {
-        if (empty(self::$dbInstance)) {
-            self::$dbInstance = new self($dbFile);
+
+        $hash = $dbFile->hash();
+        $instance = Variables::get("db_$hash");
+        if (empty($instance)) {
+            $instance = new self($dbFile);
+            Variables::set("db_$hash",$instance);
         }
 
-        return self::$dbInstance;
+        return $instance;
     }
 
     /**
@@ -90,6 +94,7 @@ class Db
      */
     function initTable(Dao $dao, Model $model, string $table): void
     {
+
         App::$debug && Log::record("SQL", sprintf("创建数据表 `%s`", $table));
         $this->execute($this->db->renderCreateTable($model, $table));
         $dao->onCreateTable();
@@ -100,11 +105,20 @@ class Db
      * @param string $sql 需要执行的sql语句
      * @param array $params 绑定的sql参数
      * @param false $readonly 是否为查询
+     * @param bool $cache 是否缓存
      * @return array|int
      * @throws DbExecuteError
      */
-    public function execute(string $sql, array $params = [], bool $readonly = false): int|array
+    public function execute(string $sql, array $params = [], bool $readonly = false, bool $cache = false): int|array
     {
+        $shouldCache = $readonly && $cache;
+
+        if($shouldCache){
+           $data = Cache::init(3600,Variables::getCachePath("sql",DS))->get($sql.join(',',$params));
+           if(!empty($data)){
+               return $data;
+           }
+        }
 
         App::$debug && Variables::set("__db_sql_start__", microtime(true));
         /**
@@ -135,7 +149,7 @@ class Db
                 $ret_data = $readonly ? $sth->fetchAll(PDO::FETCH_ASSOC) : $sth->rowCount();
             }
         }catch (PDOException $exception){
-            throw new DbExecuteError(sprintf("执行SQL语句出错：\r\n%s\r\n\r\n错误信息：%s", $this->highlightSQL($sql), $sth->errorInfo()[2]));
+            throw new DbExecuteError(sprintf("执行SQL语句出错：\r\n%s\r\n\r\n错误信息：%s", $this->highlightSQL($sql), $exception->getMessage()));
         }
         if (App::$debug) {
             $end = microtime(true) - Variables::get("__db_sql_start__");
@@ -148,48 +162,70 @@ class Db
             Log::record("SQL", $sql_default);
             Log::record("SQL", sprintf("执行时间：%s 毫秒", $end * 1000));
         }
-        if ($ret_data !== null) return $ret_data;
+        if ($ret_data !== null) {
+            if($shouldCache && !empty($ret_data)){
+                Cache::init(3600,Variables::getCachePath("sql",DS))->set($sql.join(',',$params),$ret_data);
+            }
+            return $ret_data;
+        }
         throw new DbExecuteError(sprintf("执行SQL语句出错：\r\n%s\r\n\r\n错误信息：%s", $this->highlightSQL($sql), $sth->errorInfo()[2]));
     }
 
-   private function highlightSQL($sql) {
-       // 定义 SQL 关键词列表
-       $keywords = array(
-           'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'INSERT', 'INTO', 'VALUES',
-           'UPDATE', 'SET', 'DELETE', 'ORDER BY', 'GROUP BY', 'LIMIT', 'JOIN',
-           'LEFT JOIN', 'RIGHT JOIN', 'INNER JOIN', 'ON'
-           // 可根据需要添加其他关键词
-       );
+    private function highlightSQL($sql)
+    {
+        if (!Variables::get("sql_highlight")) {
+            return $sql;
+        }
 
-       // 标记关键词
-       $pattern = '/\b(' . implode('|', $keywords) . ')\b/i';
-       $replacement = '<span style="color: blue;">$0</span>';
-       $highlightedSQL = preg_replace($pattern, $replacement, $sql);
+        // 定义 SQL 关键词列表
+        $keywords = array(
+            'SELECT', 'FROM', 'WHERE', 'AND', 'OR', 'NOT', 'IN', 'BETWEEN', 'LIKE',
+            'IS', 'NULL', 'AS', 'INNER', 'JOIN', 'LEFT', 'RIGHT', 'OUTER', 'ON',
+            'GROUP', 'BY', 'HAVING', 'ORDER', 'LIMIT', 'OFFSET', 'INSERT', 'INTO',
+            'VALUES', 'UPDATE', 'SET', 'DELETE', 'TRUNCATE', 'CREATE', 'TABLE',
+            'ALTER', 'DROP', 'INDEX', 'VIEW', 'GRANT', 'REVOKE', 'UNION', 'ALL',
+            'CASE', 'WHEN', 'THEN', 'ELSE', 'END', 'PRIMARY', 'KEY', 'FOREIGN',
+            'REFERENCES', 'CASCADE', 'CONSTRAINT'
+            // 可根据需要添加其他关键词
+        );
 
-       // 标记字符串值
-       $pattern = "/'(.*?)'/i";
-       $replacement = '<span style="color: green;">$0</span>';
-       $highlightedSQL = preg_replace($pattern, $replacement, $highlightedSQL);
+        // 标记关键词
+        $highlightedSQL = preg_replace_callback('/\b(' . implode('|', $keywords) . ')\b/i', function ($matches) {
+            return '<span style="color: blue;">' . $matches[0] . '</span>';
+        }, $sql);
 
-       // 标记表名和字段名
-       $pattern = '/(`[\w]+`)/i';
-       $replacement = '<span style="color: red;">$0</span>';
-       $highlightedSQL = preg_replace($pattern, $replacement, $highlightedSQL);
+        // 标记字符串值
+        $highlightedSQL = preg_replace_callback("/'(.*?)'/i", function ($matches) {
+            return '<span style="color: green;">' . $matches[0] . '</span>';
+        }, $highlightedSQL);
 
-       // 标记注释
-       $pattern = '/--.*$/m';
-       $replacement = '<span style="color: gray;">$0</span>';
-       $highlightedSQL = preg_replace($pattern, $replacement, $highlightedSQL);
+        // 标记数字值
+        $highlightedSQL = preg_replace_callback("/\b\d+\b/", function ($matches) {
+            return '<span style="color: orange;">' . $matches[0] . '</span>';
+        }, $highlightedSQL);
 
-       return $highlightedSQL;
-   }
+        // 标记参数绑定
+        $highlightedSQL = preg_replace_callback("/:([\w]+)/i", function ($matches) {
+            return '<span style="color: purple;">' . $matches[0] . '</span>';
+        }, $highlightedSQL);
+
+        // 标记表名和字段名
+        $highlightedSQL = preg_replace_callback('/(`?[\w]+`?)/i', function ($matches) {
+            return '<span style="color: red;">' . $matches[0] . '</span>';
+        }, $highlightedSQL);
+
+        // 标记注释
+        $highlightedSQL = preg_replace('/--.*$/m', '<span style="color: gray;">$0</span>', $highlightedSQL);
+
+        return $highlightedSQL;
+    }
 
 
 
 
     public function __destruct()
     {
-        unset($db);
+        unset($this->db);
         Variables::del($this->dbFile->hash());
     }
 

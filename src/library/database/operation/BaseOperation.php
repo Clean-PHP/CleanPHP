@@ -16,13 +16,8 @@ namespace library\database\operation;
 
 
 use cleanphp\base\Error;
-use cleanphp\file\Log;
 use library\database\Db;
-use library\database\exception\DbExecuteError;
 use library\database\exception\DbFieldError;
-use library\database\object\Dao;
-use PDOStatement;
-use Throwable;
 
 abstract class BaseOperation
 {
@@ -33,38 +28,17 @@ abstract class BaseOperation
     protected Db $db;
 
     protected ?string $model;
-    private Dao $dao;
+
 
     /**
      * @param $db DB 数据库对象
      * @param $model ?string 数据模型
      */
-    public function __construct(Db &$db, Dao &$dao, string $model = null)
+    public function __construct(Db &$db,  string $model = null)
     {
         $this->db = $db;
         $this->model = $model;
-        $this->dao = $dao;
-        if($model!==null && class_exists($model)){
-            $table =  $dao->getTable();
-            try {
-                $result = $this->db->getDriver()->getDbConnect()->query(/** @lang text */ "SELECT count(*) FROM {$table} LIMIT 1");
-                $table_exist = $result instanceof PDOStatement && ($result->rowCount() === 1);
-            }catch (Throwable $exception){
-                $table_exist = false;
-                Log::record("Sql错误",$exception->getMessage());
-            }
 
-
-            if (!$table_exist) {
-                if ($this->model !== null) {
-                    try {
-                        $this->db->initTable($this->dao, new $model, trim($table, '`'));
-                    } catch (DbExecuteError $e) {
-                        Error::err("初始化异常：".$e->getMessage(),$e->getTrace(),"Sql");
-                    }
-                }
-            }
-        }
 
     }
 
@@ -97,12 +71,12 @@ abstract class BaseOperation
      * 提交
      * @return array|int
      */
-    protected function __commit($readonly = false): int|array
+    protected function __commit($readonly = false,$cache = false): int|array
     {
         if ($this->tra_sql == null) $this->translateSql();
         $sql = $this->tra_sql;
         $this->tra_sql = null;
-        return $this->db->execute($sql, $this->bind_param, $readonly);
+        return $this->db->execute($sql, $this->bind_param, $readonly,$cache);
     }
 
     /**

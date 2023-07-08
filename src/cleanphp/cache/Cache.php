@@ -55,7 +55,11 @@ class Cache implements CacheInterface
      */
     private function fileName(string $key): string
     {
-        return $this->cache_path . preg_replace('/\W+/', '_', $key);
+        $new  = filter_characters($key);
+        if(mb_strlen($new)>100){
+            $new = mb_substr($new,0,50).md5($key);
+        }
+        return $this->cache_path . $new;
     }
 
     /**

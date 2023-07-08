@@ -13,6 +13,10 @@ class Role
 {
     protected static ?Role $instance = null;
     private array $config;
+    /**
+     * @var true
+     */
+    private bool $code;
 
 
     public function __construct($rbac = [])

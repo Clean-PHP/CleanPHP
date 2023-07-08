@@ -15,7 +15,6 @@
 namespace cleanphp\base;
 
 use cleanphp\objects\StringBuilder;
-use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
 
@@ -143,25 +142,18 @@ class Dump
      */
     public function dumpProp($obj, $num): void
     {
-        static $pads = [];
-        try {
-            $reflect = new ReflectionClass($obj);
-        } catch (ReflectionException $e) {
-            $this->output .= $e->getMessage();
-            return;
-        }
 
-        $prop = $reflect->getProperties();
+        static $pads = [];
+        $prop = get_object_vars($obj);
+
         $len = count($prop);
         $this->output .= "<i style='color: #333;'> (size=$len)</i>";
-        $pads[] = "    ";
-        for ($i = 0; $i < $len; $i++) {
-            $index = $i;
-            $prop[$index]->setAccessible(true);
-            $prop_name = $prop[$index]->getName();
-            $this->output .= "\n" . implode('', $pads) . sprintf("<i style='color: #333;'> %s </i><i style='color:#888a85'>=&gt;&nbsp;", $prop_name);
-            $this->dumpType($prop[$index]->getValue($obj), $num);
+        $pads[] = "     ";
+        foreach ($prop as $key => $value){
+            $this->output .= "\n" . implode('', $pads) . sprintf("<i style='color: #333;'> %s </i><i style='color:#888a85'>=&gt;&nbsp;", $key);
+            $this->dumpType($value, $num);
         }
+
         array_pop($pads);
     }
 

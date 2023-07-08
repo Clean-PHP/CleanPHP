@@ -24,7 +24,7 @@ class RBAC
      * @param $id string 角色id
      * @return void
      */
-    public static function setRole(string $id)
+    public static function setRole(string $id): void
     {
         Session::getInstance()->set("RBAC_ROLE", $id);
     }

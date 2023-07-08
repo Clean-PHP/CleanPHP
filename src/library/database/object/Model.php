@@ -21,6 +21,7 @@ abstract class Model extends ArgObject
 {
     private bool $fromDb = false;
 
+    public int $id = 0;
     public function __construct(array $item = [], $fromDb = false)
     {
         $this->fromDb = $fromDb;
@@ -30,12 +31,12 @@ abstract class Model extends ArgObject
     public function onParseType(string $key, mixed &$val, mixed $demo)
     {
         if (is_bool($demo)) {
-            $val = ($val === "1" || $val === 1 || $val === "true" || $val === true);
+            $val = ($val === "1" || $val === 1 || $val === "true" || $val === "on" || $val === true);
         }
-        if(is_string($val) && (is_array($demo)||is_object($demo))){
+        if($this->fromDb && is_string($val) && (is_array($demo)||is_object($demo))){
             $val = __unserialize($val);
         }
-        if ($this->fromDb && is_string($demo) && !(new StringBuilder($key))->endsWith("nofilter")) {
+        if ($this->fromDb && is_string($demo) && !StringBuilder::init($key)->endsWith("nofilter")) {
             $val = htmlspecialchars($val);
         }
     }
@@ -50,9 +51,12 @@ abstract class Model extends ArgObject
 
     /**
      * 获取主键
-     * @return array|SqlKey
+     * @return SqlKey
      */
-    abstract function getPrimaryKey();
+    public function getPrimaryKey(): SqlKey
+    {
+        return new SqlKey('id',0,true);
+    }
 
 
     public function onToArray($key, &$value)

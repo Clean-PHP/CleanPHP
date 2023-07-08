@@ -30,7 +30,7 @@ use cleanphp\exception\ExitApp;
 use cleanphp\file\File;
 use cleanphp\file\Log;
 use cleanphp\process\Async;
-use Exception;
+use Throwable;
 
 
 class App
@@ -171,7 +171,7 @@ class App
 
         } catch (ExitApp $exit_app) {//执行退出
             App::$debug && Log::record("Frame", sprintf("框架执行退出: %s", $exit_app->getMessage()));
-        } catch (Exception|\Error $exception) {
+        } catch (Throwable $exception) {
             Error::err("Exception: ".get_class($exception)."\r\n\r\n".$exception->getMessage(), $exception->getTrace());
         } finally {
             self::$app && self::$app->onRequestEnd();

@@ -68,7 +68,7 @@ class Error
         Variables::set('__frame_error__', true);
         Log::record($log_tag, $msg, Log::TYPE_ERROR);
         $traces = sizeof($errInfo) === 0 ? debug_backtrace() : $errInfo;
-
+        $trace_text = [];
         foreach ($traces as $i => &$call) {
             $trace_text[$i] = sprintf("#%s %s(%s): %s%s%s", $i, $call['file'] ?? "", $call['line'] ?? "", $call["class"] ?? "", $call["type"] ?? "", $call['function'] ?? "");
             Log::record($log_tag, $trace_text[$i], Log::TYPE_ERROR);
@@ -78,15 +78,23 @@ class Error
         if ($dump = ob_get_contents()) {
             ob_end_clean();
         }
-        $result = self::renderError();
-        $engine = EngineManager::getEngine();
-        if ($result !== null) {
-            (new Response())->render($result, 200, $engine->getContentType())->send();
-        } else if (App::$debug) {
-            (new Response())->render($engine->renderError($msg, $traces, $dump, $log_tag), 200, $engine->getContentType())->send();
-        } else {
-            (new Response())->render($engine->renderMsg(true, 404, "404 Not Found", "您访问的资源不存在。", 5), 404, $engine->getContentType())->send();
+
+        if(App::$cli){
+            var_dump($msg,$trace_text);
+        }else{
+            $result = self::renderError();
+
+            $engine = EngineManager::getEngine();
+
+            if ($result !== null) {
+                (new Response())->render($result, 200, $engine->getContentType())->send();
+            } else if (App::$debug) {
+                (new Response())->render($engine->renderError($msg, $trace_text, $dump, $log_tag), 200, $engine->getContentType())->send();
+            } else {
+                (new Response())->render($engine->renderMsg(true, 404, "404 Not Found", "您访问的资源不存在。", 5), 404, $engine->getContentType())->send();
+            }
         }
+
 
     }
 

@@ -17,6 +17,7 @@ use cleanphp\base\Dump;
 use cleanphp\base\Route;
 use cleanphp\closure\Exceptions\PhpVersionNotSupportedException;
 use cleanphp\closure\SerializableClosure;
+use cleanphp\exception\InvokeException;
 use cleanphp\file\Log;
 use cleanphp\process\Async;
 use cleanphp\process\AsyncObject;
@@ -253,10 +254,12 @@ function __unserialize(?string $data): mixed
  * 启动一个异步任务
  * @param Closure $function 任务函数
  * @param int $timeout 异步任务的最长运行时间,单位为秒
- * @return AsyncObject
+ * @return AsyncObject|null
  */
-function go(Closure $function, int $timeout = 300): AsyncObject
+function go(Closure $function, int $timeout = 300): ?AsyncObject
 {
+    if(App::$cli)return null;
+
     return Async::start($function, $timeout);
 }
 
@@ -318,7 +321,15 @@ function rand_str(int $length = 8, bool $upper = true, bool $lower = true, bool 
     return $password;
 }
 
-function filterCharacters($input)
+/**
+ * 过滤可能存在危险的字符
+ * @param $input
+ * @return array|string|null
+ */
+function filter_characters($input): array|string|null
 {
     return preg_replace('/[^\x{4e00}-\x{9fa5}a-zA-Z0-9_.\-]/u', '', $input);
 }
+
+
+

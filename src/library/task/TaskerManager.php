@@ -8,6 +8,7 @@ namespace library\task;
 use cleanphp\App;
 use cleanphp\base\Variables;
 use cleanphp\cache\Cache;
+use cleanphp\exception\ExitApp;
 use cleanphp\file\Log;
 use library\task\Cron\CronExpression;
 use Throwable;
@@ -135,6 +136,9 @@ class TaskerManager
                     $taskerAbstract->onStart();
                 } catch (Throwable $exception) {
                     $taskerAbstract->onAbort($exception);
+                    if($exception instanceof ExitApp){
+                        throw $exception;
+                    }
                 } finally {
                     $taskerAbstract->onStop();
                 }
@@ -193,8 +197,11 @@ class TaskerManager
                     try {
                         App::$debug && Log::record("Tasker", "异步执行：" . __serialize($task));
                         $task->onStart();
-                    } catch (Throwable $e) {
-                        $task->onAbort($e);
+                    } catch (Throwable $exception) {
+                        $task->onAbort($exception);
+                        if($exception instanceof ExitApp){
+                            throw $exception;
+                        }
                     } finally {
                         App::$debug && Log::record("Tasker", "异步执行结束：");
                         $task->onStop();

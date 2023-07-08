@@ -7,6 +7,7 @@ namespace library\http;
 
 
 use cleanphp\App;
+use cleanphp\exception\ExitApp;
 use cleanphp\file\Log;
 use Error;
 
@@ -46,7 +47,7 @@ class HttpClient
      * @param string $password
      * @return $this
      */
-    function proxy($host, $port, string $username='', string $password='')
+    function proxy($host, $port, string $username='', string $password=''): HttpClient
     {
         if(!empty($host)) {
             curl_setopt($this->curl, CURLOPT_PROXY, $host);
@@ -58,6 +59,16 @@ class HttpClient
         return $this;
     }
 
+    /**
+     * 设置超时时间
+     * @param $timeout int
+     * @return HttpClient
+     */
+    function timeout(int $timeout = 30): HttpClient
+    {
+        curl_setopt($this->curl, CURLOPT_TIMEOUT, $timeout);
+        return $this;
+    }
     /**
      * 初始化
      * @param $base_url string 基础URL
@@ -124,7 +135,9 @@ class HttpClient
             }
         } elseif ($content_type == 'json') {
             $this->headers["Content-Type"] = 'application/json';
-            $data = json_encode($data);
+            if(is_array($data)){
+                $data = json_encode($data);
+            }
         }
         //$this->headers["content-length"] = mb_strlen($data);
         $this->setOption(CURLOPT_POSTFIELDS, $data);
@@ -196,7 +209,7 @@ class HttpClient
 
         $this->setOption(CURLOPT_HTTPHEADER, $headers);
         $this->setOption(CURLOPT_RETURNTRANSFER, true);
-
+        $this->setOption(CURLOPT_FOLLOWLOCATION,true);
         try {
             if (App::$debug) {
                 $this->setOption(CURLOPT_VERBOSE, true);
@@ -226,8 +239,11 @@ class HttpClient
 
             return new HttpResponse($this->curl,$headers, $request_exec);
 
-        } catch (Error $e) {
-            throw new HttpException($e->getMessage());
+        } catch (Error $exception) {
+            if($exception instanceof ExitApp){
+                throw $exception;
+            }
+            throw new HttpException($exception->getMessage());
         }
 
     }
