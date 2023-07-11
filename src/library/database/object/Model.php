@@ -36,6 +36,7 @@ abstract class Model extends ArgObject
         if($this->fromDb && is_string($val) && (is_array($demo)||is_object($demo))){
             $val = __unserialize($val);
         }
+
         if ($this->fromDb && is_string($demo) && !StringBuilder::init($key)->endsWith("nofilter")) {
             $val = htmlspecialchars($val);
         }

@@ -84,12 +84,13 @@ class Error
         }else{
             $result = self::renderError();
 
+
             $engine = EngineManager::getEngine();
 
             if ($result !== null) {
                 (new Response())->render($result, 200, $engine->getContentType())->send();
             } else if (App::$debug) {
-                (new Response())->render($engine->renderError($msg, $trace_text, $dump, $log_tag), 200, $engine->getContentType())->send();
+                (new Response())->render($engine->renderError($msg, $traces, $dump, $log_tag), 200, $engine->getContentType())->send();
             } else {
                 (new Response())->render($engine->renderMsg(true, 404, "404 Not Found", "您访问的资源不存在。", 5), 404, $engine->getContentType())->send();
             }

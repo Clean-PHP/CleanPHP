@@ -162,7 +162,7 @@ class App
 
             $result = $controller_obj->$__action();
             if ($result !== null)
-                (new Response())->render($result, $controller_obj->getCode(), EngineManager::getEngine()->getContentType())->send();
+                (new Response())->render($result, $controller_obj->getCode(), EngineManager::getEngine()->getContentType())->setHeaders(Variables::get("__headers__",[]))->send();
             else {
                 $data = [$__module, $__controller, $__action, $controller_class];
                 EventManager::trigger("__not_render__", $data);

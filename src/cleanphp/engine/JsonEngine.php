@@ -70,7 +70,6 @@ class JsonEngine extends BaseEngine
     {
 
 
-
         $ret = [
             "error" => true,
             "msg" => $msg,
@@ -89,6 +88,8 @@ class JsonEngine extends BaseEngine
         EventManager::trigger("__json_render_msg__", $array, true);
         return Json::encode($array);
     }
+
+
 
     public function onNotFound($msg = ""): void
     {

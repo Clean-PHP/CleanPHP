@@ -115,6 +115,38 @@ class Response
         return $this;
     }
 
+    /**
+     * 设置缓存分钟数
+     * @param $min
+     * @return $this
+     */
+    public function cache($min): Response
+    {
+        $seconds_to_cache = $min * 60 ;
+        $ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
+        $this->header["Expires"] = $ts;
+        $this->header["Pragma"] = "cache";
+        $this->header["Cache-Control"] = "max-age=$seconds_to_cache";
+        return $this;
+    }
+
+    /**
+     * 设置header头
+     * @param $key
+     * @param $value
+     * @return $this
+     */
+    public function header($key,$value): Response
+    {
+        $this->header[$key] = $value;
+        return $this;
+    }
+
+    public function setHeaders($header = []){
+        $this->header = $header;
+        return $this;
+    }
+
 
     public function send(): void
     {

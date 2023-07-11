@@ -29,6 +29,8 @@ class StringBuilder
     {
         if(empty(self::$stringBuilder)){
             self::$stringBuilder = new StringBuilder($str);
+        }else{
+            self::$stringBuilder->str = $str;
         }
         return self::$stringBuilder;
     }

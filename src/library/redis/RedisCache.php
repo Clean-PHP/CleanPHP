@@ -21,6 +21,7 @@ use cleanphp\cache\CacheInterface;
 use cleanphp\exception\ExtendError;
 use cleanphp\file\Log;
 use Redis;
+use RedisException;
 
 class RedisCache implements CacheInterface
 {
@@ -29,6 +30,11 @@ class RedisCache implements CacheInterface
     private ?string $cache_path = null;
     private ?int $cache_expire = null;
 
+    public static function isEnabled(): bool
+    {
+        $config = Config::getConfig("redis");
+        return !isset($config["host"]) || !isset($config["port"]) || !class_exists("\\Redis");
+    }
     /**
      * @throws RedisCacheException|ExtendError
      */
@@ -43,7 +49,7 @@ class RedisCache implements CacheInterface
         $this->redis = new Redis();
         try{
             $boolean = $this->redis->connect($config["host"], intval($config["port"]));
-        }catch (\RedisException $e){
+        }catch (RedisException $e){
             throw new RedisCacheException(sprintf("Redis连接失败，请检查Redis服务：%s:%s，错误信息：%s", $config["host"], $config["port"], $e->getMessage()));
         }
 
@@ -52,7 +58,11 @@ class RedisCache implements CacheInterface
         }
         $passwd = $config["password"] ?? null;
         if ($passwd) {
-            $boolean = $this->redis->auth($passwd);
+            try {
+                $boolean = $this->redis->auth($passwd);
+            } catch (RedisException $e) {
+                $boolean = false;
+            }
             if (!$boolean) {
                 throw new RedisCacheException(sprintf("Redis认证失败，请检查Redis密码：%s:%s 密码：%s", $config["host"], $config["port"], $passwd));
             }
@@ -69,16 +79,19 @@ class RedisCache implements CacheInterface
     {
         if ($path == '') $path = Variables::getCachePath();
         $cache = Variables::get("__cache__");
-        if ($cache === null) $cache = new self();
-        $cache->setData($exp_time, $path);
-        Variables::set("__cache__", $cache);
+        if ($cache === null) {
+            $cache = new self();
+            $cache->setData($exp_time, $path);
+            Variables::set("__cache__", $cache);
+        }
+
         return $cache;
     }
 
     /**
      * 设置数据
      */
-    function setData(int $exp_time, string $path): ?RedisCache
+    function setData(int $exp_time, string $path): CacheInterface
     {
         if($exp_time<=0)$exp_time = null;
         $this->cache_expire = $exp_time;
@@ -93,7 +106,7 @@ class RedisCache implements CacheInterface
         $this->redis->del($this->cache_path . $key);
     }
 
-    public function get(string $key)
+    public function get(string $key): mixed
     {
         App::$debug && Log::record("Redis", sprintf("读取缓存：%s", $key));
         $string = $this->redis->get($this->cache_path . $key);
@@ -121,8 +134,6 @@ class RedisCache implements CacheInterface
      */
     public function __destruct()
     {
-        if ($this->redis) {
-            $this->redis->close();
-        }
+        $this->redis?->close();
     }
 }
