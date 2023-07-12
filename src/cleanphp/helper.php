@@ -17,7 +17,6 @@ use cleanphp\base\Dump;
 use cleanphp\base\Route;
 use cleanphp\closure\Exceptions\PhpVersionNotSupportedException;
 use cleanphp\closure\SerializableClosure;
-use cleanphp\exception\InvokeException;
 use cleanphp\file\Log;
 use cleanphp\process\Async;
 use cleanphp\process\AsyncObject;
@@ -76,6 +75,8 @@ function file_type(string $filename): string
         // open office
         'odt' => 'application/vnd.oasis.opendocument.text',
         'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
+        "woff2"=>'font/woff2',
+        "ttf"=>'font/ttf',
     );
     $extension = pathinfo($filename, PATHINFO_EXTENSION);
     $ext = strtolower($extension);

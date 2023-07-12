@@ -60,12 +60,12 @@ class Mysql extends Driver
         $sql = 'CREATE TABLE IF NOT EXISTS `' . $table . '`(';
         $name = $primary_keys->name;
         $primary = $name;
-        $sql .= $this->renderKey($primary_keys) . ",";
+        $sql .= $this->renderKey($primary_keys,$model->getUnique()) . ",";
 
 
         foreach (get_object_vars($model) as $key => $value) {
             if ($key === $primary) continue;
-            $sql .= $this->renderKey(new SqlKey($key, $value)) . ",";
+            $sql .= $this->renderKey(new SqlKey($key, $value),$model->getUnique()) . ",";
         }
         $sql .= "PRIMARY KEY (";
         $sql .= "`$primary`";
@@ -76,11 +76,11 @@ class Mysql extends Driver
 
     }
 
-    public function renderKey(SqlKey $sqlKey): string
+    public function renderKey(SqlKey $sqlKey,array $unique = []): string
     {
         if ($sqlKey->type === SqlKey::TYPE_TEXT && $sqlKey->value !== null)
             $sqlKey->value = str_replace("'", "\'", $sqlKey->value);
-        if (str_contains($sqlKey->name,'_unique')){
+        if (in_array($sqlKey->name,$unique)){
             if($sqlKey->type === SqlKey::TYPE_INT)return "`$sqlKey->name` INT DEFAULT '$sqlKey->value' UNIQUE";
             if($sqlKey->type === SqlKey::TYPE_TEXT)return "`$sqlKey->name` VARCHAR(512) DEFAULT '$sqlKey->value' UNIQUE";
             if($sqlKey->type === SqlKey::TYPE_FLOAT)return "`$sqlKey->name` FLOAT  DEFAULT '$sqlKey->value' UNIQUE";

@@ -15,7 +15,6 @@
 namespace library\database\object;
 
 use cleanphp\objects\ArgObject;
-use cleanphp\objects\StringBuilder;
 
 abstract class Model extends ArgObject
 {
@@ -28,7 +27,7 @@ abstract class Model extends ArgObject
         parent::__construct($item);
     }
 
-    public function onParseType(string $key, mixed &$val, mixed $demo)
+    public function onParseType(string $key, mixed &$val, mixed $demo): bool
     {
         if (is_bool($demo)) {
             $val = ($val === "1" || $val === 1 || $val === "true" || $val === "on" || $val === true);
@@ -37,9 +36,36 @@ abstract class Model extends ArgObject
             $val = __unserialize($val);
         }
 
-        if ($this->fromDb && is_string($demo) && !StringBuilder::init($key)->endsWith("nofilter")) {
+        if ($this->fromDb && is_string($demo) && !$this->inNofilter($key)) {
             $val = htmlspecialchars($val);
         }
+        return true;
+    }
+
+    /**
+     * 是否为不不要过滤的字段
+     * @param $key
+     * @return bool
+     */
+    private function inNofilter($key):bool{
+        return in_array($key,$this->getNofilter());
+    }
+
+    /**
+     * 获取不需要过滤的字段
+     * @return array
+     */
+    public function getNofilter(): array
+    {
+        return [];
+    }
+
+    /**
+     * 获取唯一字段
+     * @return array
+     */
+    public function getUnique():array{
+        return [];
     }
 
     /**

@@ -113,11 +113,17 @@ class Db
     {
         $shouldCache = $readonly && $cache;
 
+        $cacheDir = Variables::getCachePath("sql",DS);
+
         if($shouldCache){
-           $data = Cache::init(3600,Variables::getCachePath("sql",DS))->get($sql.join(',',$params));
+
+           $data = Cache::init(0,$cacheDir)->get($sql.join(',',$params));
            if(!empty($data)){
                return $data;
            }
+        }elseif(!$readonly){
+            //删除缓存,数据库数据发生变化后清除缓存
+            Cache::init(0,$cacheDir)->empty();
         }
 
         App::$debug && Variables::set("__db_sql_start__", microtime(true));
@@ -164,7 +170,7 @@ class Db
         }
         if ($ret_data !== null) {
             if($shouldCache && !empty($ret_data)){
-                Cache::init(3600,Variables::getCachePath("sql",DS))->set($sql.join(',',$params),$ret_data);
+                Cache::init(0,$cacheDir)->set($sql.join(',',$params),$ret_data);
             }
             return $ret_data;
         }

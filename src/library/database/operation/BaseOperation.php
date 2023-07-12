@@ -38,8 +38,6 @@ abstract class BaseOperation
     {
         $this->db = $db;
         $this->model = $model;
-
-
     }
 
     /**
