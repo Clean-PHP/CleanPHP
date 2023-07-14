@@ -29,6 +29,7 @@ abstract class BaseOperation
 
     protected ?string $model;
 
+    protected array $tables = [];
 
     /**
      * @param $db DB 数据库对象
@@ -53,6 +54,7 @@ abstract class BaseOperation
             $names = explode(",",$tableName);
         }
 
+        $this->tables = $names;
         $table = "";
         foreach ($names as $name){
             if(!empty($name)){
@@ -74,7 +76,7 @@ abstract class BaseOperation
         if ($this->tra_sql == null) $this->translateSql();
         $sql = $this->tra_sql;
         $this->tra_sql = null;
-        return $this->db->execute($sql, $this->bind_param, $readonly,$cache);
+        return $this->db->execute($sql, $this->bind_param, $readonly,$cache, $this->tables);
     }
 
     /**

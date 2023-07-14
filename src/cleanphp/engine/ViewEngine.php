@@ -197,6 +197,9 @@ TPL
     function render(...$data): string
     {
         App::$debug && Variables::set("__view_time_start__", microtime(true));
+
+
+
         $template_name = $data[0];
         [$file, $template_name] = $this->preCompileLayout($template_name);
         //$file = $this->checkTplFile($template_name);
@@ -344,7 +347,11 @@ EOF;
        // if (App::$debug && Config::getConfig('frame')['view_debug']) echo $debug;
 
         App::$debug && Log::record("ViewEngine", sprintf("编译运行时间：%s 毫秒", round((microtime(true) - Variables::get("__view_time_start__", 0)) * 1000, 2)), Log::TYPE_WARNING);
-        return ob_get_clean();
+        $result = ob_get_clean();
+
+        EventManager::trigger("__on_view_render__",$result);
+
+        return $result;
     }
 
     /**
@@ -354,7 +361,6 @@ EOF;
      */
     private function preCompileLayout(string $template_name): array
     {
-        $this->setData("__lang", Variables::get("__lang", "zh-cn"));
         if (!empty($this->__layout)) {
             if ($template_name === $this->__layout)
                 Error::err("父模板不能与当前模板一致，会导致死循环。", [], "ViewEngine");

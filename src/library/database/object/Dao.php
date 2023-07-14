@@ -311,10 +311,10 @@ abstract class Dao
      * @param array $condition 查询条件
      * @return mixed|null
      */
-    protected function find(Field $field = null, array $condition = []): mixed
+    protected function find(Field $field = null, array $condition = [],$nocache = true): mixed
     {
         if ($field === null) $field = new Field();
-        $result = $this->select($field)->where($condition)->limit()->commit();
+        $result = $this->select($field)->where($condition)->limit()->noCache($nocache)->commit();
         if (!empty($result)) {
             return $result[0];
         }
@@ -352,13 +352,17 @@ abstract class Dao
      * @param bool $object
      * @param int|null $start
      * @param int $size
-     * @param $page
+     * @param null $page
+     * @param string $orderBy
      * @return int|array
      */
-    function getAll(?array $fields = [], array $where = [], bool $object = true, ?int $start = null, int $size = 10, &$page = null): int|array
+    function getAll(?array $fields = [], array $where = [], bool $object = true, ?int $start = null, int $size = 10, &$page = null,$orderBy = ""): int|array
     {
         if ($fields === null) $fields = [];
         if ($start === null) return $this->select(...$fields)->where($where)->commit($object);
+        if(!empty($orderBy)){
+            return $this->select(...$fields)->page($start, $size, 10, $page)->where($where)->orderBy($orderBy)->commit($object);
+        }
         return $this->select(...$fields)->page($start, $size, 10, $page)->where($where)->commit($object);
     }
 

@@ -101,8 +101,7 @@ class Cache implements CacheInterface
         if ($path === "temp") $path = sys_get_temp_dir();
         $this->cache_expire = $exp_time;
         $this->cache_path = $path;
-        if (!is_dir($path))
-            mkdir($path, 0777, true);
+        File::mkDir($this->cache_path);
         return $this;
     }
 

@@ -36,9 +36,9 @@ class SelectOperation extends BaseOperation
      * 是否禁止使用缓存
      * @return $this
      */
-    public function noCache(): SelectOperation
+    public function noCache($is_nocache = true): SelectOperation
     {
-        $this->cache = false;
+        $this->cache = $is_nocache;
         return $this;
     }
 

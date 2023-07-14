@@ -21,6 +21,7 @@ use cleanphp\cache\Cache;
 use cleanphp\exception\ExtendError;
 use cleanphp\file\File;
 use cleanphp\file\Log;
+use cleanphp\objects\StringBuilder;
 use library\database\driver\Driver;
 use library\database\exception\DbExecuteError;
 use library\database\object\Dao;
@@ -106,24 +107,32 @@ class Db
      * @param array $params 绑定的sql参数
      * @param false $readonly 是否为查询
      * @param bool $cache 是否缓存
+     * @param array $tables
      * @return array|int
      * @throws DbExecuteError
      */
-    public function execute(string $sql, array $params = [], bool $readonly = false, bool $cache = false): int|array
+    public function execute(string $sql, array $params = [], bool $readonly = false, bool $cache = false, array $tables = []): int|array
     {
-        $shouldCache = $readonly && $cache;
+        $shouldCache = $readonly && $cache && !StringBuilder::init($sql)->contains("like");
 
         $cacheDir = Variables::getCachePath("sql",DS);
 
-        if($shouldCache){
+        $baseTables = join("_",$tables);
+        if(!in_array($baseTables,$tables)){
+            $tables[] = $baseTables;
+        }
+        if($shouldCache ){
 
-           $data = Cache::init(0,$cacheDir)->get($sql.join(',',$params));
+           $data = Cache::init(0,$cacheDir.$baseTables.DS)->get($sql.join(',',$params));
            if(!empty($data)){
                return $data;
            }
         }elseif(!$readonly){
             //删除缓存,数据库数据发生变化后清除缓存
-            Cache::init(0,$cacheDir)->empty();
+            foreach ($tables as $table){
+                Cache::init(0,$cacheDir.$table.DS)->empty();
+            }
+
         }
 
         App::$debug && Variables::set("__db_sql_start__", microtime(true));
@@ -170,7 +179,7 @@ class Db
         }
         if ($ret_data !== null) {
             if($shouldCache && !empty($ret_data)){
-                Cache::init(0,$cacheDir)->set($sql.join(',',$params),$ret_data);
+                Cache::init(0,$cacheDir.$baseTables.DS)->set($sql.join(',',$params),$ret_data);
             }
             return $ret_data;
         }
