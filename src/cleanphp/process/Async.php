@@ -75,7 +75,7 @@ class Async
         if (isset($url_array["query"]))
             parse_str($url_array["query"], $query);
         $port = intval($_SERVER["SERVER_PORT"]);
-        $scheme = Response::getHttpScheme() === "https://" ? "https://" : "http://";
+        $scheme = Response::getHttpScheme();
         if ($query !== [])
             $get_path = $url_array['path'] . "?" . http_build_query($query);
         else
