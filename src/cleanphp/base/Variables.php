@@ -35,9 +35,11 @@ class Variables
         return self::$version;
     }
 
-    public static function init()
+    public static function init(): void
     {
+
         $app_dir = APP_DIR . DS . 'app' . DS . self::getSite();
+
         self::$inner_arrays = [
             "path_app" => $app_dir,
             "path_storage" => $app_dir . 'storage' . DS,
@@ -48,14 +50,11 @@ class Variables
             "path_view" => $app_dir . 'view' . DS,
             "path_lib" => APP_DIR . DS . 'library' . DS,
             "path_public" => APP_DIR . DS . 'public' . DS,
+            "path_cleanphp" => APP_DIR . DS . 'cleanphp' . DS,
         ];
+
         if (!is_writable(APP_DIR)) {
-            exit("请检查程序目录和程序父级目录权限是否具有可写权限!");
-        }
-        foreach (self::$inner_arrays as $value) {
-            if (!file_exists($value)) {
-                mkdir($value, 0777, true);
-            }
+            exit("[ CleanPHP ] 环境异常：请检查程序目录和程序父级目录权限是否具有可写权限!");
         }
     }
 
@@ -203,6 +202,50 @@ class Variables
     public static function getAppPath(string ...$path): string
     {
         return self::setPath(self::getInner("path_app"), ...$path);
+    }
+
+
+    /**
+     * push一个数据到全局数组中的变量
+     * @param $var
+     * @param $data
+     * @return void
+     */
+    public static function push($var,$data): void
+    {
+        if(isset($GLOBALS[$var]) && is_array($GLOBALS[$var])){
+            $GLOBALS[$var][] = $data;
+        }
+    }
+
+    /**
+     * 对全局数组中的整数进行加法操作
+     * @param $var
+     * @param int $count
+     * @return void
+     */
+    public static function plus($var, int $count = 1): void
+    {
+        if(isset($GLOBALS[$var]) && is_int($GLOBALS[$var])){
+            $GLOBALS[$var] = $GLOBALS[$var] + $count;
+        }else{
+            $GLOBALS[$var] =  $count;
+        }
+    }
+
+    /**
+     *  对全局数组中的整数进行减法操作
+     * @param $var
+     * @param $count
+     * @return void
+     */
+    public static function minus($var,$count): void
+    {
+        if(isset($GLOBALS[$var]) && is_int($GLOBALS[$var])){
+            $GLOBALS[$var] = $GLOBALS[$var] - $count;
+        }else{
+            $GLOBALS[$var] = - $count;
+        }
     }
 
 

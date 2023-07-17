@@ -10,31 +10,28 @@
  * Time : 18:03
  * Description :
  */
-
 namespace cleanphp\process;
 
 use cleanphp\App;
-use cleanphp\base\Dump;
 use cleanphp\base\Error;
 use cleanphp\base\EventManager;
 use cleanphp\base\Request;
 use cleanphp\base\Response;
 use cleanphp\base\Variables;
 use cleanphp\cache\Cache;
-use cleanphp\exception\ExitApp;
-use cleanphp\exception\NoticeException;
-use cleanphp\exception\WarningException;
 use cleanphp\file\Log;
 use Closure;
-
+use Exception;
 
 class Async
 {
     private static bool $in_task = false;
 
-    public static function register()
+    public static function register(): void
     {
-        if (App::$cli) return;
+        if (App::$cli) {
+            return;
+        }
         EventManager::addListener("__route_end__", function ($event, &$data) {
             $array = $data;
             if ($array["m"] === "async" && $array["c"] === "task" && $array["a"] === "start") {
@@ -43,26 +40,19 @@ class Async
             } else {
                 ignore_user_abort(false);
                 if (connection_aborted()) {
-                    //如果连接已断开
                     App::exit("客户端断开，脚本中断。");
                 }
             }
         });
-
     }
 
-    /**
-     * 启动一个异步任务
-     * @param Closure $function 任务函数
-     * @param int $timeout 异步任务的最长运行时间,单位为秒
-     * @return ?AsyncObject
-     */
-    static function start(Closure $function, int $timeout = 300): ?AsyncObject
+    public static function start(Closure $function, int $timeout = 300): ?AsyncObject
     {
-        if (App::$cli) return null;
+        if (App::$cli) {
+            return null;
+        }
         $key = uniqid("async_");
 
-        Log::record("Async", "异步任务启动：$key");
         $asyncObject = new AsyncObject();
         $asyncObject->timeout = $timeout;
         $asyncObject->state = AsyncObject::WAIT;
@@ -72,20 +62,20 @@ class Async
         $url = url("async", "task", "start");
         $url_array = parse_url($url);
         $query = [];
-        if (isset($url_array["query"]))
+        if (isset($url_array["query"])) {
             parse_str($url_array["query"], $query);
+        }
         $port = intval($_SERVER["SERVER_PORT"]);
-        $scheme = Response::getHttpScheme() === "https://" ? "https://" : "http://";
-        if ($query !== [])
+        $scheme = Response::getHttpScheme();
+        if ($query !== []) {
             $get_path = $url_array['path'] . "?" . http_build_query($query);
-        else
+        } else {
             $get_path = $url_array['path'];
-        $token = md5($key);
-        $asyncObject->token = $token;
-        Cache::init($timeout, Variables::getCachePath("async", DS))->set($token, $asyncObject);
+        }
+        Cache::init($timeout, Variables::getCachePath("async", DS))->set($key, $asyncObject);
         try {
             $ch = curl_init();
-            curl_setopt($ch, CURLOPT_URL, $scheme . $url_array['host'] . ":" . $port. $get_path);
+            curl_setopt($ch, CURLOPT_URL, $scheme . $url_array['host'] . ":" . $port . $get_path);
             curl_setopt($ch, CURLOPT_PORT, $port);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
@@ -93,97 +83,62 @@ class Async
             curl_setopt($ch, CURLOPT_RESOLVE, [$url_array['host'] . ':' . "127.0.0.1"]);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
             curl_setopt($ch, CURLOPT_TIMEOUT, 5);
-            curl_setopt($ch, CURLOPT_NOBODY, true); // 设置仅发送请求头
+            curl_setopt($ch, CURLOPT_NOBODY, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Host: ' . $url_array['host'],
-                'Token: ' . $token,
+                'Key: '.$key,
                 'User-Agent: Async/1.0.0.1',
                 'Connection: Close'
             ]);
             curl_exec($ch);
-            $response = "";
-            $err_str = curl_error($ch);
             curl_close($ch);
-        } catch (WarningException $exception) {
-            $err_str = $exception->getMessage();
-            $response = false;
-        }
-
-        if ($response === false) {
-            Error::err('异步任务处理失败，可能超出服务器处理上限: ' . $err_str, [], "Async");
+        } catch (Exception $exception) {
+            Error::err('异步任务处理失败，可能超出服务器处理上限: ' . $exception->getMessage(), [], "Async");
             return null;
         }
-
-
 
         if (App::$debug) {
             Log::record("Async", "异步任务已下发：$key");
         }
 
         return $asyncObject;
-
     }
 
-    /**
-     *  响应后台异步请求
-     * @return void
-     * @throws ExitApp
-     */
-    public static function response()
+    public static function response(): void
     {
-        try {
-            self::noWait();
-        } catch (NoticeException $exception) {
-
-        }
+        self::noWait();
         self::$in_task = true;
-        $token = Request::getHeaderValue("Token") ?? "";
-
-        /**@var $asyncObject AsyncObject* */
-        $asyncObject = Cache::init(300, Variables::getCachePath("async", DS))->get($token);
-        Cache::init(300, Variables::getCachePath("async", DS))->del($token);
-        if (empty($asyncObject)) {
-            Log::record("Async", "key检查失败！");
-            App::exit("您无权访问该资源。");
-            return;
-        }elseif (!$asyncObject instanceof AsyncObject){
-            Log::record("Async", "key检查失败！".serialize($asyncObject));
+        $key = Request::getHeaderValue("Key") ?? "";
+        /** @var AsyncObject $asyncObject */
+        $cache =  Cache::init(300, Variables::getCachePath("async", DS));
+        $asyncObject = $cache->get($key);
+        $cache->del($key);
+        if (empty($asyncObject) || !isset($_SERVER["REMOTE_ADDR"])) {
+            Log::record("Async", "找不到对应的任务！");
             App::exit("您无权访问该资源。");
             return;
         }
 
-        try {
-        $key = $asyncObject->key;
         $function = $asyncObject->function;
-        $timeout = $asyncObject->timeout??60;
-        } catch (NoticeException $exception) {
-            Log::record("Async", "序列化对象错误！");
+        $timeout = $asyncObject->timeout ?? 60;
 
-            Log::record("Async", "错误对象：".(new Dump())->dumpTypeAsString($asyncObject));
-
-            App::exit("序列化对象错误");
-             }
         set_time_limit($timeout);
         Variables::set("__async_task_id__", $key);
         Variables::set("__frame_log_tag__", "async_{$key}_");
-        App::$debug && Log::record("Async", "异步任务开始执行：".__serialize($asyncObject));
-        if(!empty($function) && $function instanceof Closure){
+        App::$debug && Log::record("Async", "异步任务开始执行：" . serialize($asyncObject));
+        if (!empty($function) && $function instanceof Closure) {
             $function();
         }
 
         App::exit("异步任务执行完毕");
     }
 
-    /**
-     * 后台运行
-     * @param int $time 超时时间
-     * @param string $outText
-     * @return void
-     */
     public static function noWait(int $time = 0, string $outText = "")
     {
-        if (App::$cli) return null;
-        ignore_user_abort(true); // 后台运行，不受前端断开连接影响
+        if (App::$cli) {
+            return null;
+        }
+        ignore_user_abort(true);
         set_time_limit($time);
         ob_end_clean();
         ob_start();
@@ -194,40 +149,23 @@ class Async
         }
         $size = ob_get_length();
         header("Content-Length: $size");
-        ob_end_flush();//输出当前缓冲
+        ob_end_flush();
         flush();
         if (function_exists("fastcgi_finish_request")) {
-            fastcgi_finish_request(); /* 响应完成, 关闭连接 */
+            fastcgi_finish_request();
         }
     }
 
-
-    /**
-     * 判断当前执行环境是否为异步任务
-     * @return bool
-     */
-    public static function isInTask(): bool
-    {
-        return self::$in_task;
-    }
-
-    /**
-     * 等待所有任务执行完毕
-     * @param ...$keys AsyncObject
-     * @return void
-     */
-    public static function wait(...$keys)
+    public static function wait(AsyncObject ...$keys)
     {
         $array = $keys;
         while (!empty($array)) {
             foreach ($array as &$key) {
-                if (empty(Cache::init($key->timeout, Variables::getCachePath("async", DS))->get($key->token))) {
+                if (empty(Cache::init($key->timeout, Variables::getCachePath("async", DS))->get($key->key))) {
                     unset($key);
                 }
             }
             usleep(20000);
         }
     }
-
-
 }

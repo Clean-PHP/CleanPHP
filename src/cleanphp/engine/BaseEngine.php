@@ -15,17 +15,12 @@
 namespace cleanphp\engine;
 
 use cleanphp\base\Response;
-use cleanphp\base\Variables;
 
 abstract class BaseEngine
 {
 
 
-    /**
-     * 渲染的输出类型
-     * @return string
-     */
-    abstract function getContentType(): string;
+
 
     /**
      * 渲染数据
@@ -50,10 +45,15 @@ abstract class BaseEngine
      * @param $v
      * @return $this
      */
-    public function setHeader($k,$v){
+    public function setHeader($k,$v): static
+    {
         $this->headers[$k] = $v;
-        Variables::set("__headers__",$this->headers);
         return $this;
+    }
+
+    public function getHeaders(): array
+    {
+        return $this->headers;
     }
 
     /**
@@ -61,22 +61,60 @@ abstract class BaseEngine
      * @param $min
      * @return $this
      */
-    public function cache($min)
+    public function cache($min): static
     {
         $seconds_to_cache = $min * 60 ;
         $ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
         $this->headers["Expires"] = $ts;
         $this->headers["Pragma"] = "cache";
         $this->headers["Cache-Control"] = "max-age=$seconds_to_cache";
-        Variables::set("__headers__",$this->headers);
         return $this;
     }
 
+    private string $content_type = 'text/html';
+    //状态
+    private int $code = 200;
+    /**
+     * 设置响应类型
+     * @param $type
+     * @return $this
+     */
+    public function setContentType($type): static
+    {
+        $this->content_type = $type;
+        return $this;
+    }
 
     /**
+     * 渲染的输出类型
+     * @return string
      */
-    function renderMsg(bool $err = false, int $code = 404, string $title = "", $msg = "", int $time = -1, string $url = '/', string $desc = "立即跳转"): string
+    function getContentType(): string{
+        return $this->content_type;
+    }
+
+    /**
+     * 设置响应类型
+     * @param $code
+     * @return $this
+     */
+    public function setCode($code): static
     {
+        $this->code = $code;
+        return $this;
+    }
+
+    function getCode(): int
+    {
+        return $this->code;
+  }
+
+    /**
+     * 渲染数据
+     */
+    function renderMsg(int $code = 404, string $title = "", $msg = "", int $time = -1, string $url = '/', string $desc = "立即跳转"): string
+    {
+        $this->setCode($code);
         if ($time == 0) {
             Response::location($url);
         }

@@ -56,12 +56,5 @@ interface CacheInterface
      * 清空缓存
      */
     public function empty();
-
-    /**
-     * 设置数据
-     * @param int $exp_time
-     * @param string $path
-     * @return CacheInterface
-     */
-    function setData(int $exp_time, string $path): CacheInterface;
+    
 }

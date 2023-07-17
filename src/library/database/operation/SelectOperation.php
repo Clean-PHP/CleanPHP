@@ -136,7 +136,7 @@ class SelectOperation extends BaseOperation
     public function commit($object = true)
     {
 
-        if($object && StringBuilder::init($this->opt["table_name"])->contains(",")){
+        if($object && str_contains($this->opt["table_name"],",")){
             $object = false;
         }
 

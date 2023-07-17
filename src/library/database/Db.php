@@ -113,7 +113,7 @@ class Db
      */
     public function execute(string $sql, array $params = [], bool $readonly = false, bool $cache = false, array $tables = []): int|array
     {
-        $shouldCache = $readonly && $cache && !StringBuilder::init($sql)->contains("like");
+        $shouldCache = $readonly && $cache && !str_contains($sql,"like");
 
         $cacheDir = Variables::getCachePath("sql",DS);
 

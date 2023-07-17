@@ -14,15 +14,18 @@
 
 use cleanphp\App;
 use cleanphp\base\EventManager;
+use cleanphp\base\Session;
 use cleanphp\file\Log;
 use library\websocket\WebSocket;
 use library\websocket\WebsocketException;
 
-if(App::$cli)return null;
-EventManager::addListener("__frame_init__",function ($event, &$data){
-    try {
-        WebSocket::start();
-    } catch (WebsocketException $e) {
-        Log::record("Websocket",$e->getMessage());
-    }
-});
+if(!App::$cli && Session::getInstance()->get("__ws_server__",false) ) {
+    EventManager::addListener("__frame_init__",function ($event, &$data){
+        try {
+            WebSocket::start();
+        } catch (WebsocketException $e) {
+            Log::record("Websocket",$e->getMessage());
+        }
+    });
+
+}

@@ -18,7 +18,6 @@ use cleanphp\base\Config;
 use cleanphp\base\EventManager;
 use cleanphp\base\Variables;
 use cleanphp\cache\Cache;
-use cleanphp\exception\NoticeException;
 use cleanphp\exception\WarningException;
 use cleanphp\file\Log;
 use library\websocket\main\Server;
@@ -52,22 +51,29 @@ class WebSocket
 
     }
 
-    static function isLock($port): bool
-    {
-        $timeout = 1; // 连接超时时间（秒）
-        try {
-            $socket = @fsockopen("127.0.0.1", $port, $errno, $errstr, $timeout);
-            if ($socket) {
-                fclose($socket);
-                return true; // 端口已被占用
-            } else {
-                return false; // 端口未被占用
-            }
-        } catch (NoticeException|WarningException $exception) {
-            return true; // 端口已被占用
-        }
+
+
+    static function isLock($port): bool {
+       try{
+           $socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
+           if ($socket === false) {
+               return false; // 无法创建socket
+           }
+           // 设置连接超时时间为0，即立即返回
+           socket_set_option($socket, SOL_SOCKET, SO_RCVTIMEO, ['sec' => 0, 'usec' => 0]);
+           socket_set_option($socket, SOL_SOCKET, SO_SNDTIMEO, ['sec' => 0, 'usec' => 0]);
+           // 尝试绑定端口
+           $result = socket_bind($socket, '127.0.0.1', $port);
+           // 关闭socket
+           socket_close($socket);
+           return $result === false && socket_last_error() === SOCKET_EADDRINUSE;
+
+       }catch (WarningException $exception){
+          return false;
+       }
 
     }
+
 
     /**
      * 停止Websocket

@@ -332,5 +332,19 @@ function filter_characters($input): array|string|null
     return preg_replace('/[^\x{4e00}-\x{9fa5}a-zA-Z0-9_.\-]/u', '', $input);
 }
 
+/**
+ * 检查一个文件名是否为文件，这里处理了len最长的问题
+ * @param $file
+ * @return bool
+ */
+function is_file_exists($file): bool
+{
+    if (str_contains($file, "\n") || strlen($file) > 1000 || !is_file($file)) {
+        return false;
+    }
+
+    return true;
+}
+
 
 

@@ -15,7 +15,7 @@ namespace library\websocket;
 
 
 
-use cleanphp\objects\ArgObject;
+use cleanphp\base\ArgObject;
 
 class SocketInfo extends ArgObject
 {

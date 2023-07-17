@@ -75,7 +75,8 @@ class Ip
         return $deny;
     }
 
-    private function setBlack(){
+    private function setBlack(): void
+    {
         $this->malice_time++;
         $this->black_timeout = 7200 * $this->malice_time + time();
     }

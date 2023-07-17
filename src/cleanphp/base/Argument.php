@@ -52,7 +52,7 @@ class Argument
      * @param mixed|null $default
      * @return bool|float|int|mixed|string|null
      */
-    static function arg(string $key = null, mixed $default = null)
+    static function arg(string $key = null, mixed $default = null): mixed
     {
         $all = array_merge($_POST, $_GET);
         if ($key === null) return $all;

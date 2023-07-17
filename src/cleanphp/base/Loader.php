@@ -19,6 +19,12 @@ use cleanphp\file\Log;
 
 class Loader
 {
+    /**
+     * 已加载的文件数组
+     *
+     * @var array
+     */
+    private static array $loadedFiles = [];
 
     /**
      * 注册自动加载
@@ -26,45 +32,52 @@ class Loader
     public static function register(): void
     {
         spl_autoload_register(__NAMESPACE__ . "\Loader::autoload", true, true);
-
-        //注册第三方库的自动加载
-        if (is_dir(Variables::getLibPath())) {
-            $data = scandir(Variables::getLibPath());
-
+        // 注册第三方库的自动加载
+        $libPath = Variables::getLibPath();
+        if (is_dir($libPath)) {
+            $data = scandir($libPath);
             foreach ($data as $value) {
                 if (!str_starts_with($value, ".")) {
-                    $file = Variables::setPath(Variables::getLibPath(), $value, 'autoload.php');
-                    if (file_exists($file)) {
-                        include_once $file;
-                    }
+                    $file = Variables::setPath($libPath, $value, 'autoload.php');
+                    self::includeFile($file);
                 }
-
             }
-
         }
-
-        $file = Variables::setPath(APP_DIR, 'vendor', 'autoload.php');
-
-        if (file_exists($file)) include_once $file;
+        self::includeFile(Variables::setPath(APP_DIR, 'vendor', 'autoload.php'));
     }
 
     /**
      * 框架本身的自动加载
+     *
      * @param string $raw
      */
-    public static function autoload(string $raw)
+    public static function autoload(string $raw): void
     {
-        $real_class = str_replace("\\", DS, $raw) . ".php";
-        //拼接类名文件
-        $file = APP_DIR . DS . $real_class;
-        //存在就加载
-        if (file_exists($file)) {
-            include_once $file;
-            //细节不重要
-            if (App::$debug && !str_contains($file, "cleanphp/"))
-                Log::record("Loader", $raw);
-        }
+        $realClass = str_replace("\\", DS, $raw) . ".php";
+        // 拼接类名文件
+        $file = APP_DIR . DS . $realClass;
+        // 存在就加载
+        self::includeFile($file);
     }
 
+    /**
+     * 引入文件并记录日志
+     *
+     * @param string $file
+     */
+    private static function includeFile(string $file): void
+    {
+        if (isset(self::$loadedFiles[$file])) {
+            return; // 文件已加载
+        }
 
+        if (file_exists($file)) {
+            include $file;
+            // 细节不重要
+            if (App::$debug && !str_contains($file, "cleanphp/")) {
+                Log::record("Loader", $file);
+            }
+            self::$loadedFiles[$file] = true; // 将文件标记为已加载
+        }
+    }
 }

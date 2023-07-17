@@ -21,7 +21,6 @@ class AsyncObject
     const WAIT = 2;
     public string $key = "";
     public int $timeout = 0;//超时时间
-    public string $token = "";//校验token
     public  $function ;
     public int $state = 0;
 }

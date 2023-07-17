@@ -8,6 +8,7 @@ namespace cleanphp\base;
 
 use cleanphp\App;
 use cleanphp\exception\ExitApp;
+use cleanphp\file\File;
 
 /**
  * Class Config
@@ -37,6 +38,17 @@ class Config
 
     static private function loadConfig(): void
     {
+
+        $config = Variables::getAppPath( "config.php");
+        $config_example = Variables::getAppPath( "config_example.php");
+        if (!file_exists($config)) {
+            if (file_exists($config_example)) {
+                File::copy($config_example, $config);
+            } else {
+                exit("[ CleanPHP ] 环境异常：缺少配置文件:$config");
+            }
+        }
+
         if (!empty(self::$file_data)) return;
         self::$path = Variables::getAppPath("config.php");
         self::$file_data = require self::$path;
@@ -53,7 +65,7 @@ class Config
         date_default_timezone_set(Config::getConfig('frame')['time_zone'] ?? "Asia/Shanghai");
         $frame = self::getConfig("frame");
         if (!in_array("0.0.0.0", $frame['host']) && !App::$cli && !in_array($_SERVER["SERVER_NAME"], $frame['host'])) {
-            App::exit(sprintf("您的域名绑定错误，当前域名为：%s , 请在 %s 中Host选项里添加该域名。", $_SERVER["SERVER_NAME"], "config.php"), true);
+            App::exit("[ CleanPHP ] 环境异常：您的域名绑定错误，当前域名为：".$_SERVER["SERVER_NAME"]." , 请在 config.php 中Host选项里添加该域名。");
         }
 
 

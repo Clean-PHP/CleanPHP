@@ -69,7 +69,6 @@ class JsonEngine extends BaseEngine
     function renderError(string $msg, array $traces, string $dumps, string $tag): string
     {
 
-
         $ret = [
             "error" => true,
             "msg" => $msg,
@@ -80,8 +79,9 @@ class JsonEngine extends BaseEngine
         return JSON::encode($ret);
     }
 
-    public function renderMsg(bool $err = false, int $code = 404, string $title = "", $msg = "", int $time = 3, string $url = '/', string $desc = "立即跳转"): string
+    public function renderMsg(int $code = 404, string $title = "", $msg = "", int $time = 3, string $url = '/', string $desc = "立即跳转"): string
     {
+        parent::renderMsg($code , $title, $msg , $time , $url, $desc);
         $array = [
             "code" => $code, "msg" => $title, "data" => $msg, 'url' => $url
         ];

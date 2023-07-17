@@ -18,7 +18,6 @@ use cleanphp\base\Request;
 use cleanphp\base\Response;
 use cleanphp\base\Variables;
 use cleanphp\file\Log;
-use cleanphp\objects\StringBuilder;
 use ErrorException;
 use library\qrcode\src\Common\EccLevel;
 use library\qrcode\src\Common\Version;
@@ -55,7 +54,7 @@ class Code
 
         try {
             $image = Config::getConfig("login")["image"];
-            if ((new StringBuilder($image))->startsWith("/clean_static")) {
+            if (str_starts_with($image,"/clean_static")) {
                 $image = str_replace("/clean_static", APP_DIR . DS . "app" . DS . "public", $image);
             } else {
                 $image = str_replace(Response::getHttpScheme() . Request::getDomain() . DS . "image", Variables::getStoragePath("uploads"), $image);

@@ -57,7 +57,7 @@ class RBACListener
             if ($item == "all") {
                 return true;//所有都可以访问
             }
-            if((new StringBuilder($url))->startsWith($item))return true;
+            if(str_starts_with($url,$item))return true;
 
         }
         return false;

@@ -261,7 +261,7 @@ class StringParser
         $ret = '';
 
         foreach (self::$dictIsp as $k => $v) {
-            if (false !== strpos($str, $v)) {
+            if (str_contains($str, $v)) {
                 $ret = $v;
                 break;
             }

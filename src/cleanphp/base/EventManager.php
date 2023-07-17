@@ -23,7 +23,7 @@ use cleanphp\file\Log;
  */
 class EventManager
 {
-    protected static array $events = [];
+    private static array $events = [];
 
     /**
      * 监听事件
@@ -33,10 +33,14 @@ class EventManager
      */
     public static function addListener(string $event_name, callable $func, int $level = 1000): void
     {
-        while (isset(self::$events[$event_name][$level])) {
+        if (!isset(self::$events[$event_name])) {
+            self::$events[$event_name] = [];
+        }
+
+        while (array_key_exists($level, self::$events[$event_name])) {
             $level++;
         }
-        //一个事件名绑定多个监听器
+
         self::$events[$event_name][$level] = $func;
         App::$debug && Log::record("Event", "注册事件：$event_name ,优先级：$level");
     }
@@ -60,16 +64,22 @@ class EventManager
      */
     public static function trigger(string $event_name, mixed &$data = null, bool $once = false)
     {
-        if (!isset(self::$events[$event_name])) return null;
+        if (!array_key_exists($event_name, self::$events)) {
+            return null;
+        }
+
         $list = self::$events[$event_name];
         $results = [];
+
         foreach ($list as $key => $event) {
             App::$debug && Log::record("Event", "事件响应：$event_name ");
-            $results[$key] = $event($event_name, $data);//(new $event())->handleEvent($event_name, $data);
+            $results[$key] = $event($event_name, $data);
+
             if (false === $results[$key] || (!is_null($results[$key]) && $once)) {
                 break;
             }
         }
+
         return $once ? end($results) : $results;
     }
 
@@ -78,4 +88,3 @@ class EventManager
         return self::$events;
     }
 }
-

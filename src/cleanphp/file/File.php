@@ -1,38 +1,25 @@
 <?php
 /*
- * Copyright (c) 2023. Ankio. All Rights Reserved.
+ *  Copyright (c) 2023. Ankio. All Rights Reserved.
  */
 
 namespace cleanphp\file;
 
-
 use ZipArchive;
 
-/**
- * Class File
- * Created By ankio.
- * Date : 2022/1/12
- * Time : 8:09 下午
- * Description : 文件工具类
- *
- */
 class File
 {
-
-    /**
-     * 文件夹删除或者文件删除
-     * @param string $name
-     * @return bool
-     */
     public static function del(string $name): bool
     {
-        if (!is_dir($name)) {
-            if (is_file($name))
-                return unlink($name);
-            else
-                return false;
+        if (!is_dir($name) && !is_file($name)) {
+            return false;
         }
-        $handle = opendir($name); //打开目录
+
+        if (is_file($name)) {
+            return unlink($name);
+        }
+
+        $handle = opendir($name);
         while (($file = readdir($handle)) !== false) {
             if ($file !== "." && $file !== "..") {
                 $dir = $name . '/' . $file;
@@ -43,48 +30,30 @@ class File
         return rmdir($name);
     }
 
-    /**
-     * 清空一个文件夹
-     * @param string $path
-     */
-    static function empty(string $path)
+    public static function empty(string $path)
     {
-        //如果是目录则继续
         if (is_dir($path)) {
-            //扫描一个文件夹内的所有文件夹和文件并返回数组
             $p = scandir($path);
             foreach ($p as $val) {
-                //排除目录中的.和..
                 if ($val != "." && $val != "..") {
-                    //如果是目录则递归子目录，继续操作
-                    if (is_dir($path . $val)) {
-                        //子目录中操作删除文件夹和文件
-                        self::empty($path . $val . '/');
-                        //目录清空后删除空文件夹
-                        @rmdir($path . $val . '/');
+                    $subpath = $path . $val;
+                    if (is_dir($subpath)) {
+                        self::empty($subpath . '/');
+                        @rmdir($subpath . '/');
                     } else {
-                        //如果是文件直接删除
-                        unlink($path . $val);
+                        unlink($subpath);
                     }
                 }
             }
         }
     }
 
-    /**
-     * 文件夹、文件拷贝
-     *
-     * @param string $src 来源文件夹、文件
-     * @param string $dst 目的地文件夹、文件
-     * @return bool
-     */
     public static function copy(string $src = '', string $dst = ''): bool
     {
-
-
         if (empty($src) || empty($dst)) {
             return false;
         }
+
         if (is_file($src)) {
             return copy($src, $dst);
         }
@@ -105,13 +74,6 @@ class File
         return true;
     }
 
-    /**
-     * 创建文件夹
-     *
-     * @param string $path 文件夹路径
-     * @param bool $recursive 是否递归创建
-     * @return bool
-     */
     public static function mkDir(string $path, bool $recursive = true): bool
     {
         clearstatcache();
@@ -122,15 +84,15 @@ class File
         return true;
     }
 
-    static function zip($dir, $dst)
+    public static function zip($dir, $dst)
     {
         $zip = new ZipArchive();
-        if ($zip->open($dst, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
-            self::addFile2Zip($dir, $zip, $dir); //调用方法，对要打包的根目录进行操作，并将ZipArchive的对象传递给方法
+        if ($zip->open($dst, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
+            self::addDirectoryToZip($dir, $zip, $dir);
         }
     }
 
-    static function traverseDirectory($dir, $callback): void
+    public static function traverseDirectory($dir, $callback): void
     {
         if (is_dir($dir)) {
             if ($dh = opendir($dir)) {
@@ -149,15 +111,14 @@ class File
         }
     }
 
-
-    private static function addFile2Zip($path, ZipArchive $zip, $replace): void
+    private static function addDirectoryToZip($path, ZipArchive $zip, $replace): void
     {
-        $handler = opendir($path); //打开当前文件夹由$path指定。
+        $handler = opendir($path);
         while (($filename = readdir($handler)) !== false) {
-            if (!str_starts_with($filename, ".")) {//文件夹文件名字为'.'和‘..'，不要对他们进行操作
-                if (is_dir($path . "/" . $filename)) {// 如果读取的某个对象是文件夹，则递归
-                    self::addFile2Zip($path . "/" . $filename, $zip, $replace);
-                } else { //将文件加入zip对象
+            if (!str_starts_with($filename, ".")) {
+                if (is_dir($path . "/" . $filename)) {
+                    self::addDirectoryToZip($path . "/" . $filename, $zip, $replace);
+                } else {
                     $zip->addFile($path . "/" . $filename);
                     $zip->renameName($path . "/" . $filename, str_replace($replace, "", $path) . DIRECTORY_SEPARATOR . $filename);
                 }
@@ -165,5 +126,4 @@ class File
         }
         @closedir($handler);
     }
-
 }

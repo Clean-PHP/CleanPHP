@@ -10,20 +10,27 @@ use cleanphp\engine\EngineManager;
 
 class Controller
 {
-    protected int $code = 200;
-
     public function __construct()
     {
         $result = $this->__init();
-        if (!empty($result)) (new Response())->render($result)->code($this->code)->contentType(EngineManager::getEngine()->getContentType())->send();
+        if (!empty($result)){
+            $engine = EngineManager::getEngine();
+            (new Response())
+                ->render($result)
+                ->contentType($engine->getContentType())
+                ->setHeaders($engine->getHeaders())
+                ->code($engine->getCode())
+                ->send();
+        }
         EventManager::trigger("__on_controller_create__", $this);
     }
 
 
     /**
      * 初始化函数
+     * 返回string就需要提前输出
      */
-    public function __init()
+    public function __init(): ?string
     {
         return null;
     }
@@ -37,10 +44,6 @@ class Controller
         return EngineManager::getEngine()->render(...$data);
     }
 
-    public function getCode(): int
-    {
-        return $this->code;
-    }
 
 
 }
