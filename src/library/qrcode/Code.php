@@ -54,14 +54,15 @@ class Code
 
         try {
             $image = Config::getConfig("login")["image"];
-            if (str_starts_with($image,"/clean_static")) {
+            $image = str_replace(Response::getHttpScheme() . Request::getDomain(),"",$image);
+            if (str_contains($image,"/clean_static")) {
                 $image = str_replace("/clean_static", APP_DIR . DS . "app" . DS . "public", $image);
             } else {
-                $image = str_replace(Response::getHttpScheme() . Request::getDomain() . DS . "image", Variables::getStoragePath("uploads"), $image);
+                $image = str_replace("image", Variables::getStoragePath("uploads"), $image);
 
             }
-
             header('Content-type: image/png');
+
             echo (new QRImageWithLogo($options, $qrcode->getQRMatrix()))->dump(null, $image);
 
         } catch (ErrorException|src\Data\QRCodeDataException|src\Output\QRCodeOutputException $e) {

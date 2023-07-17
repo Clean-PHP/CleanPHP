@@ -75,8 +75,8 @@ function file_type(string $filename): string
         // open office
         'odt' => 'application/vnd.oasis.opendocument.text',
         'ods' => 'application/vnd.oasis.opendocument.spreadsheet',
-        "woff2"=>'font/woff2',
-        "ttf"=>'font/ttf',
+        "woff2" => 'font/woff2',
+        "ttf" => 'font/ttf',
     );
     $extension = pathinfo($filename, PATHINFO_EXTENSION);
     $ext = strtolower($extension);
@@ -200,22 +200,25 @@ function url(string $m = 'index', string $c = 'main', string $a = 'index', array
 {
     return Route::url(...func_get_args());
 }
+
 //闭包序列化
-function traversalClosure($array,$callback){
+function traversalClosure($array, $callback)
+{
     if (is_array($array) || (is_object($array) && !$array instanceof Closure)) {
         foreach ($array as &$item) {
-            if (is_array($item)|| (is_object($item) && !$item instanceof Closure)) {
-                $item = traversalClosure($item,$callback);
+            if (is_array($item) || (is_object($item) && !$item instanceof Closure)) {
+                $item = traversalClosure($item, $callback);
             } elseif ($item instanceof Closure) {
                 $callback($item);
-            }elseif (is_string($item) && str_starts_with($item, "__SerializableClosure__")) {
-                $item = substr($item,23);
+            } elseif (is_string($item) && str_starts_with($item, "__SerializableClosure__")) {
+                $item = substr($item, 23);
                 $callback($item);
             }
         }
     }
     return $array;
 }
+
 /**
  * Serialize
  *
@@ -225,11 +228,11 @@ function traversalClosure($array,$callback){
 function __serialize(mixed $data): string
 {
 
-    return  serialize(traversalClosure($data,function (&$item){
+    return serialize(traversalClosure($data, function (&$item) {
         try {
             $item = "__SerializableClosure__" . serialize(new SerializableClosure($item));
         } catch (PhpVersionNotSupportedException $e) {
-            Log::record("序列化失败",$e->getMessage());
+            Log::record("序列化失败", $e->getMessage());
             $item = "";
         }
     }));
@@ -243,10 +246,10 @@ function __serialize(mixed $data): string
  */
 function __unserialize(?string $data): mixed
 {
-    if(empty($data))return null;
+    if (empty($data)) return null;
     $result = unserialize($data);
-    traversalClosure($result,function (&$item){
-        $item =  unserialize($item)->getClosure();
+    traversalClosure($result, function (&$item) {
+        $item = unserialize($item)->getClosure();
     });
     return $result;
 }
@@ -259,7 +262,7 @@ function __unserialize(?string $data): mixed
  */
 function go(Closure $function, int $timeout = 300): ?AsyncObject
 {
-    if(App::$cli)return null;
+    if (App::$cli) return null;
 
     return Async::start($function, $timeout);
 }
@@ -346,5 +349,18 @@ function is_file_exists($file): bool
     return true;
 }
 
+/**
+ * 字符串转换utf-8
+ * @param $text
+ * @param string $encode_code
+ * @return string
+ */
+function convert($text, string $encode_code = "UTF-8"): string
+{
+    $encode = mb_detect_encoding($text, mb_detect_order());
+    if ($encode !== $encode_code)
+        $text = mb_convert_encoding($text, $encode_code, $encode);
+    return $text;
+}
 
 

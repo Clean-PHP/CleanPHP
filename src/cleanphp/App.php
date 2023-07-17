@@ -66,7 +66,6 @@ class App
         include APP_CORE . "helper.php";//载入内置助手函数
         include APP_CORE . "base" . DS . "Variables.php";// 加载变量
         include APP_CORE . "base" . DS . "Loader.php";// 加载自动加载器
-
         Variables::init();//初始化变量
         Loader::register();// 注册自动加载
         Config::register();// 加载配置文件

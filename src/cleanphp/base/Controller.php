@@ -30,7 +30,7 @@ class Controller
      * 初始化函数
      * 返回string就需要提前输出
      */
-    public function __init(): ?string
+    public function __init()
     {
         return null;
     }

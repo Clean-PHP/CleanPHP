@@ -39,7 +39,7 @@ class File
                     $subpath = $path . $val;
                     if (is_dir($subpath)) {
                         self::empty($subpath . '/');
-                        @rmdir($subpath . '/');
+                        rmdir($subpath . '/');
                     } else {
                         unlink($subpath);
                     }
@@ -77,8 +77,8 @@ class File
     public static function mkDir(string $path, bool $recursive = true): bool
     {
         clearstatcache();
-        if (!is_dir($path)) {
-            return @mkdir($path, 0777, $recursive);
+        if (!empty($path) && !file_exists($path)) {
+            return mkdir($path, 0777, $recursive);
         }
 
         return true;
@@ -124,6 +124,6 @@ class File
                 }
             }
         }
-        @closedir($handler);
+        closedir($handler);
     }
 }

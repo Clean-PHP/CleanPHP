@@ -14,7 +14,6 @@
 
 namespace cleanphp\base;
 
-use cleanphp\objects\StringBuilder;
 use ReflectionException;
 use ReflectionFunction;
 
@@ -58,7 +57,7 @@ class Dump
         if ($len === 0)
             $this->output .= $space . "  <i  style='color: #888a85;'>empty</i> \r\n";
         foreach ($param as $key => $val) {
-            $str = htmlspecialchars((new StringBuilder($key))->convert()->toString(), strlen($key));
+            $str = htmlspecialchars(convert($key), strlen($key));
             $this->output .= $space . sprintf("<i style='color: #333;'> %s </i><i  style='color: #888a85;'>=&gt;", $str);
             $this->dumpType($val, $i);
             $this->output .= "</i> \r\n";
@@ -131,7 +130,7 @@ class Dump
     private function dumpString($param): void
     {
 
-        $str = sprintf("<small style='color: #333;font-weight: bold'>string</small> <i style='color:#cc0000'>'%s'</i> <i>(length=%d)</i>", htmlspecialchars((new StringBuilder($param))->convert()->toString()), strlen($param));
+        $str = sprintf("<small style='color: #333;font-weight: bold'>string</small> <i style='color:#cc0000'>'%s'</i> <i>(length=%d)</i>", htmlspecialchars(convert($param)), strlen($param));
         $this->output .= $str;
     }
 

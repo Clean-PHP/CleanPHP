@@ -14,7 +14,6 @@ namespace cleanphp\base;
 
 
 use cleanphp\App;
-use cleanphp\objects\StringBuilder;
 
 /**
  * Class Response

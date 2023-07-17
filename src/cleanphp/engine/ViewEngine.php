@@ -825,7 +825,7 @@ pre {
         }
 
         (new Response())
-            ->code(404)
+            ->code(200)
             ->contentType($this->getContentType())
             ->render($result)
             ->send();

@@ -14,9 +14,6 @@
 
 namespace cleanphp\base;
 
-use cleanphp\App;
-use cleanphp\file\Log;
-
 class Loader
 {
     /**
@@ -73,10 +70,6 @@ class Loader
 
         if (file_exists($file)) {
             include $file;
-            // 细节不重要
-            if (App::$debug && !str_contains($file, "cleanphp/")) {
-                Log::record("Loader", $file);
-            }
             self::$loadedFiles[$file] = true; // 将文件标记为已加载
         }
     }

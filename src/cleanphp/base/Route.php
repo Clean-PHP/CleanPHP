@@ -9,7 +9,6 @@ namespace cleanphp\base;
 use cleanphp\App;
 use cleanphp\engine\EngineManager;
 use cleanphp\file\Log;
-use cleanphp\objects\StringBuilder;
 
 /**
  * Class Route
@@ -141,6 +140,7 @@ class Route
     {
         if (self::$__route_query__ === "") {
             $query = $_SERVER['REQUEST_URI'] ?? "/";
+            $query = strtok($query, '?');
             $query = trim($query, "/");
             $query = $query === "" ? "/" : $query;
             self::$__route_query__ = $query;
