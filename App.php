@@ -53,6 +53,10 @@ class App
     {
         App::$debug = file_exists(APP_DIR.DIRECTORY_SEPARATOR."app".DIRECTORY_SEPARATOR."storage".DIRECTORY_SEPARATOR."cache".DIRECTORY_SEPARATOR."cleanphp".DIRECTORY_SEPARATOR."debug.lock");
 
+        if(App::$debug && function_exists("opcache_reset")){
+            opcache_reset();
+        }
+
         error_reporting(E_ALL & ~(E_STRICT | E_NOTICE));
         ini_set("display_errors", "Off");
         define("DS", DIRECTORY_SEPARATOR);//定义斜杠符号
