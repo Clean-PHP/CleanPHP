@@ -2,19 +2,8 @@
 <module type="WEB_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/src" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/tests" isTestSource="true" />
-      <excludeFolder url="file://$MODULE_DIR$/dist" />
-      <excludeFolder url="file://$MODULE_DIR$/src/storage/logs" />
-      <excludeFolder url="file://$MODULE_DIR$/.idea/jsLinters" />
-      <excludeFolder url="file://$MODULE_DIR$/.idea/sonarlint" />
-      <excludeFolder url="file://$MODULE_DIR$/src/app/arguments" />
-      <excludeFolder url="file://$MODULE_DIR$/src/app/controller" />
-      <excludeFolder url="file://$MODULE_DIR$/src/app/database" />
-      <excludeFolder url="file://$MODULE_DIR$/src/app/language" />
-      <excludeFolder url="file://$MODULE_DIR$/src/app/tasker" />
-      <excludeFolder url="file://$MODULE_DIR$/src/app/view" />
-      <excludeFolder url="file://$MODULE_DIR$/src/app/ws" />
+      <sourceFolder url="file://$MODULE_DIR$" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/cleanphp" isTestSource="false" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

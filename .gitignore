@@ -1,6 +1,3 @@
 .git
-/src/storage/*
-/src/app/*
-/dist/*
 .DS_Store
 .idea
