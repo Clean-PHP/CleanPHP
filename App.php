@@ -51,7 +51,7 @@ class App
      */
     static function run(): void
     {
-        App::$debug = file_exists(APP_DIR.DIRECTORY_SEPARATOR."app".DIRECTORY_SEPARATOR."storage".DIRECTORY_SEPARATOR."cache".DIRECTORY_SEPARATOR."cleanphp".DIRECTORY_SEPARATOR."debug.lock");
+        App::$debug = file_exists(APP_DIR.DIRECTORY_SEPARATOR."debug.lock");
 
         if(App::$debug && function_exists("opcache_reset")){
             opcache_reset();
