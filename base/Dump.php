@@ -16,7 +16,6 @@ namespace cleanphp\base;
 
 use ReflectionException;
 use ReflectionFunction;
-use function cleanphp\base\gettype;
 
 class Dump
 {
