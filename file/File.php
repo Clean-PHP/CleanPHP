@@ -61,7 +61,7 @@ class File
         $dir = opendir($src);
         self::mkDir($dst);
         while (false !== ($file = readdir($dir))) {
-            if (($file != '.') && ($file != '..')) {
+            if (!str_starts_with($file,".")) {
                 if (is_dir($src . '/' . $file)) {
                     self::copy($src . '/' . $file, $dst . '/' . $file);
                 } else {
