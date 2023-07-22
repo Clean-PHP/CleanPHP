@@ -65,7 +65,7 @@ class Config
         date_default_timezone_set(Config::getConfig('frame')['time_zone'] ?? "Asia/Shanghai");
         $frame = self::getConfig("frame");
         if (!in_array("0.0.0.0", $frame['host']) && !App::$cli && !in_array($_SERVER["SERVER_NAME"], $frame['host'])) {
-            App::exit("[ CleanPHP ] 环境异常：您的域名绑定错误，当前域名为：".$_SERVER["SERVER_NAME"]." , 请在 config.php 中Host选项里添加该域名。");
+            exit("[ CleanPHP ] 环境异常：您的域名绑定错误，当前域名为：".$_SERVER["SERVER_NAME"]." , 请在 config.php 中Host选项里添加该域名。");
         }
 
 

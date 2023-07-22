@@ -88,11 +88,11 @@ class Error
             $engine = EngineManager::getEngine();
 
             if ($result !== null) {
-                (new Response())->render($result, 200, $engine->getContentType())->send();
+                (new Response())->render($result)->code(404)->contentType($engine->getContentType())->send();
             } else if (App::$debug) {
-                (new Response())->render($engine->renderError($msg, $traces, $dump, $log_tag), 200, $engine->getContentType())->send();
+                (new Response())->render($engine->renderError($msg, $traces, $dump, $log_tag))->contentType($engine->getContentType())->code(200)->send();
             } else {
-                (new Response())->render($engine->renderMsg(true, 404, "404 Not Found", "您访问的资源不存在。", 5), 404, $engine->getContentType())->send();
+                (new Response())->render($engine->renderMsg( 404, "404 Not Found", "您访问的资源不存在。", 5))->contentType($engine->getContentType())->code(404)->send();
             }
         }
 
