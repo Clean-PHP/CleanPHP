@@ -102,11 +102,11 @@ function dumps(...$args)
 
 /**
  * 输出变量内容
- * @param null $var 预输出的变量名
+ * @param mixed $var 预输出的变量名
  * @param false $exit 输出变量后是否退出进程
  * @param string|null $line
  */
-function dump($var, bool $exit = true, string $line = null)
+function dump(mixed $var, bool $exit = true, string $line = null): void
 {
     if (!App::$debug) return;//不是调试模式就直接返回
     if ($line === null)
