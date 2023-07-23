@@ -25,7 +25,6 @@ use Exception;
 
 class Async
 {
-    private static bool $in_task = false;
 
     public static function register(): void
     {
@@ -107,7 +106,6 @@ class Async
     public static function response(): void
     {
         self::noWait();
-        self::$in_task = true;
         $key = Request::getHeaderValue("Key") ?? "";
         /** @var AsyncObject $asyncObject */
         $cache =  Cache::init(300, Variables::getCachePath("async", DS));
@@ -125,7 +123,7 @@ class Async
         set_time_limit($timeout);
         Variables::set("__async_task_id__", $key);
         Variables::set("__frame_log_tag__", "async_{$key}_");
-        App::$debug && Log::record("Async", "异步任务开始执行：" . serialize($asyncObject));
+        App::$debug && Log::record("Async", "异步任务开始执行：" . __serialize($asyncObject));
         if (!empty($function) && $function instanceof Closure) {
             $function();
         }
