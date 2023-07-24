@@ -95,7 +95,7 @@ class JsonEngine extends BaseEngine
     {
         (new Response())->code(404)
             ->contentType($this->getContentType())
-            ->render($this->renderMsg(true, 404, "404 not found", "404 not found"))
+            ->render($this->renderMsg( 404, "404 not found", "404 not found"))
             ->send();
     }
 
