@@ -2,29 +2,27 @@
 
 namespace cleanphp\closure;
 
-use cleanphp\closure\Contracts\Serializable;
 use cleanphp\closure\Exceptions\PhpVersionNotSupportedException;
 use Closure;
-use const PHP_VERSION_ID;
 
 class UnsignedSerializableClosure
 {
     /**
      * The closure's serializable.
      *
-     * @var Serializable
+     * @var \cleanphp\closure\Contracts\Serializable
      */
     protected $serializable;
 
     /**
      * Creates a new serializable closure instance.
      *
-     * @param Closure $closure
+     * @param  \Closure  $closure
      * @return void
      */
     public function __construct(Closure $closure)
     {
-        if (PHP_VERSION_ID < 70400) {
+        if (\PHP_VERSION_ID < 70400) {
             throw new PhpVersionNotSupportedException();
         }
 
@@ -38,7 +36,7 @@ class UnsignedSerializableClosure
      */
     public function __invoke()
     {
-        if (PHP_VERSION_ID < 70400) {
+        if (\PHP_VERSION_ID < 70400) {
             throw new PhpVersionNotSupportedException();
         }
 
@@ -48,11 +46,11 @@ class UnsignedSerializableClosure
     /**
      * Gets the closure.
      *
-     * @return Closure
+     * @return \Closure
      */
     public function getClosure()
     {
-        if (PHP_VERSION_ID < 70400) {
+        if (\PHP_VERSION_ID < 70400) {
             throw new PhpVersionNotSupportedException();
         }
 

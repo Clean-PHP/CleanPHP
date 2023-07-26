@@ -2,32 +2,30 @@
 
 namespace cleanphp\closure;
 
-use cleanphp\closure\Contracts\Serializable;
 use cleanphp\closure\Exceptions\InvalidSignatureException;
 use cleanphp\closure\Exceptions\PhpVersionNotSupportedException;
 use cleanphp\closure\Serializers\Signed;
 use cleanphp\closure\Signers\Hmac;
 use Closure;
-use const PHP_VERSION_ID;
 
 class SerializableClosure
 {
     /**
      * The closure's serializable.
      *
-     * @var Serializable
+     * @var \cleanphp\closure\Contracts\Serializable
      */
     protected $serializable;
 
     /**
      * Creates a new serializable closure instance.
      *
-     * @param Closure $closure
+     * @param  \Closure  $closure
      * @return void
      */
     public function __construct(Closure $closure)
     {
-        if (PHP_VERSION_ID < 70400) {
+        if (\PHP_VERSION_ID < 70400) {
             throw new PhpVersionNotSupportedException();
         }
 
@@ -43,7 +41,7 @@ class SerializableClosure
      */
     public function __invoke()
     {
-        if (PHP_VERSION_ID < 70400) {
+        if (\PHP_VERSION_ID < 70400) {
             throw new PhpVersionNotSupportedException();
         }
 
@@ -53,11 +51,11 @@ class SerializableClosure
     /**
      * Gets the closure.
      *
-     * @return Closure
+     * @return \Closure
      */
     public function getClosure()
     {
-        if (PHP_VERSION_ID < 70400) {
+        if (\PHP_VERSION_ID < 70400) {
             throw new PhpVersionNotSupportedException();
         }
 
@@ -68,7 +66,7 @@ class SerializableClosure
      * Create a new unsigned serializable closure instance.
      *
      * @param  Closure  $closure
-     * @return UnsignedSerializableClosure
+     * @return \cleanphp\closure\UnsignedSerializableClosure
      */
     public static function unsigned(Closure $closure)
     {
@@ -91,7 +89,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param Closure|null  $transformer
+     * @param  \Closure|null  $transformer
      * @return void
      */
     public static function transformUseVariablesUsing($transformer)
@@ -102,7 +100,7 @@ class SerializableClosure
     /**
      * Sets the serializable closure secret key.
      *
-     * @param Closure|null  $resolver
+     * @param  \Closure|null  $resolver
      * @return void
      */
     public static function resolveUseVariablesUsing($resolver)
@@ -128,7 +126,7 @@ class SerializableClosure
      * @param  array  $data
      * @return void
      *
-     * @throws InvalidSignatureException
+     * @throws \cleanphp\closure\Exceptions\InvalidSignatureException
      */
     public function __unserialize($data)
     {

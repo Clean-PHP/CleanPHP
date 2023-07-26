@@ -204,7 +204,16 @@ function url(string $m = 'index', string $c = 'main', string $a = 'index', array
 //闭包序列化
 function traversalClosure($array, $callback)
 {
-    if (is_array($array) || (is_object($array) && !$array instanceof Closure)) {
+    if($array instanceof Closure){
+        $callback($array);
+        return $array;
+    }
+    if (is_string($array) && str_starts_with($array, "__SerializableClosure__")) {
+        $item = substr($array, 23);
+        $callback($item);
+        return $array;
+    }
+    if (is_array($array) || (is_object($array))) {
         foreach ($array as &$item) {
             if (is_array($item) || (is_object($item) && !$item instanceof Closure)) {
                 $item = traversalClosure($item, $callback);

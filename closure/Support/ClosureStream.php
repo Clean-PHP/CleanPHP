@@ -2,9 +2,7 @@
 
 namespace cleanphp\closure\Support;
 
-use AllowDynamicProperties;
-
-#[AllowDynamicProperties]
+#[\AllowDynamicProperties]
 class ClosureStream
 {
     /**

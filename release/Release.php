@@ -103,6 +103,9 @@ class Release
             $fileInfo = pathinfo($file);
             if (!isset($fileInfo['extension']) || !is_file($file)) return;
             if ($fileInfo['extension'] === 'php') {
+                if(str_contains(file_get_contents($file),"go(function")){
+                    return;
+                }
                 file_put_contents($file, php_strip_whitespace($file));
             } elseif ($fileInfo['extension'] === 'css') {
                 CompressCss::compress($file);
