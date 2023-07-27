@@ -137,12 +137,6 @@ class Response
 
     public function send(): void
     {
-        //允许跨域
-        $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-        if (in_array(str_replace(self::getHttpScheme(), '', $origin), Config::getConfig("frame")['host'])) {
-            $this->header['Access-Control-Allow-Origin'] = $origin;
-        }
-
         $addr = Request::getNowAddress();
         $addr = strstr($addr, '?', true) ?: $addr;
         if (preg_match("/.*\.(gif|jpg|jpeg|png|bmp|swf|woff|woff2)?$/", $addr)) {
