@@ -28,10 +28,11 @@ class ArgObject
                 if (array_key_exists($key, $item)) {
                     $data = $item[$key];
                 }
-
                 if($this->onParseType($key, $data, $val)){
                     $data = parse_type($val, $data);
-                    $this->$key = $data;
+                    if(gettype($this->$key)===gettype($data)){
+                        $this->$key = $data;
+                    }
                 }
             }
         }
