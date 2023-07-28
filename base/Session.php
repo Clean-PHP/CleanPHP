@@ -16,7 +16,7 @@ namespace cleanphp\base;
 class Session
 {
     private static ?Session $instance = null;
-
+    private static bool $isStart = false;
 
     /**
      * 获取实例
@@ -38,7 +38,7 @@ class Session
      */
     public function start(int $cacheTime = 0, string $sessionName = 'PHPSESSID'): void
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
+        if (!self::$isStart) {
             $sessionName = Config::getConfig("frame")["session"] ?? $sessionName;
             ini_set("session.name", $sessionName);
             if ($cacheTime !== 0) {
@@ -46,6 +46,7 @@ class Session
                 session_set_cookie_params($cacheTime);
             }
             session_start();
+            self::$isStart = true;
         }
     }
 
@@ -64,7 +65,7 @@ class Session
      */
     public function destroy(): void
     {
-        if (session_status() !== PHP_SESSION_ACTIVE)return;
+        if (!self::$isStart)return;
         session_destroy();
     }
 
