@@ -132,6 +132,6 @@ abstract class BaseEngine
         return null;
     }
 
-    abstract function onNotFound($msg = "");
+    abstract function onNotFound($msg = "",&$controller = null);
 
 }

@@ -47,6 +47,7 @@ class Async
 
     public static function start(Closure $function, int $timeout = 300): ?AsyncObject
     {
+
         if (App::$cli) {
             return null;
         }
@@ -96,9 +97,7 @@ class Async
             return null;
         }
 
-        if (App::$debug) {
-            Log::record("Async", "异步任务已下发：$key");
-        }
+        App::$debug && Log::record("Async", "异步任务已下发：$key");
 
         return $asyncObject;
     }

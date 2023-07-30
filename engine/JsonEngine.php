@@ -91,7 +91,7 @@ class JsonEngine extends BaseEngine
 
 
 
-    public function onNotFound($msg = ""): void
+    public function onNotFound($msg = "", &$controller = null): void
     {
         (new Response())->code(404)
             ->contentType($this->getContentType())

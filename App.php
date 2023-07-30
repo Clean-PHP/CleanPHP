@@ -36,7 +36,6 @@ class App
     public static bool $debug = false;//是否调试模式
     public static bool $cli = false;//是否命令行模式
     public static bool $exit = false;//标记是否退出运行
-
     public static float $db = 0;//db运行时间
     public static float $route = 0;//路由时间
     public static float $frame = 0;//框架时间
@@ -159,7 +158,7 @@ class App
             } else {
                 $data = [$__module, $__controller, $__action, $controller_class];
                 EventManager::trigger("__not_render__", $data);
-                $engine->onNotFound("No data.");
+                $engine->onNotFound("No data.",$controller_obj);
             }
 
         } catch (ExitApp $exit_app) {//执行退出

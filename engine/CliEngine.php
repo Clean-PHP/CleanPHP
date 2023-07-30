@@ -43,7 +43,7 @@ class CliEngine extends BaseEngine
         return print_r([$msg, $traces, $dumps], true);
     }
 
-    function onNotFound($msg = ""): void
+    function onNotFound($msg = "", &$controller = null): void
     {
         (new Response())->render($msg)->send();
     }
