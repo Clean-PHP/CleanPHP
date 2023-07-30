@@ -56,5 +56,12 @@ interface CacheInterface
      * 清空缓存
      */
     public function empty();
+
+    /**
+     * 删除指定路径下的缓存文件夹
+     * @param $path
+     * @return mixed
+     */
+    public function emptyPath($path): void;
     
 }

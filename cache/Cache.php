@@ -105,9 +105,22 @@ class Cache implements CacheInterface
     {
         file_put_contents($this->fileName($key), __serialize($data));
     }
+
     public function empty(): void
     {
         App::$debug && Log::record("Cache", "清空所有缓存");
         File::empty($this->cache_path);
+    }
+
+    public function emptyPath($path): void
+    {
+        foreach (scandir($this->cache_path) as $item) {
+            if (str_starts_with( $item,".")) {
+                continue;
+            }
+            if (str_contains($item, $path)) {
+                File::del($this->cache_path . DS . $item);
+            }
+        }
     }
 }
