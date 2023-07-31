@@ -5,6 +5,7 @@
 
 namespace cleanphp\file;
 
+use cleanphp\exception\WarningException;
 use ZipArchive;
 
 class File
@@ -14,20 +15,25 @@ class File
         if (!is_dir($name) && !is_file($name)) {
             return false;
         }
-
-        if (is_file($name)) {
-            return unlink($name);
-        }
-
-        $handle = opendir($name);
-        while (($file = readdir($handle)) !== false) {
-            if ($file !== "." && $file !== "..") {
-                $dir = $name . '/' . $file;
-                is_dir($dir) ? self::del($dir) : unlink($dir);
+        try {
+            if (is_file($name)) {
+                return unlink($name);
             }
+
+
+            $handle = opendir($name);
+            while (($file = readdir($handle)) !== false) {
+                if ($file !== "." && $file !== "..") {
+                    $dir = $name . '/' . $file;
+                    is_dir($dir) ? self::del($dir) : unlink($dir);
+                }
+            }
+            closedir($handle);
+            return rmdir($name);
+        } catch (WarningException $exception) {
+
         }
-        closedir($handle);
-        return rmdir($name);
+        return true;
     }
 
     public static function empty(string $path)
@@ -77,8 +83,12 @@ class File
     public static function mkDir(string $path, bool $recursive = true): bool
     {
         clearstatcache();
-        if (!empty($path) && !file_exists($path)) {
-            return mkdir($path, 0777, $recursive);
+        try {
+            if (!empty($path) && !file_exists($path)) {
+                return mkdir($path, 0777, $recursive);
+            }
+        } catch (WarningException $e) {
+
         }
 
         return true;
