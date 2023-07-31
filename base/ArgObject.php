@@ -101,11 +101,12 @@ class ArgObject
     }
 
     /**
-     * @param ArgObject|array $object
+     * @param ArgObject|array|null $object
      * @return void
      */
-    public function merge(ArgObject|array $object): void
+    public function merge(ArgObject|array|null $object): void
     {
+        if($object===null)return;
         if($object instanceof  ArgObject){
             $object = $object->toArray(false);
         }
