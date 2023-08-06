@@ -53,7 +53,9 @@ switch ($argv[1]) {
     case "start":
         $_SERVER["REQUEST_URI"] = $argv[2] ?? "";
         $_SERVER["HTTP_HOST"] = "localhost";
-        define('APP_DIR', dirname(__FILE__));//定义运行根目录
+        $GLOBALS['__frame_start__'] = microtime(true);
+        $GLOBALS['__memory_start__'] = memory_get_usage();
+        define('APP_DIR', dirname(__FILE__,3));//定义运行根目录
         require_once APP_DIR . DIRECTORY_SEPARATOR . "cleanphp" . DIRECTORY_SEPARATOR . "App.php";
         App::run(true);
         break;

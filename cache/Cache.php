@@ -115,11 +115,11 @@ class Cache implements CacheInterface
     public function emptyPath($path): void
     {
         foreach (scandir($this->cache_path) as $item) {
-            if (str_starts_with( $item,".")) {
+            if (str_starts_with($item,".")) {
                 continue;
             }
             if (str_contains($item, $path)) {
-                File::del($this->cache_path . DS . $item);
+                File::del($this->cache_path  . $item);
             }
         }
     }
