@@ -14,9 +14,12 @@
 use cleanphp\App;
 use cleanphp\base\Argument;
 use cleanphp\base\Dump;
+use cleanphp\base\Response;
 use cleanphp\base\Route;
 use cleanphp\closure\Exceptions\PhpVersionNotSupportedException;
 use cleanphp\closure\SerializableClosure;
+use cleanphp\engine\EngineManager;
+use cleanphp\engine\ViewEngine;
 use cleanphp\file\Log;
 use cleanphp\process\Async;
 use cleanphp\process\AsyncObject;
@@ -119,22 +122,21 @@ function dump(mixed $var, bool $exit = true, string $line = null): void
         }
         return;
     }
+    $tpl = "";
     if ($line !== "") {
-        echo <<<EOF
+        $tpl.= <<<EOF
 <style>pre {display: block;padding: 10px;margin: 0 0 10px;font-size: 13px;line-height: 1.42857143;color: #333;word-break: break-all;word-wrap: break-word;background-color:#f5f5f5;border: 1px solid #ccc;border-radius: 4px;}</style><div style="text-align: left">
 <pre class="xdebug-var-dump" dir="ltr"><small>{$line}</small>\r\n
 EOF;
     } else {
-        echo <<<EOF
+        $tpl.= <<<EOF
 <style>pre {display: block;padding: 10px;margin: 0 0 10px;font-size: 13px;line-height: 1.42857143;color: #333;word-break: break-all;word-wrap: break-word;background-color:#f5f5f5;border: 1px solid #ccc;border-radius: 4px;}</style><div style="text-align: left"><pre class="xdebug-var-dump" dir="ltr">
 EOF;
     }
     $dump = new Dump();
-    echo $dump->dumpType($var);
-    echo '</pre></div>';
-    if ($exit) {
-        App::exit("调用输出命令退出");
-    }
+    $tpl.=  $dump->dumpType($var);
+    $tpl.= '</pre></div>';
+    (new Response())->render($tpl)->contentType((new ViewEngine())->getContentType())->send();
 }
 
 /**

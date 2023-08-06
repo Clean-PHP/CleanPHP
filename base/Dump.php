@@ -73,7 +73,6 @@ class Dump
      */
     public function dumpType($param, int $i = 0): string
     {
-
         if (is_object($param)) {
             $hash = spl_object_hash($param);
             if (!empty($param) && in_array($hash, $this->vars)) {
