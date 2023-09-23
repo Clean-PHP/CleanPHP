@@ -14,12 +14,9 @@
 use cleanphp\App;
 use cleanphp\base\Argument;
 use cleanphp\base\Dump;
-use cleanphp\base\Response;
 use cleanphp\base\Route;
 use cleanphp\closure\Exceptions\PhpVersionNotSupportedException;
 use cleanphp\closure\SerializableClosure;
-use cleanphp\engine\EngineManager;
-use cleanphp\engine\ViewEngine;
 use cleanphp\file\Log;
 use cleanphp\process\Async;
 use cleanphp\process\AsyncObject;
@@ -109,7 +106,7 @@ function dumps(...$args)
  * @param false $exit 输出变量后是否退出进程
  * @param string|null $line
  */
-function dump(mixed $var, bool $exit = true, string $line = null): void
+function dump(mixed $var, bool $exit = false, string $line = null): void
 {
     if (!App::$debug) return;//不是调试模式就直接返回
     if ($line === null)
@@ -124,19 +121,22 @@ function dump(mixed $var, bool $exit = true, string $line = null): void
     }
     $tpl = "";
     if ($line !== "") {
-        $tpl.= <<<EOF
+        $tpl .= <<<EOF
 <style>pre {display: block;padding: 10px;margin: 0 0 10px;font-size: 13px;line-height: 1.42857143;color: #333;word-break: break-all;word-wrap: break-word;background-color:#f5f5f5;border: 1px solid #ccc;border-radius: 4px;}</style><div style="text-align: left">
 <pre class="xdebug-var-dump" dir="ltr"><small>{$line}</small>\r\n
 EOF;
     } else {
-        $tpl.= <<<EOF
+        $tpl .= <<<EOF
 <style>pre {display: block;padding: 10px;margin: 0 0 10px;font-size: 13px;line-height: 1.42857143;color: #333;word-break: break-all;word-wrap: break-word;background-color:#f5f5f5;border: 1px solid #ccc;border-radius: 4px;}</style><div style="text-align: left"><pre class="xdebug-var-dump" dir="ltr">
 EOF;
     }
     $dump = new Dump();
-    $tpl.=  $dump->dumpType($var);
-    $tpl.= '</pre></div>';
-    (new Response())->render($tpl)->contentType((new ViewEngine())->getContentType())->send();
+    $tpl .= $dump->dumpType($var);
+    $tpl .= '</pre></div>';
+    echo $tpl;
+    if ($exit) {
+        App::exit("调用输出命令退出");
+    }
 }
 
 /**
@@ -206,7 +206,7 @@ function url(string $m = 'index', string $c = 'main', string $a = 'index', array
 //闭包序列化
 function traversalClosure($array, $callback)
 {
-    if($array instanceof Closure){
+    if ($array instanceof Closure) {
         $callback($array);
         return $array;
     }
