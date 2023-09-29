@@ -114,7 +114,7 @@ abstract class BaseEngine
      */
     function renderMsg(int $code = 404, string $title = "", $msg = "", int $time = -1, string $url = '/', string $desc = "立即跳转"): string
     {
-        $this->setCode($code);
+       // $this->setCode($code);
         if ($time == 0) {
             Response::location($url);
         }

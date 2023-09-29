@@ -54,6 +54,38 @@ class ArgObject
     }
 
     /**
+     * 获取这个对象的hash值
+     * @return string
+     */
+    public function hash(): string
+    {
+        return md5(implode(",", get_object_vars($this)));
+    }
+
+    /**
+     * @param ArgObject|array|null $object
+     * @return void
+     */
+    public function merge(ArgObject|array|null $object): void
+    {
+        if ($object === null) return;
+        if ($object instanceof ArgObject) {
+            $object = $object->toArray(false);
+        }
+        $disable = array_merge($this->getDisableKeys(),['id']) ;
+        foreach ($this->toArray(false) as $key => $val) {
+            if (array_key_exists($key, $object) && !in_array($key, $disable)) {
+                $data = $object[$key];
+                if ($this->onMerge($key, $val, $data) && $this->onParseType($key, $data, $val)) {
+                    $this->$key = $data;
+                    continue;
+                }
+            }
+            $this->onMergeFailed($key, $val, $object);
+        }
+    }
+
+    /**
      * 将object对象转换为数组
      * @param bool $callback 是否对每一项进行回调
      * @return array
@@ -98,29 +130,6 @@ class ArgObject
     public function getDisableKeys(): array
     {
         return [];
-    }
-
-    /**
-     * @param ArgObject|array|null $object
-     * @return void
-     */
-    public function merge(ArgObject|array|null $object): void
-    {
-        if($object===null)return;
-        if($object instanceof  ArgObject){
-            $object = $object->toArray(false);
-        }
-        $disable = $this->getDisableKeys();
-        foreach ($this->toArray(false) as $key => $val) {
-            if (array_key_exists( $key,$object) && !in_array($key, $disable)) {
-                $data = $object[$key];
-                if($this->onMerge($key,$val,$data) && $this->onParseType($key,$data,$val)){
-                    $this->$key =$data;
-                    continue;
-                }
-            }
-            $this->onMergeFailed($key,$val,$object);
-        }
     }
 
     /**

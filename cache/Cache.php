@@ -20,7 +20,6 @@ class Cache implements CacheInterface
     private static ?CacheInterface $drive = null;
     private string $cache_path = "";
     private int $cache_expire = 3600;
-    private bool $cache_dir_exists = false;
 
     public static function setDriver(CacheInterface $drive): void
     {
@@ -37,7 +36,7 @@ class Cache implements CacheInterface
 
     private function fileName(string $key): string
     {
-        $new = filter_characters($key);
+        $new = filter_characters($key)."_".md5($key);
         if (mb_strlen($new) > 100) {
             $new = mb_substr($new, 0, 50) . md5($key);
         }
