@@ -19,6 +19,8 @@ use cleanphp\file\Log;
  */
 class Route
 {
+    private static string $__route_query__ = "";
+
     /**
      * 路由URL生成
      * @param string $m 模块
@@ -86,14 +88,14 @@ class Route
      */
     public static function rewrite(): array
     {
-        $__route_start__= microtime(true);
+        $__route_start__ = microtime(true);
 
         $url = self::getQuery();
-        EventManager::addListener("__route_before__",function ($event,&$data){
-            $__route_start__= microtime(true);
-            if (str_starts_with($data,'clean_static')) {
+        EventManager::addListener("__route_before__", function ($event, &$data) {
+            $__route_start__ = microtime(true);
+            if (str_starts_with($data, 'clean_static')) {
                 $uri = str_replace('clean_static', "", $data);
-                $path = Variables::setPath(APP_DIR, 'app' , "public", str_replace("..", ".", $uri));
+                $path = Variables::setPath(APP_DIR, 'app', "public", str_replace("..", ".", $uri));
                 $t = round((microtime(true) - $__route_start__) * 1000, 4);
                 App::$route = $t;
                 self::renderStatic($path);
@@ -126,12 +128,11 @@ class Route
 
         $t = round((microtime(true) - $__route_start__) * 1000, 4);
         App::$route = $t;
-        App::$debug && Log::record("Route", sprintf("路由总耗时：%s 毫秒",$t) , Log::TYPE_WARNING);
+        App::$debug && Log::record("Route", sprintf("路由总耗时：%s 毫秒", $t), Log::TYPE_WARNING);
 
         return [$__module, $__controller, $__action];
     }
 
-    private static string $__route_query__ = "";
     /**
      * 获取路径
      * @return string
@@ -146,9 +147,8 @@ class Route
             self::$__route_query__ = $query;
         }
 
-        return self::$__route_query__ ;
+        return self::$__route_query__;
     }
-
 
 
     /**
@@ -160,22 +160,10 @@ class Route
     {
         if (is_file($path)) {
             $type = file_type($path);
-
-            (new Response())->render(self::replaceStatic($path))->code(200)->contentType($type)->send();
+            (new Response())->render($path)->code(200)->contentType($type)->send();
         } else {
-            EngineManager::getEngine()->onNotFound("找不到指定的静态资源：". $path);
+            EngineManager::getEngine()->onNotFound("找不到指定的静态资源：" . $path);
         }
-    }
-
-    /**
-     * 替换静态文件
-     * @param string $content
-     * @return string
-     */
-    public static function replaceStatic(string $content): string
-    {
-        $replaces = Variables::get("__static_replace__", "../../public");
-        return str_replace($replaces, "/clean_static", $content);
     }
 
     /**
@@ -202,7 +190,7 @@ class Route
             $debugEnabled && Log::record("Route", sprintf("路由匹配：%s => %s", $rule, $mapper));
             $rule = '@^' . str_ireplace(
                     ['\\\\', '/', '<', '>', '.'],
-                    ['', '\/', '(?P<', '>[\x{4e00}-\x{9fa5}a-zA-Z0-9_\.\-\/]+)', '\.'],
+                    ['', '\/', '(?P<', '>[\x{4e00}-\x{9fa5}a-zA-Z0-9_\.\-\/=]+?)', '\.'],
                     strtolower($rule)
                 ) . '$@ui';
             if (preg_match($rule, $query, $matches)) {
@@ -220,6 +208,17 @@ class Route
         }
 
         return $array;
+    }
+
+    /**
+     * 替换静态文件
+     * @param string $content
+     * @return string
+     */
+    public static function replaceStatic(string $content): string
+    {
+        $replaces = Variables::get("__static_replace__", "../../public");
+        return str_replace($replaces, "/clean_static", $content);
     }
 
 

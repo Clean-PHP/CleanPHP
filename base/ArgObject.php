@@ -30,7 +30,7 @@ class ArgObject
                 }
                 if($this->onParseType($key, $data, $val)){
                     $data = parse_type($val, $data);
-                    if(gettype($this->$key)===gettype($data)){
+                    if (gettype($this->$key) === gettype($data)) {
                         $this->$key = $data;
                     }
                 }
@@ -93,9 +93,9 @@ class ArgObject
     public function toArray(bool $callback = true): array
     {
         $ret = get_object_vars($this);
-        if(!$callback)return $ret;
-        array_walk($ret, function (&$value, $key,$arr){
-            $this->onToArray($key, $value,$arr['ret']);
+        if (!$callback) return $ret;
+        array_walk($ret, function (&$value, $key, $arr) {
+            $this->onToArray($key, $value, $arr['ret']);
         }, ['ret' => &$ret]);
         return $ret;
     }
@@ -115,15 +115,6 @@ class ArgObject
     }
 
     /**
-     * 获取这个对象的hash值
-     * @return string
-     */
-    public function hash(): string
-    {
-        return md5(implode(",", get_object_vars($this)));
-    }
-
-    /**
      * 在调用merge的时候，返回哪些字段不允许合并
      * @return array
      */
@@ -139,7 +130,7 @@ class ArgObject
      * @param $val mixed 准备合并的值
      * @return bool 返回true允许合并
      */
-    public function onMerge(string $key, mixed $raw, mixed &$val):bool
+    public function onMerge(string $key, mixed $raw, mixed &$val): bool
     {
         return true;
     }
@@ -151,7 +142,7 @@ class ArgObject
      * @param $object array 欲合并的对象（数组形式）
      * @return void
      */
-    public function onMergeFailed(string $key, mixed $raw, array $object):void
+    public function onMergeFailed(string $key, mixed $raw, array $object): void
     {
 
     }

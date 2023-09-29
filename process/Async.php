@@ -135,6 +135,7 @@ class Async
         if (App::$cli) {
             return null;
         }
+        session_write_close();
         ignore_user_abort(true);
         set_time_limit($time);
         ob_end_clean();
