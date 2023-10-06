@@ -21,7 +21,7 @@ class CompressJs
 {
     static function compress($file)
     {
-        if (str_ends_with($file,"min.js")||str_ends_with($file,"unpack.js")) {
+        if (str_ends_with($file,".min.js")) {
             file_put_contents($file,preg_replace( '/\s*\/\/# sourceMappingURL=\S+/',"",file_get_contents($file)) );
             File::del($file.".map");
             return;
