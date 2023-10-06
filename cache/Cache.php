@@ -18,6 +18,7 @@ use cleanphp\file\Log;
 class Cache implements CacheInterface
 {
     private static ?CacheInterface $drive = null;
+    private static array $cache = [];
     private string $cache_path = "";
     private int $cache_expire = 3600;
 
@@ -36,29 +37,42 @@ class Cache implements CacheInterface
 
     private function fileName(string $key): string
     {
-        $new = filter_characters($key)."_".md5($key);
+        $new = filter_characters($key) . "_" . md5($key);
         if (mb_strlen($new) > 100) {
             $new = mb_substr($new, 0, 50) . md5($key);
         }
         return $this->cache_path . $new;
     }
 
-    private static ?Cache $cache = null;
-
     public static function init(int $exp_time = 0, string $path = ''): ?Cache
     {
+        $path = $path ?? Variables::getCachePath();
         if (self::$drive) {
             return self::$drive::init($exp_time, $path);
         }
 
-        if (self::$cache === null) {
-            self::$cache = new self();
+        if (!isset(self::$cache[$path])) {
+            self::$cache[$path] = new self();
         }
 
-        if (self::$cache->cache_expire !== $exp_time || self::$cache->cache_path !== $path) {
-            self::$cache->setData($exp_time, $path);
+        if (self::$cache[$path]->cache_expire !== $exp_time || self::$cache[$path]->cache_path !== $path) {
+            self::$cache[$path]->setData($exp_time, $path);
         }
-        return self::$cache;
+        return self::$cache[$path];
+    }
+
+    private function setData(int $exp_time, string $path): CacheInterface
+    {
+        if ($this->cache_path === $path && $this->cache_expire === $exp_time) {
+            return $this;
+        }
+
+        $this->cache_expire = $exp_time;
+        $this->cache_path = $path;
+
+        File::mkDir($this->cache_path);
+
+        return $this;
     }
 
     public function get(string $key): mixed
@@ -86,20 +100,6 @@ class Cache implements CacheInterface
         }
     }
 
-    private function setData(int $exp_time, string $path): CacheInterface
-    {
-        if ($this->cache_path === $path && $this->cache_expire === $exp_time) {
-            return $this;
-        }
-
-        $this->cache_expire = $exp_time;
-        $this->cache_path = empty($path)?Variables::getCachePath():$path;
-
-        File::mkDir($this->cache_path);
-
-        return $this;
-    }
-
     public function set(string $key, mixed $data): void
     {
         file_put_contents($this->fileName($key), __serialize($data));
@@ -114,11 +114,11 @@ class Cache implements CacheInterface
     public function emptyPath($path): void
     {
         foreach (scandir($this->cache_path) as $item) {
-            if (str_starts_with($item,".")) {
+            if (str_starts_with($item, ".")) {
                 continue;
             }
             if (str_contains($item, $path)) {
-                File::del($this->cache_path  . $item);
+                File::del($this->cache_path . $item);
             }
         }
     }
