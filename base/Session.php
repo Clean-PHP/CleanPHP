@@ -48,21 +48,12 @@ class Session
         // 设置会话名称
         ini_set("session.name", $sessionConfig);
 
-        //session_set_cookie_params(
-        //    int $lifetime_or_options,
-        //    ?string $path = null,
-        //    ?string $domain = null,
-        //    ?bool $secure = null,
-        //    ?bool $httponly = null
-        //): bool
-
         if ($cacheTime !== 0) {
             // 设置会话的最大生存时间和Cookie参数
             ini_set('session.gc_maxlifetime', $cacheTime);
-            session_set_cookie_params($cacheTime, '/',null,true,true);
-        } else {
-            session_set_cookie_params(0, '/',null,true,true);
+
         }
+        session_set_cookie_params($cacheTime, '',null,true,true);
         // 启动会话
         session_start();
         self::$isStart = true;
