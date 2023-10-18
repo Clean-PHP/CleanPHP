@@ -53,7 +53,7 @@ class Session
             ini_set('session.gc_maxlifetime', $cacheTime);
 
         }
-        session_set_cookie_params($cacheTime, '',null,true,true);
+        session_set_cookie_params($cacheTime, '/',null,true,true);
         // 启动会话
         session_start();
         self::$isStart = true;
