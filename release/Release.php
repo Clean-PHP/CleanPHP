@@ -82,7 +82,7 @@ class Release
 
         self::checkFrame($app_dir);
 
-        $path = $app_dir . DIRECTORY_SEPARATOR . "config_example.php";
+        $path = $app_dir . DIRECTORY_SEPARATOR . "config.example.php";
         $config = include_once $path;
         $config['frame']['version'] = $version;
         file_put_contents($path, '<?php return ' . var_export($config, true) . '; ');
