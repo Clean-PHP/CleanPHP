@@ -40,7 +40,7 @@ class Config
     {
 
         $config = Variables::getAppPath( "config.php");
-        $config_example = Variables::getAppPath( "config_example.php");
+        $config_example = Variables::getAppPath( "config.example.php");
         if (!file_exists($config)) {
             if (file_exists($config_example)) {
                 File::copy($config_example, $config);
