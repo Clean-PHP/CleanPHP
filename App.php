@@ -115,7 +115,7 @@ class App
 
             $controller_name = ucfirst($__controller);
 
-            $controller_class = 'app\\' . Variables::getSite("\\") . 'controller\\' . $__module . '\\' . $controller_name;
+            $controller_class = 'app\\controller\\' . $__module . '\\' . $controller_name;
 
             if (!class_exists($controller_class, true)) {
                 $data = [$__module, $__controller, $__action, $controller_class];
