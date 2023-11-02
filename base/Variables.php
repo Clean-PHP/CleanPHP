@@ -17,18 +17,12 @@ namespace cleanphp\base;
 
 class Variables
 {
-    private static string $version = "4.0.1";
-    public static string $site_name = ""; //站点模块名称
+    private static string $version = "4.0.2";
     /**
      * @var string[] 内部变量
      */
     public static array $inner_arrays = [];
 
-    public static function getSite($split = DS): string
-    {
-        if (self::$site_name == "") return "";
-        else return self::$site_name . $split;
-    }
 
     public static function getVersion(): string
     {
@@ -38,7 +32,7 @@ class Variables
     public static function init(): void
     {
 
-        $app_dir = APP_DIR . DS . 'app' . DS . self::getSite();
+        $app_dir = APP_DIR . DS . 'app' . DS ;
 
         self::$inner_arrays = [
             "path_app" => $app_dir,
@@ -64,7 +58,7 @@ class Variables
      * @param null $default 默认值
      * @return mixed|null
      */
-    public static function get(string $key, $default = null)
+    public static function get(string $key, $default = null): mixed
     {
         return $GLOBALS[$key] ?? $default;
     }
@@ -75,7 +69,7 @@ class Variables
      * @param $value
      * @return void
      */
-    public static function set(string $key, $value)
+    public static function set(string $key, $value): void
     {
         $GLOBALS[$key] = $value;
     }
@@ -85,7 +79,7 @@ class Variables
      * @param string $key
      * @return void
      */
-    public static function del(string $key)
+    public static function del(string $key): void
     {
         if (isset($GLOBALS[$key])) unset($GLOBALS[$key]);
     }
