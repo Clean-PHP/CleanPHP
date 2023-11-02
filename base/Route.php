@@ -93,8 +93,8 @@ class Route
         $url = self::getQuery();
         EventManager::addListener("__route_before__", function ($event, &$data) {
             $__route_start__ = microtime(true);
-            if (str_starts_with($data, 'clean_static')) {
-                $uri = str_replace('clean_static', "", $data);
+            if (str_starts_with($data, '@')) {
+                $uri = str_replace('@', "", $data);
                 $path = Variables::setPath(APP_DIR, 'app', "public", str_replace("..", ".", $uri));
                 $t = round((microtime(true) - $__route_start__) * 1000, 4);
                 App::$route = $t;
