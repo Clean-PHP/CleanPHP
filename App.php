@@ -86,7 +86,7 @@ class App
 
             Error::register();// 注册错误和异常处理机制
             //Application实例化
-            $app = "\app\\" . Variables::getSite("\\") . "Application"; //入口初始化
+            $app = "\app\\Application"; //入口初始化
             if (class_exists($app) && ($imp = class_implements($app)) && in_array(MainApp::class, $imp)) {
                 self::$app = new $app();
                 self::$app->onFrameworkStart();
