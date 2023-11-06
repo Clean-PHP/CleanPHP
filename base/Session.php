@@ -6,6 +6,10 @@
 namespace cleanphp\base;
 
 
+use cleanphp\cache\Cache;
+use SessionHandlerInterface;
+use SessionIdInterface;
+
 /**
  * Class Session
  * @package cleanphp\web
@@ -18,6 +22,7 @@ class Session
     private static ?Session $instance = null;
     private static bool $isStart = false;
 
+    private static Cache $cache;
     /**
      * 获取实例
      * @return Session
@@ -26,10 +31,13 @@ class Session
     {
         if (is_null(self::$instance)) {
             self::$instance = new Session();
+            self::$cache = Cache::init();
+
         }
 
         return self::$instance;
     }
+
 
     /**
      * 启动session
@@ -51,8 +59,9 @@ class Session
         if ($cacheTime !== 0) {
             // 设置会话的最大生存时间和Cookie参数
             ini_set('session.gc_maxlifetime', $cacheTime);
-
+            self::$cache->setData($cacheTime,Variables::getCachePath("session",DS));
         }
+        session_set_save_handler(new SessionHandler(self::$cache), true);
         session_set_cookie_params($cacheTime, '/',null,true,true);
         // 启动会话
         session_start();
@@ -69,15 +78,7 @@ class Session
         return session_id();
     }
 
-    /**
-     * 销毁session
-     * @return void
-     */
-    public function destroy(): void
-    {
-        if (!self::$isStart)return;
-        session_destroy();
-    }
+
 
     /**
      * 设置session
@@ -139,5 +140,12 @@ class Session
         }
     }
 
-
+    public function destroy(): void
+    {
+       session_destroy();
+    }
+    function __destruct()
+    {
+        session_write_close();
+    }
 }
