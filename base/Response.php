@@ -145,6 +145,7 @@ class Response
             $this->cache(60 * 24 * 180);
         }
 
+
         if(App::$debug){
             $this->header[] = "Server-Timing: ".
             "Total;dur=".round((microtime(true) - Variables::get("__frame_start__", 0)) * 1000,4).
