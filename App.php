@@ -151,8 +151,8 @@ class App
             if ($result !== null){
                 (new Response())
                     ->render($result)
-                    ->contentType($engine->getContentType())
                     ->setHeaders($engine->getHeaders())
+                    ->contentType($engine->getContentType())
                     ->code($engine->getCode())
                     ->send();
             } else {
