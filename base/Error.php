@@ -107,8 +107,8 @@ class Error
     {
         $__module = Variables::get("__request_module__", '');
         $__controller = Variables::get("__request_controller__", '');
-        $controller = 'app\\' . Variables::getSite("\\") . 'controller\\' . $__module . '\\' . ucfirst($__controller);
-        $base = 'app\\' . Variables::getSite("\\") . 'controller\\' . $__module . '\\BaseController';
+        $controller = 'app\\controller\\' . $__module . '\\' . ucfirst($__controller);
+        $base = 'app\\controller\\' . $__module . '\\BaseController';
         $method = "system_error";
 
         try {

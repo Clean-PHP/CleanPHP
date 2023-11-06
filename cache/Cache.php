@@ -61,7 +61,7 @@ class Cache implements CacheInterface
         return self::$cache[$path];
     }
 
-    private function setData(int $exp_time, string $path): CacheInterface
+    public function setData(int $exp_time, string $path): CacheInterface
     {
         if ($this->cache_path === $path && $this->cache_expire === $exp_time) {
             return $this;

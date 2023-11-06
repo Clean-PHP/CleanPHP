@@ -805,8 +805,8 @@ pre {
         $__module = Variables::get("__request_module__", '');
         $__controller = Variables::get("__request_controller__", '');
         $__action = Variables::get("__request_action__", '');
-        $base = 'app\\' . Variables::getSite("\\") . 'controller\\' . $__module . '\\' . "BaseController";
-        $controller_cls = 'app\\' . Variables::getSite("\\") . 'controller\\' . $__module . '\\' . ucfirst($__controller);
+        $base = 'app\\controller\\' . $__module . '\\' . "BaseController";
+        $controller_cls = 'app\\controller\\' . $__module . '\\' . ucfirst($__controller);
         if(empty($controller)){
             if (class_exists($controller_cls) ) {
                 if(method_exists($controller_cls,$__action) ){
