@@ -31,7 +31,6 @@ class Session
     {
         if (is_null(self::$instance)) {
             self::$instance = new Session();
-            self::$cache = Cache::init();
 
         }
 
@@ -60,7 +59,7 @@ class Session
             // 设置会话的最大生存时间和Cookie参数
             ini_set('session.gc_maxlifetime', $cacheTime);
         }
-        self::$cache->setData($cacheTime,Variables::getCachePath("session",DS));
+        self::$cache = Cache::init($cacheTime,Variables::getCachePath("session",DS));
         session_set_save_handler(new SessionHandler(self::$cache), true);
         session_set_cookie_params($cacheTime, '/',null,true,true);
         // 启动会话
