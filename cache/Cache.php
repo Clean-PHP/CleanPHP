@@ -44,7 +44,7 @@ class Cache implements CacheInterface
         return $this->cache_path . $new;
     }
 
-    public static function init(int $exp_time = 0, string $path = ''): ?Cache
+    public static function init(int $exp_time = 0, ?string $path = null): ?Cache
     {
         $path = $path ?? Variables::getCachePath();
         if (self::$drive) {
