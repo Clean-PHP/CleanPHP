@@ -28,9 +28,9 @@ class ArgObject
                 if (array_key_exists($key, $item)) {
                     $data = $item[$key];
                 }
-                if($this->onParseType($key, $data, $val)){
+                if ($this->onParseType($key, $data, $val)) {
                     $data = parse_type($val, $data);
-                    if (gettype($this->$key) === gettype($data)) {
+                    if (gettype($val) === gettype($data)) {
                         $this->$key = $data;
                     }
                 }
@@ -72,7 +72,7 @@ class ArgObject
         if ($object instanceof ArgObject) {
             $object = $object->toArray(false);
         }
-        $disable = array_merge($this->getDisableKeys(),['id']) ;
+        $disable = array_merge($this->getDisableKeys(), ['id']);
         foreach ($this->toArray(false) as $key => $val) {
             if (array_key_exists($key, $object) && !in_array($key, $disable)) {
                 $data = $object[$key];
