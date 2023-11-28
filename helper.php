@@ -258,7 +258,7 @@ function __serialize(mixed $data): string
 function __unserialize(?string $data): mixed
 {
     if (empty($data)) return null;
-    Log::record("__unserialize", $data);
+    App::$debug && Log::record("__unserialize", $data);
     $result = unserialize($data);
     traversalClosure($result, function (&$item) {
         $item = unserialize($item)->getClosure();
