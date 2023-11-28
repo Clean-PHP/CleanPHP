@@ -65,8 +65,9 @@ class Async
         if (isset($url_array["query"])) {
             parse_str($url_array["query"], $query);
         }
-        $port = intval($_SERVER["SERVER_PORT"]);
         $scheme = Response::getHttpScheme();
+        $port = intval($url_array['port']??($scheme==="https://"?443:80));
+
         if ($query !== []) {
             $get_path = $url_array['path'] . "?" . http_build_query($query);
         } else {
@@ -75,15 +76,17 @@ class Async
         Cache::init($timeout, Variables::getCachePath("async", DS))->set($key, $asyncObject);
         try {
             $ch = curl_init();
+            App::$debug && Log::record("请求地址",$scheme . $url_array['host'] . ":" . $port . $get_path);
             curl_setopt($ch, CURLOPT_URL, $scheme . $url_array['host'] . ":" . $port . $get_path);
             curl_setopt($ch, CURLOPT_PORT, $port);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_RESOLVE, [$url_array['host'] . ':' . "127.0.0.1"]);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 5);
             curl_setopt($ch, CURLOPT_TIMEOUT, 5);
             curl_setopt($ch, CURLOPT_NOBODY, true);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Host: ' . $url_array['host'],
                 'Key: '.$key,
