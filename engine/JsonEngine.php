@@ -34,10 +34,9 @@ class JsonEngine extends BaseEngine
         $this->tpl = $template;
     }
 
-    function getContentType(): string
-    {
-        return "application/json";
-    }
+    protected string $content_type = "application/json";
+
+    protected int $code = 200;
 
 
     /**
@@ -82,7 +81,7 @@ class JsonEngine extends BaseEngine
 
     public function renderMsg(int $code = 404, string $title = "", $msg = "", int $time = 3, string $url = '/', string $desc = "立即跳转"): string
     {
-        parent::renderMsg($code , $title, $msg , $time , $url, $desc);
+        parent::renderMsg($code, $title, $msg, $time, $url, $desc);
         $array = [
             "code" => $code, "msg" => $title, "data" => $msg, 'url' => $url
         ];
@@ -91,12 +90,11 @@ class JsonEngine extends BaseEngine
     }
 
 
-
     public function onNotFound($msg = "", &$controller = null): void
     {
         (new Response())->code(404)
             ->contentType($this->getContentType())
-            ->render($this->renderMsg( 404, "404 not found", App::$debug?$msg:"404 not found"))
+            ->render($this->renderMsg(404, "404 not found", App::$debug ? $msg : "404 not found"))
             ->send();
     }
 

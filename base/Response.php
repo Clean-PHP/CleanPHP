@@ -38,7 +38,7 @@ class Response
      */
     public static function location(string $url, int $timeout = 0): void
     {
-        if (!str_starts_with($url,"http")) {
+        if (!str_starts_with($url, "http")) {
             $url = Response::getHttpScheme() . Request::getDomain() . $url;
         }
         if ($timeout !== 0) {
@@ -59,8 +59,7 @@ class Response
         if (isset($_SERVER['REQUEST_SCHEME']) && $_SERVER['REQUEST_SCHEME'] == "https"
             || isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on"
             || isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443
-            || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == "https")
-         {
+            || isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == "https") {
             return 'https://';
         } else {
             return 'http://';
@@ -110,7 +109,7 @@ class Response
      */
     public function cache($min): Response
     {
-        $seconds_to_cache = $min * 60 ;
+        $seconds_to_cache = $min * 60;
         $ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
         $this->header["Expires"] = $ts;
         $this->header["Pragma"] = "cache";
@@ -124,7 +123,7 @@ class Response
      * @param $value
      * @return $this
      */
-    public function header($key,$value): Response
+    public function header($key, $value): Response
     {
         $this->header[$key] = $value;
         return $this;
@@ -147,13 +146,13 @@ class Response
         }
 
 
-        if(App::$debug){
-            $this->header[] = "Server-Timing: ".
-            "Total;dur=".round((microtime(true) - Variables::get("__frame_start__", 0)) * 1000,4).
-            ",Route;dur=".App::$route.
-                ",Frame;dur=".App::$frame .
-                ",App;dur=".App::$route .
-                ",Db;dur=".App::$db;
+        if (App::$debug) {
+            $this->header[] = "Server-Timing: " .
+                "Total;dur=" . round((microtime(true) - Variables::get("__frame_start__", 0)) * 1000, 4) .
+                ",Route;dur=" . App::$route .
+                ",Frame;dur=" . App::$frame .
+                ",App;dur=" . App::$route .
+                ",Db;dur=" . App::$db;
         }
 
         $this->header["Server"] = "Apache";
@@ -173,9 +172,9 @@ class Response
                 }
             }
         }
-        if(is_file_exists($this->data)){
+        if (is_file_exists($this->data)) {
             readfile($this->data);
-        }else{
+        } else {
             echo $this->data;
         }
 
@@ -191,7 +190,7 @@ class Response
      * 结束Http响应
      * @return void
      */
-    static function finish(): void
+    static private function finish(): void
     {
         if (function_exists('fastcgi_finish_request')) {
             // 提高页面响应

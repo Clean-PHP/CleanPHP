@@ -20,8 +20,6 @@ abstract class BaseEngine
 {
 
 
-
-
     /**
      * 渲染数据
      * @param $data
@@ -45,7 +43,7 @@ abstract class BaseEngine
      * @param $v
      * @return $this
      */
-    public function setHeader($k,$v): static
+    public function setHeader($k, $v): static
     {
         $this->headers[$k] = $v;
         return $this;
@@ -63,7 +61,7 @@ abstract class BaseEngine
      */
     public function cache($min): static
     {
-        $seconds_to_cache = $min * 60 ;
+        $seconds_to_cache = $min * 60;
         $ts = gmdate("D, d M Y H:i:s", time() + $seconds_to_cache) . " GMT";
         $this->headers["Expires"] = $ts;
         $this->headers["Pragma"] = "cache";
@@ -71,9 +69,10 @@ abstract class BaseEngine
         return $this;
     }
 
-    private string $content_type = 'text/html';
+    protected string $content_type = 'text/html';
     //状态
-    private int $code = 200;
+    protected int $code = 200;
+
     /**
      * 设置响应类型
      * @param $type
@@ -89,7 +88,8 @@ abstract class BaseEngine
      * 渲染的输出类型
      * @return string
      */
-    function getContentType(): string{
+    function getContentType(): string
+    {
         return $this->content_type;
     }
 
@@ -107,14 +107,14 @@ abstract class BaseEngine
     function getCode(): int
     {
         return $this->code;
-  }
+    }
 
     /**
      * 渲染数据
      */
     function renderMsg(int $code = 404, string $title = "", $msg = "", int $time = -1, string $url = '/', string $desc = "立即跳转"): string
     {
-       // $this->setCode($code);
+        // $this->setCode($code);
         if ($time == 0) {
             Response::location($url);
         }
@@ -132,6 +132,6 @@ abstract class BaseEngine
         return null;
     }
 
-    abstract function onNotFound($msg = "",&$controller = null);
+    abstract function onNotFound($msg = "", &$controller = null);
 
 }
