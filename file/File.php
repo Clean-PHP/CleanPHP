@@ -67,7 +67,7 @@ class File
         $dir = opendir($src);
         self::mkDir($dst);
         while (false !== ($file = readdir($dir))) {
-            if (!str_starts_with($file,".")) {
+            if (!str_starts_with($file, ".")) {
                 if (is_dir($src . '/' . $file)) {
                     self::copy($src . '/' . $file, $dst . '/' . $file);
                 } else {
@@ -94,12 +94,24 @@ class File
         return true;
     }
 
-    public static function zip($dir, $dst)
+    public static function zip($dir, $dst): void
     {
         $zip = new ZipArchive();
         if ($zip->open($dst, ZipArchive::CREATE | ZipArchive::OVERWRITE) === true) {
             self::addDirectoryToZip($dir, $zip, $dir);
         }
+    }
+
+    public static function unzip($src, $dst): bool
+    {
+        $zip = new ZipArchive();
+        if ($zip->open($src) === true) {
+            File::mkDir($dst);
+            $zip->extractTo($dst);
+            $zip->close();
+            return true;
+        }
+        return false;
     }
 
     public static function traverseDirectory($dir, $callback): void
